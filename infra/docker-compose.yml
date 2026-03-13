@@ -1,0 +1,139 @@
+networks:
+  agent-foundry:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
+  memgraph_data:
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: af-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - agent-foundry
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: af-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agentfoundry}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - agent-foundry
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: af-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - agent-foundry
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  memgraph:
+    image: memgraph/memgraph:latest
+    container_name: af-memgraph
+    restart: unless-stopped
+    ports:
+      - "7687:7687"
+      - "7444:7444"
+    volumes:
+      - memgraph_data:/var/lib/memgraph
+    networks:
+      - agent-foundry
+    mem_limit: 512m
+
+  memgraph-lab:
+    image: memgraph/lab:latest
+    container_name: af-memgraph-lab
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      QUICK_CONNECT_MG_HOST: memgraph
+      QUICK_CONNECT_MG_PORT: 7687
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mglab.rule=Host(`mglab.localhost`)"
+      - "traefik.http.services.mglab.loadbalancer.server.port=3000"
+    depends_on:
+      - memgraph
+    networks:
+      - agent-foundry
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: af-litellm
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-changeme}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_HOST: http://langfuse:3000
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.litellm.rule=Host(`litellm.localhost`)"
+      - "traefik.http.services.litellm.loadbalancer.server.port=4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agent-foundry
+
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: af-langfuse
+    restart: unless-stopped
+    ports:
+      - "3200:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3200
+      NEXTAUTH_SECRET: ${LANGFUSE_SECRET:-changeme}
+      SALT: ${LANGFUSE_SECRET:-changeme}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.langfuse.rule=Host(`langfuse.localhost`)"
+      - "traefik.http.services.langfuse.loadbalancer.server.port=3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agent-foundry

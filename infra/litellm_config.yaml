@@ -1,0 +1,38 @@
+model_list:
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: claude-haiku
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: openrouter-auto
+    litellm_params:
+      model: openrouter/auto
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: gpt-4o
+    litellm_params:
+      model: openrouter/openai/gpt-4o
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: gemini-flash
+    litellm_params:
+      model: openrouter/google/gemini-flash-1.5
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: deepseek-coder
+    litellm_params:
+      model: openrouter/deepseek/deepseek-coder
+      api_key: os.environ/OPENROUTER_API_KEY
+
+router_settings:
+  routing_strategy: cost-based-routing
+  fallbacks:
+    - {claude-sonnet: [openrouter-auto]}
+  context_window_fallbacks:
+    - {claude-sonnet: [gpt-4o]}
+
+litellm_settings:
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+  request_timeout: 120
+  num_retries: 3
