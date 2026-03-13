@@ -27,227 +27,61 @@ agent-foundry/
 │   └── design-guidelines.md                # UI/UX standards, components
 │
 ├── backend/                                # Python backend (FastAPI + agents)
-│   ├── src/
+│   ├── api/
 │   │   ├── __init__.py
-│   │   ├── main.py                         # FastAPI app entry point
-│   │   ├── config.py                       # Settings (Pydantic BaseSettings)
-│   │   ├── dependencies.py                 # FastAPI dependency injection (DB, auth)
-│   │   ├── security.py                     # Auth (OAuth2, API key validation)
-│   │   │
-│   │   ├── agents/                         # Agent implementations
+│   │   ├── main.py                         # FastAPI app entry point + app factory
+│   │   ├── routers/
 │   │   │   ├── __init__.py
-│   │   │   ├── base.py                     # Base Agent class (CrewAI wrapper)
-│   │   │   ├── agent-loader.py             # Load agents from YAML config
-│   │   │   ├── coder.py                    # Coder agent (code interpretation)
-│   │   │   ├── research.py                 # Research agent (web search + RAG)
-│   │   │   ├── pm.py                       # PM agent (PRD generation) — Phase 2
-│   │   │   ├── qa.py                       # QA agent (test execution) — Phase 2
-│   │   │   ├── copywriter.py               # Copywriter agent — Phase 2
-│   │   │   ├── designer.py                 # Image Design agent — Phase 3
-│   │   │   └── video-editor.py             # Video Design agent — Phase 3
-│   │   │
-│   │   ├── orchestrator/                   # Multi-agent orchestration
-│   │   │   ├── __init__.py
-│   │   │   ├── crew-manager.py             # CrewAI manager orchestrator
-│   │   │   └── langgraph-flow.py           # LangGraph orchestrator (Phase 2+)
-│   │   │
-│   │   ├── tools/                          # Tool implementations
-│   │   │   ├── __init__.py
-│   │   │   ├── base-tool.py                # Base Tool class
-│   │   │   ├── github-mcp.py               # GitHub MCP integration
-│   │   │   ├── notion-mcp.py               # Notion MCP integration
-│   │   │   ├── web-search.py               # Web search tool
-│   │   │   ├── file-io.py                  # File read/write
-│   │   │   ├── code-interpreter.py         # Python/JavaScript execution
-│   │   │   ├── playwright.py               # Browser automation
-│   │   │   ├── terminal.py                 # Bash execution (with safeguards)
-│   │   │   ├── figma-api.py                # Figma design tool — Phase 3
-│   │   │   └── ffmpeg.py                   # Video processing — Phase 3
-│   │   │
-│   │   ├── memory/                         # Memory backends
-│   │   │   ├── __init__.py
-│   │   │   ├── base-memory.py              # Abstract memory interface
-│   │   │   ├── postgres-memory.py          # PostgreSQL queries (structured)
-│   │   │   ├── pgai-memory.py              # pgai semantic search + RAG
-│   │   │   ├── memgraph-memory.py          # Memgraph relationships
-│   │   │   └── memory-manager.py           # Coordinate memory backends
-│   │   │
-│   │   ├── guardrails/                     # Output validation & cost control
-│   │   │   ├── __init__.py
-│   │   │   ├── validator.py                # Output schema validation
-│   │   │   ├── cost-guardrail.py           # Budget enforcement
-│   │   │   ├── hallucination-detector.py   # Fact-check agent outputs
-│   │   │   └── toxicity-filter.py          # Content safety
-│   │   │
-│   │   ├── models/                         # Pydantic schemas
-│   │   │   ├── __init__.py
-│   │   │   ├── task.py                     # TaskInput, TaskResult, TaskStatus
-│   │   │   ├── agent.py                    # AgentConfig, AgentStatus
-│   │   │   ├── user.py                     # User, Team, Subscription
-│   │   │   ├── billing.py                  # Invoice, UsageRecord
-│   │   │   └── tool.py                     # ToolDefinition, ToolCall
-│   │   │
-│   │   ├── api/                            # FastAPI routes
-│   │   │   ├── __init__.py
-│   │   │   ├── agents-router.py            # GET /agents, GET /agents/{id}
-│   │   │   ├── tasks-router.py             # POST /tasks, GET /tasks/{id}
-│   │   │   ├── subscriptions-router.py     # GET /subscriptions, PATCH /subscriptions
-│   │   │   ├── billing-router.py           # GET /billing/usage, GET /billing/invoices
-│   │   │   ├── teams-router.py             # POST /teams, GET /teams/{id}
-│   │   │   └── health-router.py            # GET /health (readiness probe)
-│   │   │
-│   │   ├── worker/                         # Celery task execution
-│   │   │   ├── __init__.py
-│   │   │   ├── celery-app.py               # Celery app configuration
-│   │   │   ├── task-worker.py              # execute_task() task function
-│   │   │   └── job-scheduler.py            # Schedule recurring jobs
-│   │   │
-│   │   ├── integrations/                   # External service adapters
-│   │   │   ├── __init__.py
-│   │   │   ├── langfuse-client.py          # LLM tracing
-│   │   │   ├── opentelemetry-setup.py      # Metrics collection
-│   │   │   ├── litellm-router.py           # LLM routing config
-│   │   │   ├── stripe-client.py            # Billing — Phase 2
-│   │   │   └── webhook-publisher.py        # Event distribution
-│   │   │
-│   │   ├── db/                             # Database
-│   │   │   ├── __init__.py
-│   │   │   ├── postgres-client.py          # PostgreSQL connection pool
-│   │   │   ├── migrations/                 # Alembic migrations
-│   │   │   │   ├── env.py
-│   │   │   │   ├── script.py.mako
-│   │   │   │   └── versions/
-│   │   │   │       ├── 001-initial-schema.py
-│   │   │   │       ├── 002-agents-config.py
-│   │   │   │       └── ...
-│   │   │   ├── models.py                   # SQLAlchemy ORM models
-│   │   │   └── queries.py                  # Common SQL queries
-│   │   │
-│   │   └── utils/                          # Utilities
-│   │       ├── __init__.py
-│   │       ├── logger.py                   # Structured logging
-│   │       ├── http-client.py              # Async HTTP client wrapper
-│   │       ├── jwt-handler.py              # JWT encode/decode
-│   │       └── cost-estimator.py           # LLM cost forecasting
+│   │   │   ├── health.py                   # GET /health (readiness probe)
+│   │   │   ├── agents.py                   # GET /agents, GET /agents/{id} (stubs)
+│   │   │   └── tasks.py                    # POST /tasks, GET /tasks/{id} (stubs)
 │   │
-│   ├── agents_config/                      # YAML agent definitions
-│   │   ├── coder.yaml                      # Coder agent config
-│   │   ├── research.yaml                   # Research agent config
-│   │   ├── pm.yaml                         # PM agent config (Phase 2)
-│   │   ├── qa.yaml                         # QA agent config (Phase 2)
-│   │   ├── copywriter.yaml                 # Copywriter config (Phase 2)
-│   │   └── _schema.json                    # JSON schema for validation
-│   │
-│   ├── tests/                              # Unit & integration tests
+│   ├── agents/                             # Agent implementations
 │   │   ├── __init__.py
-│   │   ├── conftest.py                     # pytest fixtures
-│   │   ├── test-agents.py                  # Agent tests
-│   │   ├── test-orchestrator.py            # Orchestration tests
-│   │   ├── test-tools.py                   # Tool tests
-│   │   ├── test-memory.py                  # Memory backend tests
-│   │   ├── test-guardrails.py              # Guardrail validation tests
-│   │   ├── test-api.py                     # API endpoint tests
-│   │   └── fixtures/                       # Test data
-│   │       ├── sample-tasks.yaml
-│   │       └── sample-context.md
+│   │   ├── base.py                         # Base Agent ABC class + TaskInput/TaskResult
+│   │   ├── coder.py                        # Coder agent stub (ready for tools)
+│   │   └── researcher.py                   # Research agent stub (ready for tools)
+│   │   │
+│   ├── memory/                             # Memory backends (stubs)
+│   │   ├── __init__.py
+│   │   ├── pgai.py                         # PgaiMemoryService stub
+│   │   └── memgraph.py                     # MemgraphService stub
 │   │
-│   └── docker/
-│       └── Dockerfile                      # Backend container
+│   └── workers/                            # Celery task execution
+│       ├── __init__.py
+│       └── celery_app.py                   # Celery app configuration (stub)
+│   │
+│   ├── pyproject.toml                      # Python project metadata + dependencies
+│   └── Dockerfile                          # Backend container image
 │
 ├── frontend/                               # Next.js frontend
-│   ├── app/                                # App Router pages
-│   │   ├── layout.tsx                      # Root layout
-│   │   ├── page.tsx                        # Home page
-│   │   ├── agents/
-│   │   │   ├── page.tsx                    # Agent marketplace
-│   │   │   └── [id]/page.tsx               # Agent detail
-│   │   ├── tasks/
-│   │   │   ├── page.tsx                    # Task list
-│   │   │   ├── create/page.tsx             # Create task
-│   │   │   └── [id]/page.tsx               # Task monitor + results
-│   │   ├── billing/
-│   │   │   ├── page.tsx                    # Billing dashboard
-│   │   │   └── invoices/page.tsx           # Invoice history
-│   │   ├── teams/
-│   │   │   ├── page.tsx                    # Team management
-│   │   │   └── [id]/page.tsx               # Team detail
-│   │   └── api/
-│   │       ├── auth/[...nextauth]/route.ts # NextAuth.js routes
-│   │       └── webhook/stripe/route.ts     # Stripe webhooks (Phase 2)
+│   ├── app/
+│   │   ├── layout.tsx                      # Root layout (implemented)
+│   │   └── page.tsx                        # Landing page (implemented)
 │   │
-│   ├── components/                         # React components
-│   │   ├── common/
-│   │   │   ├── Header.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── Button.tsx
-│   │   │   └── Card.tsx
-│   │   ├── agents/
-│   │   │   ├── AgentCard.tsx               # Agent listing card
-│   │   │   ├── AgentDetail.tsx             # Agent detail view
-│   │   │   └── AgentFilter.tsx             # Filter controls
-│   │   ├── tasks/
-│   │   │   ├── TaskForm.tsx                # Create/edit task
-│   │   │   ├── TaskMonitor.tsx             # Live progress monitor
-│   │   │   ├── TaskResult.tsx              # Result display
-│   │   │   └── TaskHistory.tsx             # Past tasks list
-│   │   ├── billing/
-│   │   │   ├── BillingDashboard.tsx
-│   │   │   ├── CostBreakdown.tsx
-│   │   │   └── SubscriptionSelector.tsx
-│   │   └── auth/
-│   │       ├── LoginForm.tsx
-│   │       └── SignupForm.tsx
+│   ├── components/                         # React components (Phase 2+)
+│   │   └── (placeholder for future components)
 │   │
-│   ├── lib/                                # Utilities & API clients
-│   │   ├── api-client.ts                   # Fetch wrapper
-│   │   ├── hooks/
-│   │   │   ├── useAgents.ts                # Fetch agents (React Query)
-│   │   │   ├── useTasks.ts                 # Fetch tasks
-│   │   │   ├── useSSE.ts                   # Live task monitoring
-│   │   │   └── useAuth.ts                  # Auth hook
-│   │   ├── utils/
-│   │   │   ├── format-cost.ts              # Format currency
-│   │   │   └── format-duration.ts          # Format time
-│   │   └── types.ts                        # TypeScript interfaces (match Pydantic)
-│   │
-│   ├── styles/
-│   │   ├── globals.css                     # Tailwind directives + global styles
-│   │   └── dark.css                        # Dark mode overrides
-│   │
-│   ├── public/
-│   │   ├── logo.png
-│   │   └── favicon.ico
-│   │
-│   ├── package.json
+│   ├── package.json                        # Dependencies (Next.js 15, React 19, Tailwind v4)
 │   ├── tsconfig.json
 │   ├── next.config.js
 │   ├── tailwind.config.ts
 │   ├── postcss.config.js
-│   └── docker/
-│       └── Dockerfile                      # Frontend container
+│   └── .env.example                        # Frontend environment variables
 │
-├── azure/                                  # Infrastructure as Code
-│   ├── main.bicep                          # Main Bicep template
-│   ├── parameters.json                     # Bicep parameters
-│   ├── modules/
-│   │   ├── container-apps.bicep            # Container Apps (FastAPI, workers)
-│   │   ├── postgresql.bicep                # PostgreSQL Flexible Server
-│   │   ├── redis.bicep                     # Azure Cache for Redis
-│   │   ├── storage.bicep                   # Blob storage (logs, artifacts)
-│   │   └── networking.bicep                # VNET, security groups
-│   └── scripts/
-│       ├── deploy.sh                       # Deployment script
-│       └── teardown.sh                     # Cleanup script
+├── infra/                                  # Docker Compose infrastructure
+│   ├── docker-compose.yml                  # Local dev stack (7 services)
+│   ├── litellm_config.yaml                 # LiteLLM routing config
+│   ├── init.sql                            # PostgreSQL initialization
+│   ├── traefik/                            # Traefik reverse proxy config
+│   │   └── traefik.yml
+│   └── docker-compose.prod.yml             # Production overrides (Phase 2+)
 │
-├── .github/
-│   └── workflows/
-│       ├── ci.yml                          # Run tests on PR
-│       ├── cd.yml                          # Deploy on merge to main
-│       └── security-scan.yml               # Dependency scanning
+├── Makefile                                # Development commands (up, down, api, worker, fe, etc.)
+├── .env.example                            # Environment variables template
+├── .gitignore                              # Git ignore rules
 │
 └── plans/                                  # Project planning
-    ├── README.md
     └── reports/                            # Generated reports from tasks
 ```
 
@@ -255,166 +89,132 @@ agent-foundry/
 
 ## Key Modules
 
-### Backend Core
+### Backend Core (Phase 1 - Implemented)
 
-#### `src/main.py`
-- FastAPI application factory
-- Middleware setup (auth, logging, CORS)
-- Route registration
-- Database connection pooling
-- Redis connection
+#### `api/main.py`
+- FastAPI app factory
+- Middleware setup (logging, CORS)
+- Route registration (health, agents, tasks routers)
+- Uvicorn configuration
 
-#### `src/agents/base.py`
-- Abstract `Agent` class
-- Inherits from CrewAI `Agent`
-- Methods: `execute(task_input)`, `initialize_tools()`, `load_config()`
-- Handles CrewAI initialization, memory attachment, guardrail setup
+#### `agents/base.py`
+- Abstract `Agent` base class
+- `TaskInput` Pydantic model (goal, context, budget)
+- `TaskResult` Pydantic model (output, metadata, cost)
+- Base methods for agent subclasses to inherit
 
-#### `src/orchestrator/crew-manager.py`
-- CrewAI `Crew` wrapper
-- Methods: `add_agents()`, `execute_workflow()`, `handle_errors()`
-- Routes tasks to correct agent(s) based on task type
-- Aggregates results from multiple agents
+#### `agents/coder.py` & `agents/researcher.py`
+- Concrete agent stubs inheriting from `Agent`
+- Ready for tool integration (Phase 1 Week 3)
+- Placeholders for LLM invocation logic
 
-#### `src/worker/task-worker.py`
-- Celery task: `execute_task(task_id, user_id)`
-- Workflow:
-  1. Load task from PostgreSQL
-  2. Retrieve context from pgai
-  3. Load agent config
-  4. Invoke orchestrator
-  5. Validate output (guardrails)
-  6. Store result + cost
-  7. Publish events
+#### `api/routers/health.py`
+- `GET /health` — Readiness probe for Kubernetes/load balancers
+- Returns service status + dependency checks
 
-#### `src/api/tasks-router.py`
+#### `api/routers/agents.py` (stubs)
+- `GET /agents` — List all agents with metadata
+- `GET /agents/{id}` — Get single agent details
+
+#### `api/routers/tasks.py` (stubs)
 - `POST /tasks` — Create & enqueue task
-- `GET /tasks/{id}` — Get task status
-- `GET /tasks` — List user's tasks (with pagination)
-- `GET /tasks/{id}/results` — Download results
+- `GET /tasks/{id}` — Get task status + results
 
-### Database
+### Database & Memory (Phase 1 - Infrastructure Ready)
 
-#### `src/db/models.py` (SQLAlchemy ORM)
-```python
-# Core tables:
-class User(Base):
-    id: UUID
-    email: str
-    tier: str  # "solo", "small_team", "full_squad"
-    api_key: str
+#### PostgreSQL (via Docker)
+- Port 5432 (internal), exposed via Traefik
+- Initialized from `infra/init.sql`
+- Ready for Alembic migrations (to be created Week 2–4)
 
-class Task(Base):
-    id: UUID
-    user_id: UUID
-    agent_id: str
-    goal: str
-    input_json: str  # JSON
-    output_json: str
-    status: str  # "pending", "running", "completed", "failed"
-    cost_cents: int
-    created_at: DateTime
-    completed_at: DateTime
+#### pgai (PostgreSQL + pgvector)
+- Semantic search backend
+- `PgaiMemoryService` stub implemented
+- Ready for embedding + chunk retrieval (Week 3+)
 
-class AgentConfig(Base):
-    id: str  # "coder", "research", etc.
-    version: int  # v1, v2, ...
-    yaml_content: str
-    created_at: DateTime
-```
+#### Memgraph
+- Graph database via `infra/docker-compose.yml`
+- Memgraph Lab UI at http://mglab.localhost
+- `MemgraphService` stub implemented
+- Ready for Agent-Task-Project relationships (Week 4+)
 
-#### Alembic Migrations
-- Version control for schema changes
-- Track all modifications to tables, indexes
+#### Redis
+- Task queue backend
+- Used by Celery for job distribution
+- Configured in `infra/docker-compose.yml`
 
-### Tools
-
-#### `src/tools/github-mcp.py`
-- Wrapper around GitHub MCP
-- Methods: `create_pr()`, `read_file()`, `commit()`
-
-#### `src/tools/code-interpreter.py`
-- Execute Python/Node.js in container
-- Sandboxed with timeouts
-- Methods: `run_python()`, `run_javascript()`
+### Tools (Phase 2+)
+- Tool implementations deferred to Week 3 (Coder agent)
+- Plan: GitHub MCP, code interpreter, web search, PDF reader
+- All tools inherit from base `Tool` ABC (to be created)
 
 ---
 
-## Frontend Components
+## Frontend Components (Phase 1 - Scaffolded)
 
 ### Pages
 
-#### `app/agents/page.tsx`
-- Display all agents (filters by role, cost, tier)
-- Use `useAgents()` hook (React Query)
-- Cards with agent name, bio, price, success rate
-- Click → navigate to agent detail
+#### `app/layout.tsx`
+- Root layout with Tailwind styling
+- Navigation structure prepared
+- Meta tags + fonts configured
 
-#### `app/tasks/create/page.tsx`
-- Form to create task (goal, context, budget)
-- Upload context documents (PDF, markdown)
-- Select agent or auto-select based on goal
-- Preview estimated cost
-- Submit → API POST /tasks
+#### `app/page.tsx`
+- Landing page skeleton
+- Value proposition, agent showcase sections
+- Prepared for Phase 2 marketplace implementation
 
-#### `app/tasks/[id]/page.tsx`
-- Real-time progress monitor (SSE stream)
-- Show agent reasoning + tool calls
-- Collect result when done
-- Download button (PDF, markdown, JSON)
-- Rating form
-
-### Hooks
-
-#### `lib/hooks/useSSE.ts`
-- Open SSE connection to `/api/tasks/{id}/stream`
-- Parse messages: `{"type": "status_update", "data": {...}}`
-- Return latest status + new messages
-- Auto-reconnect on disconnect
+### Components & Pages (Phase 2+)
+- Deferred to Phase 2: Agents marketplace, task creation, monitoring, billing pages
+- React hook implementations (useAgents, useTasks, useSSE) ready for integration
 
 ---
 
 ## Technology Dependencies
 
-### Backend
-- `crewai` — Agent orchestration
-- `langgraph` — Workflow graphs (Phase 2)
-- `fastapi`, `uvicorn` — Web framework
-- `sqlalchemy` — ORM
+### Backend (Installed)
+- `fastapi`, `uvicorn` — Web framework, ASGI server
+- `pydantic`, `pydantic-settings` — Data validation
 - `psycopg` — PostgreSQL driver
-- `asyncpg` — Async PostgreSQL
-- `pgvector` — Semantic search (pgai integration)
 - `celery`, `redis` — Task queue
-- `pydantic`, `pydantic-settings` — Validation
-- `litellm` — LLM routing
-- `anthropic` — Claude SDK
-- `openai` — GPT integration (fallback)
+- `crewai` — Agent orchestration framework
+- `litellm` — LLM routing (200+ models)
+- `anthropic`, `openai` — LLM SDKs
 - `langfuse` — LLM tracing
-- `opentelemetry` — Metrics
-- `neo4j` — Memgraph driver (Phase 2)
 - `pytest` — Testing
-- `black`, `isort`, `mypy` — Code quality (dev)
 
-### Frontend
-- `next` — Framework
-- `typescript` — Language
-- `tailwindcss` — Styling
-- `react-query` — Server state
+### Backend (Deferred to Phase 1 Week 3+)
+- `langgraph` — Workflow graphs
+- `sqlalchemy` — ORM + migrations
+- `pgvector` — Semantic search
+- `neo4j` — Memgraph driver
+
+### Frontend (Installed)
+- `next` 15 — React framework
+- `react` 19 — UI library
+- `typescript` — Type safety
+- `tailwindcss` v4 — Styling
+- `zustand` — State management
+- `@tanstack/query`, `@tanstack/router`, `@tanstack/form` — Data & routing
+
+### Frontend (Deferred to Phase 2+)
 - `next-auth` — Authentication
-- `zod` + `react-hook-form` — Form validation
-- `recharts` — Data visualization (Phase 2)
 - `tamagui` — Cross-platform (Phase 2)
-- `vitest`, `@testing-library/react` — Testing
+- `recharts` — Data visualization
 
 ### Infrastructure
-- `docker`, `docker-compose` — Containers
-- `azure-cli` — Azure CLI
-- `bicep` — IaC
+- Docker Compose — Local dev stack
+- Traefik v3 — Reverse proxy
+- PostgreSQL 15 + pgvector — Database
+- Redis 7 — Cache/queue
+- Memgraph — Graph database
+- LiteLLM — LLM proxy
+- Langfuse — LLM dashboard
 
 ---
 
 ## Document Metadata
-- **Version:** 1.0
+- **Version:** 1.1
 - **Last Updated:** 2026-03-14
 - **Owner:** Engineering Team
-- **Status:** Planned (pre-implementation)
+- **Status:** Phase 1 Week 1 Complete (Foundation Infrastructure)

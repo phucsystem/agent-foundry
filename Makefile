@@ -29,7 +29,7 @@ seed:
 
 # Frontend
 fe:
-	cd frontend && npm run dev
+	cd frontend && pnpm run dev
 
 # Production
 sync-prod:

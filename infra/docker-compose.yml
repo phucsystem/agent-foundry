@@ -34,7 +34,8 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./init-langfuse-db.sh:/docker-entrypoint-initdb.d/00-langfuse-db.sh:ro
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
       - agent-foundry
     healthcheck:
@@ -71,6 +72,11 @@ services:
     networks:
       - agent-foundry
     mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'RETURN 1;' | mgconsole || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   memgraph-lab:
     image: memgraph/lab:latest

@@ -1,3 +1,7 @@
+-- pgvector extension + app tables run against the default (agentfoundry) database.
+-- Langfuse database is created via a separate shell script (see init-langfuse-db.sh)
+-- because CREATE DATABASE cannot run inside a transaction.
+
 CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE IF NOT EXISTS agent_memories (
@@ -38,4 +42,3 @@ CREATE TABLE IF NOT EXISTS tasks (
     completed_at TIMESTAMPTZ
 );
 
-CREATE DATABASE langfuse;
