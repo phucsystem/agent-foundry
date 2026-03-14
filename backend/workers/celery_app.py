@@ -10,6 +10,7 @@ celery_app = Celery(
     "agent_foundry",
     broker=REDIS_URL,
     backend=REDIS_URL,
+    include=["workers.tasks"],
 )
 
 celery_app.conf.update(
@@ -21,4 +22,7 @@ celery_app.conf.update(
     task_track_started=True,
     task_time_limit=1800,
     task_soft_time_limit=1500,
+    worker_max_tasks_per_child=100,
+    task_acks_late=True,
+    worker_prefetch_multiplier=1,
 )
