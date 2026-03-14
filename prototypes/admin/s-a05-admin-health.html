@@ -1,0 +1,285 @@
+<!--
+  Screen: S-A05 Platform Health
+  CJX Stage: Usage
+  FR Mapping: /admin/health — System monitoring, LLM costs, errors, worker health
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Health — Admin — Agent Foundry</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../components.css">
+  <link rel="stylesheet" href="admin-styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-page cjx-usage">
+  <div class="app-layout">
+
+    <!-- Admin Sidebar -->
+    <nav class="admin-sidebar hide-mobile" aria-label="Admin navigation">
+      <div class="admin-sidebar-brand">
+        <span class="admin-sidebar-brand-name">Agent Foundry</span>
+        <span class="admin-sidebar-brand-label">Admin</span>
+      </div>
+      <ul class="admin-nav">
+        <li><a href="s-a00-admin-dashboard.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </a></li>
+        <li><a href="s-a01-admin-users.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </a></li>
+        <li><a href="s-a02-admin-subscriptions.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>
+          Subscriptions
+        </a></li>
+        <li><a href="s-a03-admin-revenue.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue &amp; Exp
+        </a></li>
+        <li><a href="s-a04-admin-agents.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14H8a5 5 0 0 0-5 5v2h18v-2a5 5 0 0 0-5-5z"/></svg>
+          Agents
+        </a></li>
+        <li><a href="s-a05-admin-health.html" class="admin-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Health
+        </a></li>
+      </ul>
+      <div class="admin-nav-divider"></div>
+      <div class="admin-nav-bottom">
+        <a href="../s01-agent-marketplace.html" class="admin-nav-back" aria-label="Return to main application">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back to App
+        </a>
+        <button class="admin-theme-toggle" onclick="toggleAdminTheme()" aria-label="Toggle theme">
+          <svg class="theme-toggle-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="theme-toggle-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <span class="theme-toggle-label">Dark Mode</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main" data-cjx-entrance>
+
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Platform Health</h1>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="admin-kpi-grid admin-kpi-grid-3">
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">LLM Cost Today</div>
+          <div class="admin-kpi-value">$142</div>
+          <div class="admin-kpi-delta negative">↑ $18</div>
+        </div>
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">Error Rate (7d)</div>
+          <div class="admin-kpi-value">2.1%</div>
+          <div class="admin-kpi-delta positive">↓ 0.3%</div>
+        </div>
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">Avg Runtime</div>
+          <div class="admin-kpi-value">43s</div>
+          <div class="admin-kpi-delta negative">↑ 2s</div>
+        </div>
+      </div>
+
+      <!-- LLM Cost Chart + Metrics Split -->
+      <div class="admin-revenue-split">
+        <!-- Left: Chart (2/3) -->
+        <div class="admin-revenue-chart-col">
+          <div class="admin-chart-card" style="margin-bottom:0;">
+            <div class="admin-chart-card-header">
+              <h2 class="admin-section-title" style="font-size:15px;">LLM Cost Trend (7d)</h2>
+            </div>
+            <svg viewBox="0 0 560 180" preserveAspectRatio="xMidYMid meet">
+              <title>LLM cost trend chart</title>
+              <defs>
+                <linearGradient id="costGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#F59E0B" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- Grid -->
+              <line x1="40" y1="145" x2="540" y2="145" stroke="var(--admin-border)" stroke-width="1"/>
+              <line x1="40" y1="110" x2="540" y2="110" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="40" y1="75" x2="540" y2="75" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="40" y1="40" x2="540" y2="40" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <!-- Y-axis -->
+              <text x="35" y="149" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$0</text>
+              <text x="35" y="114" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$80</text>
+              <text x="35" y="79" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$120</text>
+              <text x="35" y="44" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$160</text>
+              <!-- Cost area + line -->
+              <polygon fill="url(#costGradient)" points="70,100 145,92 220,108 295,82 370,72 445,68 510,55 510,145 70,145"/>
+              <polyline fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                points="70,100 145,92 220,108 295,82 370,72 445,68 510,55"/>
+              <circle cx="70" cy="100" r="3" fill="#F59E0B"/>
+              <circle cx="145" cy="92" r="3" fill="#F59E0B"/>
+              <circle cx="220" cy="108" r="3" fill="#F59E0B"/>
+              <circle cx="295" cy="82" r="3" fill="#F59E0B"/>
+              <circle cx="370" cy="72" r="3" fill="#F59E0B"/>
+              <circle cx="445" cy="68" r="3" fill="#F59E0B"/>
+              <circle cx="510" cy="55" r="3" fill="#F59E0B"/>
+              <!-- Day labels -->
+              <text x="70" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 9</text>
+              <text x="145" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 10</text>
+              <text x="220" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 11</text>
+              <text x="295" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 12</text>
+              <text x="370" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 13</text>
+              <text x="445" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 14</text>
+              <text x="510" y="162" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 15</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Right: Health Metrics (1/3) -->
+        <div class="admin-revenue-metrics-col">
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">LLM Cost (7d)</div>
+            <div class="admin-metric-value" style="color:var(--admin-warning);">$742</div>
+            <div class="admin-kpi-delta negative">↑ 12% vs prior 7d</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Avg Cost / Task</div>
+            <div class="admin-metric-value">$2.14</div>
+            <div class="admin-kpi-delta positive">↓ 3%</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Worker Queue</div>
+            <div class="admin-metric-value" style="color:var(--admin-success);">3</div>
+            <div class="admin-kpi-delta" style="color:var(--admin-text-tertiary);">pending tasks</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Uptime</div>
+            <div class="admin-metric-value" style="color:var(--admin-success);">99.8%</div>
+            <div class="admin-kpi-delta" style="color:var(--admin-text-tertiary);">last 30 days</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Log -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2 class="admin-section-title">Error Log</h2>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Task</th>
+                <th>Agent</th>
+                <th>Error Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr tabindex="0" role="row">
+                <td class="text-muted">14:23</td>
+                <td>#890</td>
+                <td>QA</td>
+                <td style="color:var(--admin-error);">Timeout after 120s — no response from LLM</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td class="text-muted">13:01</td>
+                <td>#887</td>
+                <td>Coder</td>
+                <td style="color:var(--admin-error);">API rate limit exceeded (429)</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td class="text-muted">11:45</td>
+                <td>#882</td>
+                <td>PM</td>
+                <td style="color:var(--admin-error);">Invalid output schema — missing required field</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td class="text-muted">10:12</td>
+                <td>#879</td>
+                <td>Research</td>
+                <td style="color:var(--admin-error);">Web search tool returned empty results</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td class="text-muted">09:34</td>
+                <td>#875</td>
+                <td>Coder</td>
+                <td style="color:var(--admin-error);">GuardrailViolation: cost limit exceeded ($5.00)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2 class="admin-section-title">System Status</h2>
+        </div>
+        <div class="admin-system-list">
+          <div class="admin-system-item">
+            <span class="admin-status-dot green"></span>
+            <span>API Server</span>
+            <span class="admin-system-item-status">Running</span>
+          </div>
+          <div class="admin-system-item">
+            <span class="admin-status-dot green"></span>
+            <span>Celery Worker</span>
+            <span class="admin-system-item-status">Running (3 active)</span>
+          </div>
+          <div class="admin-system-item">
+            <span class="admin-status-dot green"></span>
+            <span>Redis</span>
+            <span class="admin-system-item-status">Connected</span>
+          </div>
+          <div class="admin-system-item">
+            <span class="admin-status-dot green"></span>
+            <span>PostgreSQL</span>
+            <span class="admin-system-item-status">Connected</span>
+          </div>
+          <div class="admin-system-item">
+            <span class="admin-status-dot green"></span>
+            <span>LiteLLM</span>
+            <span class="admin-system-item-status">Healthy</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../interactions.js"></script>
+  <script>
+    function toggleAdminTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      localStorage.setItem('agent-foundry-theme', newTheme);
+      updateAdminToggle();
+    }
+    function updateAdminToggle() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelector('.theme-icon-sun').style.display = isDark ? 'block' : 'none';
+      document.querySelector('.theme-icon-moon').style.display = isDark ? 'none' : 'block';
+      const label = document.querySelector('.theme-toggle-label');
+      if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('agent-foundry-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      updateAdminToggle();
+    });
+  </script>
+</body>
+</html>

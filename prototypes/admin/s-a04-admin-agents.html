@@ -1,0 +1,266 @@
+<!--
+  Screen: S-A04 Agent Operations
+  CJX Stage: Usage
+  FR Mapping: /admin/agents — Monitor agent health and moderate tasks
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Operations — Admin — Agent Foundry</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../components.css">
+  <link rel="stylesheet" href="admin-styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-page cjx-usage">
+  <div class="app-layout">
+
+    <!-- Admin Sidebar -->
+    <nav class="admin-sidebar hide-mobile" aria-label="Admin navigation">
+      <div class="admin-sidebar-brand">
+        <span class="admin-sidebar-brand-name">Agent Foundry</span>
+        <span class="admin-sidebar-brand-label">Admin</span>
+      </div>
+      <ul class="admin-nav">
+        <li><a href="s-a00-admin-dashboard.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </a></li>
+        <li><a href="s-a01-admin-users.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </a></li>
+        <li><a href="s-a02-admin-subscriptions.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>
+          Subscriptions
+        </a></li>
+        <li><a href="s-a03-admin-revenue.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue &amp; Exp
+        </a></li>
+        <li><a href="s-a04-admin-agents.html" class="admin-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14H8a5 5 0 0 0-5 5v2h18v-2a5 5 0 0 0-5-5z"/></svg>
+          Agents
+        </a></li>
+        <li><a href="s-a05-admin-health.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Health
+        </a></li>
+      </ul>
+      <div class="admin-nav-divider"></div>
+      <div class="admin-nav-bottom">
+        <a href="../s01-agent-marketplace.html" class="admin-nav-back" aria-label="Return to main application">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back to App
+        </a>
+        <button class="admin-theme-toggle" onclick="toggleAdminTheme()" aria-label="Toggle theme">
+          <svg class="theme-toggle-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="theme-toggle-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <span class="theme-toggle-label">Dark Mode</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main" data-cjx-entrance>
+
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Agent Operations</h1>
+        </div>
+      </div>
+
+      <!-- Agent Performance Table -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2 class="admin-section-title">Agent Performance</h2>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th class="text-right">Success</th>
+                <th class="text-right">Avg Time</th>
+                <th class="text-right">Avg Cost</th>
+                <th class="text-right">Tasks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr tabindex="0" role="row">
+                <td>Coder</td>
+                <td class="text-right"><span class="admin-success-rate-high">94%</span></td>
+                <td class="text-right">45s</td>
+                <td class="text-right">$2.37</td>
+                <td class="text-right">523</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td>Research</td>
+                <td class="text-right"><span class="admin-success-rate-mid">89%</span></td>
+                <td class="text-right">62s</td>
+                <td class="text-right">$1.54</td>
+                <td class="text-right">312</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td>PM</td>
+                <td class="text-right"><span class="admin-success-rate-high">91%</span></td>
+                <td class="text-right">38s</td>
+                <td class="text-right">$2.96</td>
+                <td class="text-right">98</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td>QA</td>
+                <td class="text-right"><span class="admin-success-rate-mid">87%</span></td>
+                <td class="text-right">55s</td>
+                <td class="text-right">$2.44</td>
+                <td class="text-right">45</td>
+              </tr>
+              <tr tabindex="0" role="row">
+                <td>Copywriter</td>
+                <td class="text-right"><span class="admin-success-rate-high">93%</span></td>
+                <td class="text-right">22s</td>
+                <td class="text-right">$1.73</td>
+                <td class="text-right">22</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Tasks -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2 class="admin-section-title">Recent Tasks</h2>
+          <div class="admin-filters" style="margin-bottom:0;">
+            <select class="admin-select">
+              <option>All Status</option>
+              <option>Pending</option>
+              <option>Running</option>
+              <option>Completed</option>
+              <option>Failed</option>
+            </select>
+            <select class="admin-select">
+              <option>All Agents</option>
+              <option>Coder</option>
+              <option>Research</option>
+              <option>PM</option>
+              <option>QA</option>
+              <option>Copywriter</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Agent</th>
+                <th>Goal</th>
+                <th>Status</th>
+                <th class="text-right">Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#892</td>
+                <td>Coder</td>
+                <td>Fix auth bug in login endpoint</td>
+                <td><span class="admin-badge admin-badge-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> completed</span></td>
+                <td class="text-right">$2.50</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#891</td>
+                <td>Research</td>
+                <td>Market analysis for SaaS competitor...</td>
+                <td><span class="admin-badge admin-badge-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> completed</span></td>
+                <td class="text-right">$1.20</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#890</td>
+                <td>QA</td>
+                <td>Test login flow regression suite</td>
+                <td><span class="admin-badge admin-badge-failed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> failed</span></td>
+                <td class="text-right">$0.80</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#889</td>
+                <td>PM</td>
+                <td>Write PRD for notification feature</td>
+                <td><span class="admin-badge admin-badge-running"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> running</span></td>
+                <td class="text-right">$0.00</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#888</td>
+                <td>Coder</td>
+                <td>Implement webhook retry logic</td>
+                <td><span class="admin-badge admin-badge-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> completed</span></td>
+                <td class="text-right">$3.10</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#887</td>
+                <td>Coder</td>
+                <td>Refactor database connection pool</td>
+                <td><span class="admin-badge admin-badge-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> completed</span></td>
+                <td class="text-right">$1.90</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#886</td>
+                <td>Research</td>
+                <td>Analyze pricing models for AI tools</td>
+                <td><span class="admin-badge admin-badge-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg> completed</span></td>
+                <td class="text-right">$1.45</td>
+              </tr>
+              <tr onclick="location.href='../s05-task-results.html'" tabindex="0" role="row">
+                <td class="text-muted">#885</td>
+                <td>Copywriter</td>
+                <td>Write landing page hero copy varian...</td>
+                <td><span class="admin-badge admin-badge-pending"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg> pending</span></td>
+                <td class="text-right">$0.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="admin-pagination">
+          <button class="admin-pagination-btn">← Prev</button>
+          <span>Page 1 of 18</span>
+          <button class="admin-pagination-btn">Next →</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../interactions.js"></script>
+  <script>
+    function toggleAdminTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      localStorage.setItem('agent-foundry-theme', newTheme);
+      updateAdminToggle();
+    }
+    function updateAdminToggle() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelector('.theme-icon-sun').style.display = isDark ? 'block' : 'none';
+      document.querySelector('.theme-icon-moon').style.display = isDark ? 'none' : 'block';
+      const label = document.querySelector('.theme-toggle-label');
+      if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('agent-foundry-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      updateAdminToggle();
+    });
+  </script>
+</body>
+</html>

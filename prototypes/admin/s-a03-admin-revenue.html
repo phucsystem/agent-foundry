@@ -1,0 +1,287 @@
+<!--
+  Screen: S-A03 Revenue & Expenses
+  CJX Stage: Usage
+  FR Mapping: /admin/revenue — Revenue & expense analytics, MRR, net profit, trends, per-agent breakdown
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revenue & Expenses — Admin — Agent Foundry</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../components.css">
+  <link rel="stylesheet" href="admin-styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-page cjx-usage">
+  <div class="app-layout">
+
+    <!-- Admin Sidebar -->
+    <nav class="admin-sidebar hide-mobile" aria-label="Admin navigation">
+      <div class="admin-sidebar-brand">
+        <span class="admin-sidebar-brand-name">Agent Foundry</span>
+        <span class="admin-sidebar-brand-label">Admin</span>
+      </div>
+      <ul class="admin-nav">
+        <li><a href="s-a00-admin-dashboard.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </a></li>
+        <li><a href="s-a01-admin-users.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </a></li>
+        <li><a href="s-a02-admin-subscriptions.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>
+          Subscriptions
+        </a></li>
+        <li><a href="s-a03-admin-revenue.html" class="admin-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue & Exp
+        </a></li>
+        <li><a href="s-a04-admin-agents.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14H8a5 5 0 0 0-5 5v2h18v-2a5 5 0 0 0-5-5z"/></svg>
+          Agents
+        </a></li>
+        <li><a href="s-a05-admin-health.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Health
+        </a></li>
+      </ul>
+      <div class="admin-nav-divider"></div>
+      <div class="admin-nav-bottom">
+        <a href="../s01-agent-marketplace.html" class="admin-nav-back" aria-label="Return to main application">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back to App
+        </a>
+        <button class="admin-theme-toggle" onclick="toggleAdminTheme()" aria-label="Toggle theme">
+          <svg class="theme-toggle-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="theme-toggle-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <span class="theme-toggle-label">Dark Mode</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main" data-cjx-entrance>
+
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Revenue & Expenses</h1>
+        </div>
+        <div class="admin-header-controls">
+          <div class="admin-date-range">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="date" class="admin-date-input" value="2026-02-14" aria-label="Start date">
+            <span class="admin-date-separator">–</span>
+            <input type="date" class="admin-date-input" value="2026-03-15" aria-label="End date">
+          </div>
+          <div class="admin-period-tabs">
+            <button class="admin-period-tab">7d</button>
+            <button class="admin-period-tab active">30d</button>
+            <button class="admin-period-tab">90d</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart + Metrics Split Layout -->
+      <div class="admin-revenue-split">
+        <!-- Left: Chart (2/3) -->
+        <div class="admin-revenue-chart-col">
+          <div class="admin-chart-card" style="margin-bottom:0;">
+            <div class="admin-chart-card-header">
+              <h2 class="admin-section-title" style="font-size:15px;">Revenue & Expenses Over Time</h2>
+              <div class="admin-chart-legend">
+                <span class="admin-legend-item"><span class="admin-legend-dot" style="background:#3B82F6;"></span> Revenue</span>
+                <span class="admin-legend-item"><span class="admin-legend-dot" style="background:#EF4444;"></span> Expenses</span>
+              </div>
+            </div>
+            <svg viewBox="0 0 560 220" preserveAspectRatio="xMidYMid meet">
+              <title>Revenue and expenses over time chart</title>
+              <defs>
+                <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="expGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#EF4444" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#EF4444" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- Grid -->
+              <line x1="40" y1="185" x2="540" y2="185" stroke="var(--admin-border)" stroke-width="1"/>
+              <line x1="40" y1="150" x2="540" y2="150" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="40" y1="115" x2="540" y2="115" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="40" y1="80" x2="540" y2="80" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="40" y1="45" x2="540" y2="45" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4"/>
+              <!-- Y-axis labels -->
+              <text x="35" y="189" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$0</text>
+              <text x="35" y="154" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$250</text>
+              <text x="35" y="119" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$500</text>
+              <text x="35" y="84" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$750</text>
+              <text x="35" y="49" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="end" font-family="Inter, sans-serif">$1,000</text>
+
+              <!-- Revenue gradient fill -->
+              <polygon fill="url(#revGradient)" points="60,155 110,145 160,132 210,120 260,128 310,112 360,102 410,90 460,80 510,68 510,185 60,185"/>
+              <!-- Revenue line -->
+              <polyline fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                points="60,155 110,145 160,132 210,120 260,128 310,112 360,102 410,90 460,80 510,68"/>
+              <!-- Revenue points -->
+              <circle cx="60" cy="155" r="2.5" fill="#3B82F6"/>
+              <circle cx="160" cy="132" r="2.5" fill="#3B82F6"/>
+              <circle cx="260" cy="128" r="2.5" fill="#3B82F6"/>
+              <circle cx="360" cy="102" r="2.5" fill="#3B82F6"/>
+              <circle cx="460" cy="80" r="2.5" fill="#3B82F6"/>
+              <circle cx="510" cy="68" r="2.5" fill="#3B82F6"/>
+
+              <!-- Expense gradient fill -->
+              <polygon fill="url(#expGradient)" points="60,175 110,173 160,170 210,168 260,171 310,166 360,163 410,158 460,155 510,152 510,185 60,185"/>
+              <!-- Expense line -->
+              <polyline fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                points="60,175 110,173 160,170 210,168 260,171 310,166 360,163 410,158 460,155 510,152"/>
+              <!-- Expense points -->
+              <circle cx="60" cy="175" r="2.5" fill="#EF4444"/>
+              <circle cx="160" cy="170" r="2.5" fill="#EF4444"/>
+              <circle cx="260" cy="171" r="2.5" fill="#EF4444"/>
+              <circle cx="360" cy="163" r="2.5" fill="#EF4444"/>
+              <circle cx="460" cy="155" r="2.5" fill="#EF4444"/>
+              <circle cx="510" cy="152" r="2.5" fill="#EF4444"/>
+
+              <!-- X-axis labels -->
+              <text x="60" y="200" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Feb 14</text>
+              <text x="160" y="200" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Feb 21</text>
+              <text x="260" y="200" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Feb 28</text>
+              <text x="360" y="200" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 7</text>
+              <text x="460" y="200" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 12</text>
+              <text x="510" y="200" fill="var(--admin-text-tertiary)" font-size="9" text-anchor="middle" font-family="Inter, sans-serif">Mar 15</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Right: Metrics (1/3) -->
+        <div class="admin-revenue-metrics-col">
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">MRR</div>
+            <div class="admin-metric-value">$4,200</div>
+            <div class="admin-kpi-delta positive">↑ 12% vs last period</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Total Revenue</div>
+            <div class="admin-metric-value" style="color:var(--admin-accent);">$12,400</div>
+            <div class="admin-kpi-delta" style="color:var(--admin-text-tertiary);">selected period</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Total Expenses</div>
+            <div class="admin-metric-value" style="color:var(--admin-error);">$3,820</div>
+            <div class="admin-kpi-delta negative">↑ 8% vs last period</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Net Profit</div>
+            <div class="admin-metric-value" style="color:var(--admin-success);">$8,580</div>
+            <div class="admin-kpi-delta positive">↑ 14% margin</div>
+          </div>
+          <div class="admin-metric-card">
+            <div class="admin-metric-label">Avg Cost / Task</div>
+            <div class="admin-metric-value">$3.82</div>
+            <div class="admin-kpi-delta positive">↓ 5% vs last period</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue & Expenses by Agent -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          <h2 class="admin-section-title">Revenue & Expenses by Agent</h2>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Agent</th>
+                <th class="text-right">Tasks</th>
+                <th class="text-right">Revenue</th>
+                <th class="text-right">Expense</th>
+                <th class="text-right">Profit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr onclick="location.href='s-a03-agent-revenue-detail.html'" tabindex="0" role="row">
+                <td>Coder</td>
+                <td class="text-right">523</td>
+                <td class="text-right" style="color:var(--admin-accent);">$1,240</td>
+                <td class="text-right" style="color:var(--admin-error);">$380</td>
+                <td class="text-right" style="color:var(--admin-success);">$860</td>
+              </tr>
+              <tr onclick="location.href='s-a03-agent-revenue-detail.html'" tabindex="0" role="row">
+                <td>Research</td>
+                <td class="text-right">312</td>
+                <td class="text-right" style="color:var(--admin-accent);">$480</td>
+                <td class="text-right" style="color:var(--admin-error);">$145</td>
+                <td class="text-right" style="color:var(--admin-success);">$335</td>
+              </tr>
+              <tr onclick="location.href='s-a03-agent-revenue-detail.html'" tabindex="0" role="row">
+                <td>PM</td>
+                <td class="text-right">98</td>
+                <td class="text-right" style="color:var(--admin-accent);">$290</td>
+                <td class="text-right" style="color:var(--admin-error);">$88</td>
+                <td class="text-right" style="color:var(--admin-success);">$202</td>
+              </tr>
+              <tr onclick="location.href='s-a03-agent-revenue-detail.html'" tabindex="0" role="row">
+                <td>QA</td>
+                <td class="text-right">45</td>
+                <td class="text-right" style="color:var(--admin-accent);">$110</td>
+                <td class="text-right" style="color:var(--admin-error);">$34</td>
+                <td class="text-right" style="color:var(--admin-success);">$76</td>
+              </tr>
+              <tr onclick="location.href='s-a03-agent-revenue-detail.html'" tabindex="0" role="row">
+                <td>Copywriter</td>
+                <td class="text-right">22</td>
+                <td class="text-right" style="color:var(--admin-accent);">$38</td>
+                <td class="text-right" style="color:var(--admin-error);">$12</td>
+                <td class="text-right" style="color:var(--admin-success);">$26</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="../interactions.js"></script>
+  <script>
+    function toggleAdminTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      localStorage.setItem('agent-foundry-theme', newTheme);
+      updateAdminToggle();
+    }
+    function updateAdminToggle() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelector('.theme-icon-sun').style.display = isDark ? 'block' : 'none';
+      document.querySelector('.theme-icon-moon').style.display = isDark ? 'none' : 'block';
+      const label = document.querySelector('.theme-toggle-label');
+      if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('agent-foundry-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      updateAdminToggle();
+    });
+    document.querySelectorAll('.admin-period-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.admin-period-tab').forEach(function(tabItem) { tabItem.classList.remove('active'); });
+        tab.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

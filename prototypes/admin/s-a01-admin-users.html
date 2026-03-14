@@ -1,0 +1,282 @@
+<!--
+  Screen: S-A01 User Management
+  CJX Stage: Usage
+  FR Mapping: /admin/users — Browse, search, manage platform users
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users — Admin — Agent Foundry</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../components.css">
+  <link rel="stylesheet" href="admin-styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="admin-page cjx-usage">
+  <div class="app-layout">
+
+    <!-- Admin Sidebar -->
+    <nav class="admin-sidebar hide-mobile" aria-label="Admin navigation">
+      <div class="admin-sidebar-brand">
+        <span class="admin-sidebar-brand-name">Agent Foundry</span>
+        <span class="admin-sidebar-brand-label">Admin</span>
+      </div>
+      <ul class="admin-nav">
+        <li><a href="s-a00-admin-dashboard.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </a></li>
+        <li><a href="s-a01-admin-users.html" class="admin-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Users
+        </a></li>
+        <li><a href="s-a02-admin-subscriptions.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></svg>
+          Subscriptions
+        </a></li>
+        <li><a href="s-a03-admin-revenue.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Revenue &amp; Exp
+        </a></li>
+        <li><a href="s-a04-admin-agents.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 14H8a5 5 0 0 0-5 5v2h18v-2a5 5 0 0 0-5-5z"/></svg>
+          Agents
+        </a></li>
+        <li><a href="s-a05-admin-health.html" class="admin-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Health
+        </a></li>
+      </ul>
+      <div class="admin-nav-divider"></div>
+      <div class="admin-nav-bottom">
+        <a href="../s01-agent-marketplace.html" class="admin-nav-back" aria-label="Return to main application">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Back to App
+        </a>
+        <button class="admin-theme-toggle" onclick="toggleAdminTheme()" aria-label="Toggle theme">
+          <svg class="theme-toggle-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="theme-toggle-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <span class="theme-toggle-label">Dark Mode</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-main" data-cjx-entrance>
+
+      <div class="admin-page-header">
+        <div>
+          <h1 class="admin-page-title">Users <span class="admin-page-count">127 total</span></h1>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="admin-filters">
+        <input type="text" class="admin-search-input" placeholder="Search by email or name..." aria-label="Search users">
+        <select class="admin-select">
+          <option>All Tiers</option>
+          <option>free</option>
+          <option>pro</option>
+          <option>team</option>
+          <option>super_admin</option>
+        </select>
+        <select class="admin-select">
+          <option>Newest</option>
+          <option>Oldest</option>
+          <option>Most Tasks</option>
+        </select>
+      </div>
+
+      <!-- Users Table -->
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Name</th>
+              <th>Tier</th>
+              <th>Joined</th>
+              <th class="text-right">Tasks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>john@example.com</td>
+              <td>John Doe</td>
+              <td><span class="admin-badge admin-badge-pro">pro</span></td>
+              <td class="text-muted">Mar 12</td>
+              <td class="text-right">23</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>sara@example.com</td>
+              <td>Sara Lee</td>
+              <td><span class="admin-badge admin-badge-free">free</span></td>
+              <td class="text-muted">Mar 10</td>
+              <td class="text-right">5</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>dev@example.com</td>
+              <td>Dev Tanaka</td>
+              <td><span class="admin-badge admin-badge-team">team</span></td>
+              <td class="text-muted">Mar 8</td>
+              <td class="text-right">41</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>lisa@example.com</td>
+              <td>Lisa Chen</td>
+              <td><span class="admin-badge admin-badge-pro">pro</span></td>
+              <td class="text-muted">Mar 6</td>
+              <td class="text-right">17</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>mike@example.com</td>
+              <td>Mike Ross</td>
+              <td><span class="admin-badge admin-badge-free">free</span></td>
+              <td class="text-muted">Mar 4</td>
+              <td class="text-right">2</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>anna@example.com</td>
+              <td>Anna Kim</td>
+              <td><span class="admin-badge admin-badge-pro">pro</span></td>
+              <td class="text-muted">Mar 2</td>
+              <td class="text-right">34</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>bob@example.com</td>
+              <td>Bob Smith</td>
+              <td><span class="admin-badge admin-badge-free">free</span></td>
+              <td class="text-muted">Feb 28</td>
+              <td class="text-right">8</td>
+            </tr>
+            <tr onclick="openDrawer()" tabindex="0" role="row">
+              <td>carol@example.com</td>
+              <td>Carol White</td>
+              <td><span class="admin-badge admin-badge-team">team</span></td>
+              <td class="text-muted">Feb 25</td>
+              <td class="text-right">56</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="admin-pagination">
+        <button class="admin-pagination-btn">← Prev</button>
+        <span>Page 1 of 3</span>
+        <button class="admin-pagination-btn">Next →</button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- User Detail Drawer -->
+  <div class="admin-drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <div class="admin-drawer" id="drawer">
+    <div class="admin-drawer-header">
+      <span class="admin-drawer-title">User Detail</span>
+      <button class="admin-drawer-close" onclick="closeDrawer()" aria-label="Close drawer">✕</button>
+    </div>
+
+    <div class="admin-drawer-field">
+      <div class="admin-drawer-label">Email</div>
+      <div class="admin-drawer-value">john@example.com</div>
+    </div>
+    <div class="admin-drawer-field">
+      <div class="admin-drawer-label">Name</div>
+      <div class="admin-drawer-value">John Doe</div>
+    </div>
+    <div class="admin-drawer-field">
+      <div class="admin-drawer-label">Tier</div>
+      <div class="admin-drawer-value">
+        <select class="admin-select" style="margin-top:4px;">
+          <option>free</option>
+          <option selected>pro</option>
+          <option>team</option>
+          <option>super_admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="admin-drawer-field">
+      <div class="admin-drawer-label">Joined</div>
+      <div class="admin-drawer-value">2026-03-12</div>
+    </div>
+    <div class="admin-drawer-field">
+      <div class="admin-drawer-label">API Key</div>
+      <div class="admin-drawer-value" style="font-family:monospace;">****-abcd</div>
+    </div>
+
+    <div class="admin-drawer-section">
+      <div class="admin-drawer-section-title">Hired Agents (2)</div>
+      <div class="admin-drawer-list-item">
+        <span>Coder</span>
+        <span><span class="admin-badge admin-badge-active">active</span> &nbsp; $100/w</span>
+      </div>
+      <div class="admin-drawer-list-item">
+        <span>Research</span>
+        <span><span class="admin-badge admin-badge-active">active</span> &nbsp; $50/w</span>
+      </div>
+    </div>
+
+    <div class="admin-drawer-section">
+      <div class="admin-drawer-section-title">Recent Tasks (5)</div>
+      <div class="admin-drawer-list-item">
+        <span>#892 coder</span>
+        <span style="color:var(--admin-success);">✅ $2.50</span>
+      </div>
+      <div class="admin-drawer-list-item">
+        <span>#891 research</span>
+        <span style="color:var(--admin-success);">✅ $1.20</span>
+      </div>
+      <div class="admin-drawer-list-item">
+        <span>#890 coder</span>
+        <span style="color:var(--admin-error);">❌ $0.80</span>
+      </div>
+    </div>
+
+    <button class="admin-btn-danger">Suspend User</button>
+  </div>
+
+  <script src="../interactions.js"></script>
+  <script>
+    function openDrawer() {
+      document.getElementById('drawerOverlay').classList.add('open');
+      document.getElementById('drawer').classList.add('open');
+    }
+    function closeDrawer() {
+      document.getElementById('drawerOverlay').classList.remove('open');
+      document.getElementById('drawer').classList.remove('open');
+    }
+    function toggleAdminTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      localStorage.setItem('agent-foundry-theme', newTheme);
+      updateAdminToggle();
+    }
+    function updateAdminToggle() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.querySelector('.theme-icon-sun').style.display = isDark ? 'block' : 'none';
+      document.querySelector('.theme-icon-moon').style.display = isDark ? 'none' : 'block';
+      const label = document.querySelector('.theme-toggle-label');
+      if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('agent-foundry-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+      updateAdminToggle();
+    });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') closeDrawer();
+    });
+  </script>
+</body>
+</html>
