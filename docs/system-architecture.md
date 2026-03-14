@@ -9,6 +9,7 @@ Agent-foundry is a distributed system separating **deterministic flow** (routing
 ## High-Level Architecture
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TD
     FE["Frontend - Next.js 15 + React 19"]
     FE -->|HTTP + SSE| API["FastAPI Gateway"]
@@ -24,15 +25,15 @@ graph TD
     TQ --> PGV["pgvector<br/>Semantic Memory"]
     TQ --> MG["Memgraph<br/>Graph Memory"]
 
-    style FE fill:#e1f5ff
-    style API fill:#fff3e0
-    style CAG fill:#f3e5f5
-    style LLMP fill:#fce4ec
-    style GP fill:#ffe0b2
-    style PG fill:#c8e6c9
-    style PGV fill:#b2dfdb
-    style MG fill:#d1c4e9
-    style LF fill:#ffccbc
+    style FE fill:#4a90d9,stroke:#6ba3e0,color:#fff
+    style API fill:#d4883e,stroke:#e0a060,color:#fff
+    style CAG fill:#9b6bb0,stroke:#b085c2,color:#fff
+    style LLMP fill:#c25a6e,stroke:#d47585,color:#fff
+    style GP fill:#c48530,stroke:#d9a050,color:#fff
+    style PG fill:#4a9e5c,stroke:#6db87e,color:#fff
+    style PGV fill:#3a8e7e,stroke:#5aaa9a,color:#fff
+    style MG fill:#7a5aaa,stroke:#9575c4,color:#fff
+    style LF fill:#c46040,stroke:#d88060,color:#fff
 ```
 
 ---
@@ -109,6 +110,7 @@ TaskResult (aggregated output)
 **Agent Framework Architecture:**
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TD
     YAML["base.yaml<br/>coder.yaml<br/>researcher.yaml"]
     YAML -->|load| LC["AgentConfig<br/>Pydantic"]
@@ -122,10 +124,10 @@ graph TD
     GA --> CR
     CR -->|execute| CE["CrewAI Execution"]
 
-    style YAML fill:#fff9c4
-    style LC fill:#f1f8e9
-    style BA fill:#e0f2f1
-    style CR fill:#f3e5f5
+    style YAML fill:#b8960f,stroke:#d4b030,color:#fff
+    style LC fill:#4a8e3c,stroke:#6aaa5c,color:#fff
+    style BA fill:#2e8a7a,stroke:#4aaa9a,color:#fff
+    style CR fill:#9b6bb0,stroke:#b085c2,color:#fff
 ```
 
 **Pydantic Models (config.py):**
@@ -139,6 +141,7 @@ graph TD
 **Tool System:**
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TD
     BT["BaseTool ABC"]
     BT --> ST["SimpleTool<br/>@tool decorator"]
@@ -149,9 +152,9 @@ graph TD
     ST -->|to_crewai_tool| CW["CrewAI Tool Wrapper"]
     CW --> CA
 
-    style BT fill:#ffe0b2
-    style ST fill:#ffcc80
-    style TR fill:#f9a825
+    style BT fill:#c48530,stroke:#d9a050,color:#fff
+    style ST fill:#b07520,stroke:#cc9040,color:#fff
+    style TR fill:#9a6510,stroke:#b88030,color:#fff
 ```
 
 **Pre-built Tools (via @tool decorator):**
@@ -179,6 +182,7 @@ graph TD
 **Task Execution Flow:**
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
     participant User as User
     participant API as FastAPI
@@ -280,6 +284,7 @@ LIMIT 5;
 **Guardrail Pipeline Architecture:**
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph LR
     IN["TaskInput"]
     IGR["InputGuardrail<br/>prompt injection"]
@@ -296,10 +301,10 @@ graph LR
     CGR2 -->|check| OGR
     OGR -->|valid| OUT
 
-    style IGR fill:#ffcdd2
-    style CGR1 fill:#fff9c4
-    style CGR2 fill:#fff9c4
-    style OGR fill:#c8e6c9
+    style IGR fill:#c25a5a,stroke:#d47575,color:#fff
+    style CGR1 fill:#b8960f,stroke:#d4b030,color:#fff
+    style CGR2 fill:#b8960f,stroke:#d4b030,color:#fff
+    style OGR fill:#4a9e5c,stroke:#6db87e,color:#fff
 ```
 
 **Guardrail Implementation (guardrails/ module):**
@@ -390,6 +395,7 @@ Captures LLM calls, agent execution traces, task lifecycle, and cost breakdowns.
 **Request-Response Sequence:**
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TD
     A["1. User submits TaskInput"] -->|POST /api/tasks| B["2. FastAPI validates<br/>Pydantic model"]
     B --> C["3. Check user budget"]
@@ -410,10 +416,10 @@ graph TD
 
     P -->|real-time| Q["17. Frontend<br/>displays result"]
 
-    style A fill:#e3f2fd
-    style F fill:#f3e5f5
-    style J fill:#e8f5e9
-    style Q fill:#fff3e0
+    style A fill:#4a90d9,stroke:#6ba3e0,color:#fff
+    style F fill:#9b6bb0,stroke:#b085c2,color:#fff
+    style J fill:#4a9e5c,stroke:#6db87e,color:#fff
+    style Q fill:#d4883e,stroke:#e0a060,color:#fff
 ```
 
 **Key Data Structures in Flow:**
@@ -431,6 +437,7 @@ graph TD
 ## Deployment Topology (Azure)
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 graph TB
     FD["Azure Front Door + CDN<br/>DDoS protection, caching"]
 
@@ -466,15 +473,15 @@ graph TB
     API --> AM
     WK --> AM
 
-    style FD fill:#1976d2
-    style SWA fill:#90caf9
-    style API fill:#ffb74d
-    style WK fill:#a5d6a7
-    style PG fill:#81c784
-    style RD fill:#64b5f6
-    style MG fill:#ba68c8
-    style LF fill:#ef5350
-    style AM fill:#ffb74d
+    style FD fill:#1565c0,stroke:#4a90d9,color:#fff
+    style SWA fill:#4a90d9,stroke:#6ba3e0,color:#fff
+    style API fill:#d4883e,stroke:#e0a060,color:#fff
+    style WK fill:#4a9e5c,stroke:#6db87e,color:#fff
+    style PG fill:#3a8e4c,stroke:#5aaa6e,color:#fff
+    style RD fill:#3a7ec0,stroke:#5a9ee0,color:#fff
+    style MG fill:#8a4ab0,stroke:#a565ca,color:#fff
+    style LF fill:#c04040,stroke:#d06060,color:#fff
+    style AM fill:#d4883e,stroke:#e0a060,color:#fff
 ```
 
 **Infrastructure Breakdown:**
