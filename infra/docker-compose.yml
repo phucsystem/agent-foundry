@@ -197,6 +197,7 @@ services:
       - /app/.next
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
+      MOCK_AUTH: ${MOCK_AUTH:-true}
       LOGTO_ENDPOINT: ${LOGTO_ENDPOINT:-https://pk5k15.logto.app/}
       LOGTO_APP_ID: ${LOGTO_APP_ID:-wfys39gnwrpez0g29f1v0}
       LOGTO_APP_SECRET: ${LOGTO_APP_SECRET:-wOrPwIrodl8rAPt8xEiEUIbDzYGju15M}

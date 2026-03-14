@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// TODO: Remove mock auth when Logto integration is verified
+const MOCK_AUTH = process.env.MOCK_AUTH === "true";
+
 const PUBLIC_PATHS = [
   "/callback",
   "/api/auth",
@@ -13,6 +16,20 @@ export function middleware(request: NextRequest) {
 
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
+  }
+
+  // Mock auth: skip authentication check, set fake session cookie
+  if (MOCK_AUTH) {
+    const response = NextResponse.next();
+    if (!request.cookies.has("mock_session")) {
+      response.cookies.set("mock_session", JSON.stringify({
+        userId: "mock-user-001",
+        email: "dev@agentfoundry.io",
+        name: "Dev User",
+        role: "admin",
+      }), { path: "/", maxAge: 86400 });
+    }
+    return response;
   }
 
   const hasSession = request.cookies.has("logto:client");
