@@ -104,6 +104,26 @@ export interface NavItem {
   icon: string;
 }
 
+export interface AgentCapability {
+  name: string;
+  description: string;
+  icon: string;
+  colorClass: string;
+  bgClass: string;
+}
+
+export interface PerformanceMetric {
+  label: string;
+  value: number;
+  color: string;
+}
+
+export interface ReviewSummary {
+  avgScore: number;
+  totalReviews: number;
+  distribution: number[];
+}
+
 // Hired agent types
 
 export interface AgentStatsSummary {

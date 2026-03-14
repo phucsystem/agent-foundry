@@ -8,6 +8,9 @@ import type {
   TimelineEntry,
   CostSegment,
   KpiData,
+  AgentCapability,
+  PerformanceMetric,
+  ReviewSummary,
 } from "./types";
 
 export const MOCK_AGENTS: Agent[] = [
@@ -220,6 +223,40 @@ export const MOCK_PRICING_TIERS: PricingTier[] = [
     highlighted: false,
   },
 ];
+
+export const MOCK_CAPABILITIES: AgentCapability[] = [
+  { name: "Code Interpreter", description: "Execute Python and JavaScript in a sandboxed environment. Analyse, debug, and generate code.", icon: "lucide:code-2", colorClass: "text-primary", bgClass: "bg-primary/10" },
+  { name: "GitHub MCP", description: "Create PRs, read repos, review diffs, and manage branches via Model Context Protocol.", icon: "lucide:github", colorClass: "text-success", bgClass: "bg-success/10" },
+  { name: "Bash Terminal", description: "Run shell commands with safeguards. Install packages, run tests, manage files.", icon: "lucide:terminal", colorClass: "text-warning", bgClass: "bg-warning/10" },
+  { name: "Web Search", description: "Search documentation, Stack Overflow, and APIs for up-to-date solutions.", icon: "lucide:search", colorClass: "text-[#8B5CF6]", bgClass: "bg-[#8B5CF6]/10" },
+  { name: "File I/O", description: "Read, write, and manage project files. Parse logs, configs, and source code.", icon: "lucide:file-text", colorClass: "text-[#EC4899]", bgClass: "bg-[#EC4899]/10" },
+  { name: "RAG Search", description: "Semantic search across past tasks and knowledge files for context-aware solutions.", icon: "lucide:database", colorClass: "text-[#14B8A6]", bgClass: "bg-[#14B8A6]/10" },
+];
+
+export const MOCK_USE_CASES: string[] = [
+  "Bug Fixes",
+  "Code Reviews",
+  "Unit Tests",
+  "API Integrations",
+  "Refactoring",
+  "Documentation",
+  "Database Queries",
+  "Security Audits",
+];
+
+export const MOCK_PERFORMANCE: PerformanceMetric[] = [
+  { label: "Code Quality", value: 96, color: "bg-success" },
+  { label: "Test Coverage", value: 91, color: "bg-success" },
+  { label: "Task Success", value: 94, color: "bg-primary" },
+  { label: "Speed (vs avg)", value: 88, color: "bg-primary" },
+  { label: "Cost Efficiency", value: 92, color: "bg-success" },
+];
+
+export const MOCK_REVIEW_SUMMARY: ReviewSummary = {
+  avgScore: 4.7,
+  totalReviews: 89,
+  distribution: [68, 22, 7, 2, 1],
+};
 
 export const MOCK_TASKS: Task[] = [
   {

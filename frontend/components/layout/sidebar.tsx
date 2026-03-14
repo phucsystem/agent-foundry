@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icon } from "@iconify-icon/react";
+import { Icon } from "@iconify/react";
 import { NAV_ITEMS } from "@/lib/constants";
 import { ThemeToggle } from "./theme-toggle";
 import { AuthButton } from "./auth-button";

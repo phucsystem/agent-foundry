@@ -3,13 +3,21 @@
 import { use } from "react";
 import Link from "next/link";
 import { useAgent } from "@/lib/hooks/use-agents";
-import { MOCK_REVIEWS, MOCK_SAMPLE_OUTPUTS, MOCK_PRICING_TIERS } from "@/lib/mock-data";
+import {
+  MOCK_REVIEWS,
+  MOCK_CAPABILITIES,
+  MOCK_USE_CASES,
+  MOCK_PERFORMANCE,
+  MOCK_REVIEW_SUMMARY,
+} from "@/lib/mock-data";
 import { AgentHero } from "@/components/agents/agent-hero";
 import { AgentStatsBar } from "@/components/agents/agent-stats-bar";
+import { AgentCapabilities } from "@/components/agents/agent-capabilities";
+import { AgentUseCases } from "@/components/agents/agent-use-cases";
+import { AgentPerformance } from "@/components/agents/agent-performance";
 import { AgentReviews } from "@/components/agents/agent-reviews";
-import { AgentPricing } from "@/components/agents/agent-pricing";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface AgentDetailPageProps {
   params: Promise<{ id: string }>;
@@ -44,49 +52,48 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
       <AgentHero agent={agent} />
       <AgentStatsBar agent={agent} />
 
+      {/* Hire CTA */}
+      <div className="flex items-center justify-between gap-6 p-6 bg-white dark:bg-slate-800 border-2 border-primary rounded-lg mb-8">
+        <div>
+          <div className="text-2xl font-bold text-primary">
+            ${agent.weeklyPrice} <span className="text-sm font-normal text-text-secondary">/week</span>
+          </div>
+          <div className="text-sm text-text-secondary mt-1">
+            Unlimited tasks, standard priority, email support. Cancel anytime.
+          </div>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="primary" className="px-8 py-3">Hire This Agent</Button>
+          <Button variant="secondary">Compare Plans</Button>
+        </div>
+      </div>
+
+      <AgentCapabilities capabilities={MOCK_CAPABILITIES} />
+      <AgentUseCases useCases={MOCK_USE_CASES} />
+      <AgentPerformance metrics={MOCK_PERFORMANCE} />
+
+      {/* About Section */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold mb-4">About This Agent</h2>
         <Card hoverable={false}>
           <div className="mb-4">
             <strong className="text-sm">Specialisation</strong>
-            <p className="text-sm text-text-secondary">{agent.specialisation}</p>
+            <p className="text-sm text-text-secondary mt-1">{agent.specialisation}</p>
           </div>
           <div className="mb-4">
-            <strong className="text-sm">Tools</strong>
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {agent.tools.map((tool) => (
-                <Badge key={tool} variant="info">{tool}</Badge>
-              ))}
-            </div>
+            <strong className="text-sm">LLM Backend</strong>
+            <p className="text-sm text-text-secondary mt-1">{agent.llmBackend}</p>
           </div>
           <div>
-            <strong className="text-sm">LLM Backend</strong>
-            <p className="text-sm text-text-secondary">{agent.llmBackend}</p>
+            <strong className="text-sm">Guardrails</strong>
+            <p className="text-sm text-text-secondary mt-1">
+              Prompt injection detection, $10 per-task budget cap, output schema validation, 5-minute hard timeout. All executions logged to Langfuse.
+            </p>
           </div>
         </Card>
       </section>
 
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Sample Outputs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {MOCK_SAMPLE_OUTPUTS.map((sample) => (
-            <Card key={sample.id}>
-              <div className="flex justify-between items-center mb-2">
-                <strong className="text-sm">{sample.title}</strong>
-                <Badge variant="success">Completed</Badge>
-              </div>
-              <p className="text-sm text-text-secondary mb-4">{sample.description}</p>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-text-muted">Cost: ${sample.cost.toFixed(2)}</span>
-                <span className="text-text-muted">Runtime: {sample.runtime}</span>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <AgentReviews reviews={MOCK_REVIEWS} />
-      <AgentPricing tiers={MOCK_PRICING_TIERS} />
+      <AgentReviews reviews={MOCK_REVIEWS} summary={MOCK_REVIEW_SUMMARY} />
     </>
   );
 }
