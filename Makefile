@@ -57,6 +57,9 @@ test:
 check: lint test
 	@echo "All checks passed"
 
+check-auth:
+	@bash scripts/check-auth.sh
+
 # Production
 sync-prod:
 	@echo "TODO: sync prod config"
