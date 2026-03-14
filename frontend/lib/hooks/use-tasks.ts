@@ -71,7 +71,8 @@ function mapBackendTask(raw: BackendTask): Task {
 }
 
 async function fetchTasks(): Promise<Task[]> {
-  return [];
+  const data = await apiClient<{ tasks: BackendTask[] }>("/api/tasks/");
+  return data.tasks.map(mapBackendTask);
 }
 
 async function fetchTaskById(taskId: string): Promise<Task | undefined> {
