@@ -1,7 +1,7 @@
 <!--
   Screen: S-02 Agent Detail
   CJX Stage: discovery
-  FR Mapping: REQ-4.1
+  FR Mapping: FR-12, FR-13
   Route: /agents/{id}
 -->
 <!DOCTYPE html>
@@ -12,6 +12,299 @@
   <title>Coder Agent - Agent Foundry</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="components.css">
+  <style>
+    .agent-hero {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-xl);
+      align-items: start;
+    }
+
+    .agent-hero-avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .agent-hero-avatar svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-md);
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .hero-meta-item svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .hero-meta-divider {
+      width: 4px;
+      height: 4px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);
+    }
+
+    /* Capabilities grid */
+    .capability-card {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition-normal);
+    }
+
+    .capability-card:hover {
+      border-color: var(--color-primary);
+    }
+
+    .capability-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .capability-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .capability-name {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .capability-desc {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Use case tags */
+    .use-case-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .use-case-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      color: var(--color-text);
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+      cursor: default;
+    }
+
+    .use-case-tag:hover {
+      border-color: var(--color-primary);
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .use-case-tag svg {
+      width: 14px;
+      height: 14px;
+      color: var(--color-primary);
+    }
+
+    /* Performance bar */
+    .perf-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-sm) 0;
+    }
+
+    .perf-row + .perf-row {
+      border-top: 1px solid var(--color-border);
+    }
+
+    .perf-label {
+      width: 140px;
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
+
+    .perf-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--color-surface);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .perf-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.6s ease;
+    }
+
+    .perf-value {
+      width: 50px;
+      text-align: right;
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+
+    /* Hire CTA card */
+    .hire-cta-card {
+      background: var(--color-bg);
+      border: 2px solid var(--color-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+    }
+
+    .hire-cta-info {
+      flex: 1;
+    }
+
+    .hire-cta-price {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .hire-cta-period {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      font-weight: 400;
+    }
+
+    .hire-cta-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      margin-top: var(--space-xs);
+    }
+
+    .hire-cta-actions {
+      display: flex;
+      gap: var(--space-sm);
+      flex-shrink: 0;
+    }
+
+    /* Review summary */
+    .review-summary {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .review-avg {
+      text-align: center;
+    }
+
+    .review-avg-score {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+    }
+
+    .review-avg-count {
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .review-bars {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .review-bar-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+    }
+
+    .review-bar-label {
+      width: 12px;
+      text-align: right;
+    }
+
+    .review-bar-track {
+      flex: 1;
+      height: 4px;
+      background: var(--color-border);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .review-bar-fill {
+      height: 100%;
+      background: #F59E0B;
+      border-radius: var(--radius-full);
+    }
+
+    /* Responsive */
+    @media (max-width: 767px) {
+      .agent-hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .agent-hero-avatar {
+        margin: 0 auto;
+      }
+      .hero-meta {
+        justify-content: center;
+      }
+      .hire-cta-card {
+        flex-direction: column;
+        text-align: center;
+      }
+      .perf-label {
+        width: 100px;
+      }
+      .review-summary {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
 </head>
 <body class="cjx-discovery">
   <div class="app-layout">
@@ -22,9 +315,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           Marketplace
         </a></li>
-        <li><a href="s03-create-task.html" class="sidebar-nav-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          Create Task
+        <li><a href="s07-hired-agents.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          My Team
         </a></li>
         <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -47,31 +340,54 @@
       </div>
 
       <!-- Hero Section -->
-      <div class="agent-hero">
-        <div class="avatar avatar-xl" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
+      <div class="agent-hero card mb-xl">
+        <div class="agent-hero-avatar" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
         <div class="agent-hero-info">
-          <h1 class="agent-hero-name">Coder</h1>
-          <div class="agent-hero-role">Code Interpreter &amp; GitHub Expert</div>
-          <p class="agent-hero-bio">
-            This agent uses Python &amp; GitHub APIs to write code, fix bugs, create pull requests, and run automated analysis.
-            It has fixed 150 bugs, written 2000+ lines of production code, and maintains a 94% success rate across all tasks.
-          </p>
-          <div class="flex gap-sm">
-            <button class="btn btn-primary">Hire This Agent</button>
-            <button class="btn btn-secondary">View Sample Outputs</button>
+          <div class="flex items-center gap-sm mb-xs">
+            <h1 class="agent-hero-name" style="margin-bottom: 0;">Coder</h1>
+            <span class="status-badge success">Active</span>
           </div>
+          <div class="agent-hero-role">Code Interpreter &amp; GitHub Expert</div>
+
+          <div class="hero-meta">
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+              Avg 45s per task
+            </span>
+            <span class="hero-meta-divider"></span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              ~$2.50 avg cost
+            </span>
+            <span class="hero-meta-divider"></span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              1,247 tasks completed
+            </span>
+            <span class="hero-meta-divider"></span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              4.7 rating
+            </span>
+          </div>
+
+          <p class="agent-hero-bio">
+            Expert at writing production code, fixing bugs, creating pull requests, and running automated tests. Specialises in Python, TypeScript, Go, and full-stack development. Powered by Claude Sonnet with DeepSeek fallback for code-heavy tasks.
+          </p>
         </div>
       </div>
 
       <!-- Stats Bar -->
-      <div class="stats-bar" data-cjx-entrance>
+      <div class="stats-bar mb-xl" data-cjx-entrance>
         <div class="stat-item">
           <div class="stat-value text-success">94%</div>
           <div class="stat-label">Success Rate</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">~$2.50</div>
-          <div class="stat-label">Avg Cost Per Task</div>
+          <div class="stat-label">Avg Cost</div>
         </div>
         <div class="stat-item">
           <div class="stat-value">45s</div>
@@ -83,56 +399,175 @@
         </div>
       </div>
 
+      <!-- Hire CTA -->
+      <div class="hire-cta-card mb-xl" data-cjx-entrance>
+        <div class="hire-cta-info">
+          <div class="hire-cta-price">$99 <span class="hire-cta-period">/week</span></div>
+          <div class="hire-cta-desc">Unlimited tasks, standard priority, email support. Cancel anytime.</div>
+        </div>
+        <div class="hire-cta-actions">
+          <button class="btn btn-primary" style="padding: 12px 32px; font-size: var(--text-base);">Hire This Agent</button>
+          <button class="btn btn-secondary">Compare Plans</button>
+        </div>
+      </div>
+
+      <!-- Capabilities (Tools) -->
+      <div class="section">
+        <h2 class="section-title">Capabilities</h2>
+        <div class="grid-3">
+          <div class="capability-card">
+            <div class="capability-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--color-primary);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <div>
+              <div class="capability-name">Code Interpreter</div>
+              <div class="capability-desc">Execute Python and JavaScript in a sandboxed environment. Analyse, debug, and generate code.</div>
+            </div>
+          </div>
+          <div class="capability-card">
+            <div class="capability-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+            </div>
+            <div>
+              <div class="capability-name">GitHub MCP</div>
+              <div class="capability-desc">Create PRs, read repos, review diffs, and manage branches via Model Context Protocol.</div>
+            </div>
+          </div>
+          <div class="capability-card">
+            <div class="capability-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--color-warning);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </div>
+            <div>
+              <div class="capability-name">Bash Terminal</div>
+              <div class="capability-desc">Run shell commands with safeguards. Install packages, run tests, manage files.</div>
+            </div>
+          </div>
+          <div class="capability-card">
+            <div class="capability-icon" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div>
+              <div class="capability-name">Web Search</div>
+              <div class="capability-desc">Search documentation, Stack Overflow, and APIs for up-to-date solutions.</div>
+            </div>
+          </div>
+          <div class="capability-card">
+            <div class="capability-icon" style="background: rgba(236, 72, 153, 0.1); color: #EC4899;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div>
+              <div class="capability-name">File I/O</div>
+              <div class="capability-desc">Read, write, and manage project files. Parse logs, configs, and source code.</div>
+            </div>
+          </div>
+          <div class="capability-card">
+            <div class="capability-icon" style="background: rgba(20, 184, 166, 0.1); color: #14B8A6;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            </div>
+            <div>
+              <div class="capability-name">RAG Search</div>
+              <div class="capability-desc">Semantic search across past tasks and knowledge files for context-aware solutions.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Use Cases -->
+      <div class="section">
+        <h2 class="section-title">Common Use Cases</h2>
+        <div class="use-case-list">
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Bug Fixes
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+            Code Reviews
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Unit Tests
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            API Integrations
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Refactoring
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Documentation
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            Database Queries
+          </span>
+          <span class="use-case-tag">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Security Audits
+          </span>
+        </div>
+      </div>
+
+      <!-- Performance Metrics -->
+      <div class="section">
+        <h2 class="section-title">Performance Breakdown</h2>
+        <div class="card">
+          <div class="perf-row">
+            <span class="perf-label">Code Quality</span>
+            <div class="perf-bar-track">
+              <div class="perf-bar-fill" style="width: 96%; background: var(--color-success);"></div>
+            </div>
+            <span class="perf-value text-success">96%</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">Test Coverage</span>
+            <div class="perf-bar-track">
+              <div class="perf-bar-fill" style="width: 91%; background: var(--color-success);"></div>
+            </div>
+            <span class="perf-value text-success">91%</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">Task Success</span>
+            <div class="perf-bar-track">
+              <div class="perf-bar-fill" style="width: 94%; background: var(--color-primary);"></div>
+            </div>
+            <span class="perf-value" style="color: var(--color-primary);">94%</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">Speed (vs avg)</span>
+            <div class="perf-bar-track">
+              <div class="perf-bar-fill" style="width: 88%; background: var(--color-primary);"></div>
+            </div>
+            <span class="perf-value" style="color: var(--color-primary);">88%</span>
+          </div>
+          <div class="perf-row">
+            <span class="perf-label">Cost Efficiency</span>
+            <div class="perf-bar-track">
+              <div class="perf-bar-fill" style="width: 92%; background: var(--color-success);"></div>
+            </div>
+            <span class="perf-value text-success">92%</span>
+          </div>
+        </div>
+      </div>
+
       <!-- About Section -->
       <div class="section">
         <h2 class="section-title">About This Agent</h2>
         <div class="card">
           <div class="mb-md">
             <strong class="text-sm">Specialisation</strong>
-            <p class="text-sm text-muted">Python, JavaScript, TypeScript, Go. Full-stack development, bug fixes, code reviews, automated testing.</p>
+            <p class="text-sm text-muted" style="margin-top: 4px;">Python, JavaScript, TypeScript, Go. Full-stack development, bug fixes, code reviews, automated testing, CI/CD pipeline configuration.</p>
           </div>
           <div class="mb-md">
-            <strong class="text-sm">Tools</strong>
-            <div class="flex gap-sm mt-md" style="flex-wrap: wrap;">
-              <span class="status-badge info">Code Interpreter</span>
-              <span class="status-badge info">GitHub MCP</span>
-              <span class="status-badge info">Bash Terminal</span>
-              <span class="status-badge info">Web Search</span>
-              <span class="status-badge info">File I/O</span>
-            </div>
+            <strong class="text-sm">LLM Backend</strong>
+            <p class="text-sm text-muted" style="margin-top: 4px;">Claude Sonnet 4.6 (primary reasoning), with fallback to DeepSeek Coder for code-heavy tasks and Gemini Flash for quick lookups.</p>
           </div>
           <div>
-            <strong class="text-sm">LLM Backend</strong>
-            <p class="text-sm text-muted">Claude Sonnet (primary), with fallback to DeepSeek for code-heavy tasks.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sample Outputs -->
-      <div class="section">
-        <h2 class="section-title">Sample Outputs</h2>
-        <div class="grid-2">
-          <div class="card">
-            <div class="flex justify-between items-center mb-sm">
-              <strong class="text-sm">Authentication Module Refactor</strong>
-              <span class="status-badge success">Completed</span>
-            </div>
-            <p class="text-sm text-muted mb-md">Refactored OAuth2 flow, added refresh token rotation, and wrote 12 unit tests. Delivered as a GitHub PR.</p>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-muted">Cost: $3.20</span>
-              <span class="text-muted">Runtime: 72s</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="flex justify-between items-center mb-sm">
-              <strong class="text-sm">API Rate Limiter Implementation</strong>
-              <span class="status-badge success">Completed</span>
-            </div>
-            <p class="text-sm text-muted mb-md">Built a sliding-window rate limiter with Redis backend. Included load testing results and documentation.</p>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-muted">Cost: $2.10</span>
-              <span class="text-muted">Runtime: 55s</span>
-            </div>
+            <strong class="text-sm">Guardrails</strong>
+            <p class="text-sm text-muted" style="margin-top: 4px;">Prompt injection detection, $10 per-task budget cap, output schema validation, 5-minute hard timeout. All executions logged to Langfuse.</p>
           </div>
         </div>
       </div>
@@ -140,6 +575,48 @@
       <!-- Reviews -->
       <div class="section">
         <h2 class="section-title">Reviews</h2>
+
+        <div class="review-summary">
+          <div class="review-avg">
+            <div class="review-avg-score">4.7</div>
+            <div class="star-rating" style="justify-content: center;">
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+              <span class="star filled" style="opacity: 0.5;">&#9733;</span>
+            </div>
+            <div class="review-avg-count">Based on 89 reviews</div>
+          </div>
+          <div class="review-bars">
+            <div class="review-bar-row">
+              <span class="review-bar-label">5</span>
+              <div class="review-bar-track"><div class="review-bar-fill" style="width: 68%;"></div></div>
+              <span>68%</span>
+            </div>
+            <div class="review-bar-row">
+              <span class="review-bar-label">4</span>
+              <div class="review-bar-track"><div class="review-bar-fill" style="width: 22%;"></div></div>
+              <span>22%</span>
+            </div>
+            <div class="review-bar-row">
+              <span class="review-bar-label">3</span>
+              <div class="review-bar-track"><div class="review-bar-fill" style="width: 7%;"></div></div>
+              <span>7%</span>
+            </div>
+            <div class="review-bar-row">
+              <span class="review-bar-label">2</span>
+              <div class="review-bar-track"><div class="review-bar-fill" style="width: 2%;"></div></div>
+              <span>2%</span>
+            </div>
+            <div class="review-bar-row">
+              <span class="review-bar-label">1</span>
+              <div class="review-bar-track"><div class="review-bar-fill" style="width: 1%;"></div></div>
+              <span>1%</span>
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="padding: 0;">
           <div class="review-card">
             <div class="review-header">
@@ -192,51 +669,12 @@
         </div>
       </div>
 
-      <!-- Pricing -->
-      <div class="section">
-        <h2 class="section-title">Pricing</h2>
-        <div class="grid-3">
-          <div class="tier-card">
-            <div class="tier-name">Solo</div>
-            <div class="tier-price">$99 <span class="tier-price-period">/week</span></div>
-            <ul class="tier-features">
-              <li>1 Coder agent</li>
-              <li>Unlimited tasks</li>
-              <li>Standard priority</li>
-              <li>Email support</li>
-            </ul>
-            <button class="btn btn-primary" style="width: 100%;">Hire</button>
-          </div>
-          <div class="tier-card current">
-            <div class="tier-name">Small Team</div>
-            <div class="tier-price">$349 <span class="tier-price-period">/week</span></div>
-            <ul class="tier-features">
-              <li>PM + Coder + QA agents</li>
-              <li>Orchestrated workflows</li>
-              <li>High priority</li>
-              <li>Slack support</li>
-            </ul>
-            <button class="btn btn-primary" style="width: 100%;">Hire Team</button>
-          </div>
-          <div class="tier-card">
-            <div class="tier-name">Full Squad</div>
-            <div class="tier-price">$999 <span class="tier-price-period">/week</span></div>
-            <ul class="tier-features">
-              <li>5+ agents, orchestrated</li>
-              <li>Custom workflows</li>
-              <li>Dedicated support</li>
-              <li>SLA guarantees</li>
-            </ul>
-            <button class="btn btn-primary" style="width: 100%;">Hire Squad</button>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 
   <!-- Sticky footer for mobile -->
   <div class="sticky-footer">
-    <button class="btn btn-primary">Hire This Agent</button>
+    <button class="btn btn-primary">Hire This Agent — $99/week</button>
   </div>
 
   <script src="interactions.js"></script>
