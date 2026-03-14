@@ -9,18 +9,250 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Billing Dashboard - Agent Foundry</title>
+  <title>Billing - Agent Foundry</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="components.css">
+  <style>
+    /* Credit Balance Card */
+    .credit-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+    }
+
+    .credit-balance-label {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .credit-balance-value {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1;
+    }
+
+    .credit-balance-sub {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-top: var(--space-xs);
+    }
+
+    /* Top-up options */
+    .topup-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-sm);
+    }
+
+    .topup-option {
+      background: var(--color-bg);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .topup-option:hover {
+      border-color: var(--color-primary);
+    }
+
+    .topup-option.selected {
+      border-color: var(--color-primary);
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .topup-amount {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .topup-credits {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .topup-bonus {
+      font-size: var(--text-xs);
+      color: var(--color-success);
+      font-weight: 600;
+      margin-top: var(--space-xs);
+    }
+
+    /* Usage ring */
+    .usage-ring-container {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .usage-ring {
+      flex-shrink: 0;
+    }
+
+    .usage-ring-text {
+      font-size: 13px;
+      fill: var(--color-text-muted);
+    }
+
+    .usage-ring-value {
+      font-size: 18px;
+      font-weight: 700;
+      fill: var(--color-text);
+    }
+
+    .usage-detail {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .usage-detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--text-sm);
+      padding: var(--space-xs) 0;
+    }
+
+    .usage-detail-label {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      color: var(--color-text-secondary);
+    }
+
+    .usage-detail-value {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* Transaction table */
+    .tx-type {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .tx-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tx-icon.topup {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--color-success);
+    }
+
+    .tx-icon.usage {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--color-primary);
+    }
+
+    /* Two-column layout */
+    .billing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    /* Modal overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg, var(--radius-md));
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-lg, var(--shadow-md));
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .modal-title {
+      font-size: var(--text-base);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      padding: var(--space-xs);
+    }
+
+    .modal-close:hover { color: var(--color-text); }
+
+    .modal-body { padding: var(--space-lg); }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .billing-grid { grid-template-columns: 1fr; }
+      .topup-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 767px) {
+      .credit-card { flex-direction: column; text-align: center; }
+      .topup-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
 <body class="cjx-retention">
   <div class="app-layout">
     <nav class="sidebar hide-mobile">
-      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <a href="s01-agent-marketplace.html" class="sidebar-logo">Agent Foundry</a>
       <ul class="sidebar-nav">
         <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
           Marketplace
+        </a></li>
+        <li><a href="s07-hired-agents.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          My Team
         </a></li>
         <li><a href="s03-create-task.html" class="sidebar-nav-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -43,164 +275,178 @@
 
     <main class="main-content" data-cjx-entrance>
       <div class="page-header">
-        <h1 class="page-title">Billing Dashboard</h1>
-        <p class="page-subtitle">Track your usage, manage your subscription, and download invoices.</p>
+        <h1 class="page-title">Billing</h1>
+        <p class="page-subtitle">Manage your credits and track AI usage.</p>
       </div>
 
-      <!-- Current Tier Card -->
-      <div class="card mb-xl" style="border-left: 4px solid var(--color-primary);">
-        <div class="flex justify-between items-center">
-          <div>
-            <div class="text-sm text-muted mb-xs">Current Plan</div>
-            <div class="font-bold" style="font-size: var(--text-xl);">Small Team</div>
-            <div class="text-sm text-muted">PM + Coder + QA &middot; Renews March 21, 2026</div>
-          </div>
-          <div style="text-align: right;">
-            <div class="font-bold" style="font-size: var(--text-xl); color: var(--color-primary);">$349/week</div>
-            <button class="btn btn-secondary btn-sm mt-md">Change Plan</button>
+      <!-- Credit Balance -->
+      <div class="credit-card">
+        <div>
+          <div class="credit-balance-label">Credit Balance</div>
+          <div class="credit-balance-value">$54.80</div>
+          <div class="credit-balance-sub">~22 tasks remaining at avg $2.40/task</div>
+        </div>
+        <button class="btn btn-primary" onclick="openTopup()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Top Up Credits
+        </button>
+      </div>
+
+      <!-- Usage + Spend side by side -->
+      <div class="billing-grid">
+
+        <!-- Usage This Week -->
+        <div class="card">
+          <h3 class="section-title">Usage This Week</h3>
+          <div class="usage-ring-container">
+            <svg class="usage-ring" width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-border)" stroke-width="8"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="var(--color-primary)" stroke-width="8"
+                      stroke-dasharray="163 88" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+              <text x="50" y="46" text-anchor="middle" class="usage-ring-value">$45</text>
+              <text x="50" y="60" text-anchor="middle" class="usage-ring-text">of $100</text>
+            </svg>
+            <div class="usage-detail" style="flex: 1;">
+              <div class="usage-detail-row">
+                <span class="usage-detail-label">
+                  <span class="status-dot" style="background: #3B82F6; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+                  Coder
+                </span>
+                <span class="usage-detail-value">$22.50</span>
+              </div>
+              <div class="usage-detail-row">
+                <span class="usage-detail-label">
+                  <span class="status-dot" style="background: #10B981; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+                  Research
+                </span>
+                <span class="usage-detail-value">$9.60</span>
+              </div>
+              <div class="usage-detail-row">
+                <span class="usage-detail-label">
+                  <span class="status-dot" style="background: #EF4444; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+                  QA
+                </span>
+                <span class="usage-detail-value">$8.70</span>
+              </div>
+              <div class="usage-detail-row">
+                <span class="usage-detail-label">
+                  <span class="status-dot" style="background: #F59E0B; width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+                  PM
+                </span>
+                <span class="usage-detail-value">$4.20</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Usage This Week -->
-      <div class="section">
-        <h2 class="section-title">Usage This Week</h2>
-        <div class="kpi-grid" data-cjx-entrance>
-          <div class="kpi-card">
-            <div class="kpi-label">Tasks Completed</div>
-            <div class="kpi-value">23</div>
-            <div class="kpi-change positive">+8 from last week</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Total Cost</div>
-            <div class="kpi-value">$45.20</div>
-            <div class="kpi-change positive">Under budget</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Projected Total</div>
-            <div class="kpi-value">$68.50</div>
-            <div class="kpi-change neutral" style="color: var(--color-text-secondary);">Based on current pace</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Budget Remaining</div>
-            <div class="kpi-value">$54.80</div>
-            <div class="kpi-change">
-              <span class="status-badge success">Healthy</span>
+        <!-- Quick Stats -->
+        <div class="card">
+          <h3 class="section-title">This Week</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+            <div class="usage-detail-row" style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border);">
+              <span class="usage-detail-label">Tasks Completed</span>
+              <span class="usage-detail-value">23</span>
+            </div>
+            <div class="usage-detail-row" style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border);">
+              <span class="usage-detail-label">Credits Used</span>
+              <span class="usage-detail-value">$45.20</span>
+            </div>
+            <div class="usage-detail-row" style="padding: var(--space-sm) 0; border-bottom: 1px solid var(--color-border);">
+              <span class="usage-detail-label">Avg Cost / Task</span>
+              <span class="usage-detail-value">$1.97</span>
+            </div>
+            <div class="usage-detail-row" style="padding: var(--space-sm) 0;">
+              <span class="usage-detail-label">Last Top-Up</span>
+              <span class="usage-detail-value">$100 on Mar 10</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Usage Bar -->
-      <div class="card mb-xl">
-        <div class="usage-bar-container">
-          <div class="usage-bar-header">
-            <span class="font-semibold">You've used $45.20 of your $100 weekly budget</span>
-            <span class="text-muted">45%</span>
-          </div>
-          <div class="usage-bar">
-            <div class="usage-bar-fill" style="width: 45%;"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cost Breakdown Chart + Tier Selector -->
-      <div class="chart-row">
-        <!-- Cost Breakdown by Agent -->
-        <div class="chart-card">
-          <div class="chart-card-title">Cost Breakdown by Agent</div>
-          <svg class="donut-chart" viewBox="0 0 400 200" style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#E2E8F0" stroke-width="25"/>
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#3B82F6" stroke-width="25"
-                    stroke-dasharray="176 264" transform="rotate(-90 100 100)"/>
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#10B981" stroke-width="25"
-                    stroke-dasharray="110 330" stroke-dashoffset="-176" transform="rotate(-90 100 100)"/>
-            <circle cx="100" cy="100" r="70" fill="none" stroke="#F59E0B" stroke-width="25"
-                    stroke-dasharray="66 374" stroke-dashoffset="-286" transform="rotate(-90 100 100)"/>
-            <text x="100" y="95" text-anchor="middle" font-size="11" fill="#64748B">Total</text>
-            <text x="100" y="112" text-anchor="middle" font-size="16" font-weight="bold" fill="#0F172A">$45.20</text>
-            <!-- Legend -->
-            <rect x="230" y="50" width="12" height="12" rx="2" fill="#3B82F6"/>
-            <text x="248" y="61" font-size="12" fill="#64748B">Coder — $22.50 (50%)</text>
-            <rect x="230" y="80" width="12" height="12" rx="2" fill="#10B981"/>
-            <text x="248" y="91" font-size="12" fill="#64748B">PM — $13.70 (30%)</text>
-            <rect x="230" y="110" width="12" height="12" rx="2" fill="#F59E0B"/>
-            <text x="248" y="121" font-size="12" fill="#64748B">QA — $9.00 (20%)</text>
-          </svg>
-        </div>
-
-        <!-- Upgrade Prompt -->
-        <div class="chart-card">
-          <div class="chart-card-title">Upgrade to Full Squad for more agents</div>
-          <p class="text-sm text-muted mb-md">Get access to 5+ agents with orchestrated workflows, custom pipelines, and dedicated support.</p>
-          <div style="text-align: center; padding: var(--space-md) 0;">
-            <div class="font-bold" style="font-size: var(--text-xl); color: var(--color-primary); margin-bottom: var(--space-sm);">$999/week</div>
-            <ul class="tier-features" style="margin-bottom: var(--space-md);">
-              <li>5+ agents, orchestrated</li>
-              <li>Custom workflows</li>
-              <li>Dedicated support</li>
-              <li>SLA guarantees</li>
-            </ul>
-            <button class="btn btn-primary" style="width: 100%;">Upgrade Now</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Usage Alerts -->
+      <!-- Transaction History -->
       <div class="section">
-        <h2 class="section-title">Alerts</h2>
-        <div class="alert alert-info">
-          You're at 45% of your weekly budget. On track to stay within limits.
-        </div>
-      </div>
-
-      <!-- Invoice History -->
-      <div class="section">
-        <h2 class="section-title">Invoice History</h2>
+        <h2 class="section-title">Transaction History</h2>
         <div class="table-container" data-cjx-entrance>
           <table class="data-table">
             <thead>
               <tr>
-                <th>Invoice</th>
-                <th>Period</th>
-                <th>Plan</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Date</th>
                 <th class="text-right">Amount</th>
-                <th>Status</th>
-                <th></th>
+                <th class="text-right">Balance</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="font-semibold">INV-2026-012</td>
-                <td>Mar 7 &ndash; Mar 14</td>
-                <td>Small Team</td>
-                <td class="text-right">$349.00</td>
-                <td><span class="status-badge success">Paid</span></td>
-                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+                <td>
+                  <span class="tx-type">
+                    <span class="tx-icon usage">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </span>
+                    Usage
+                  </span>
+                </td>
+                <td>Fix auth token refresh bug <span class="text-muted">(Coder)</span></td>
+                <td>Mar 14, 2:30 PM</td>
+                <td class="text-right" style="color: var(--color-error);">-$2.10</td>
+                <td class="text-right font-semibold">$54.80</td>
               </tr>
               <tr>
-                <td class="font-semibold">INV-2026-011</td>
-                <td>Feb 28 &ndash; Mar 7</td>
-                <td>Small Team</td>
-                <td class="text-right">$349.00</td>
-                <td><span class="status-badge success">Paid</span></td>
-                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+                <td>
+                  <span class="tx-type">
+                    <span class="tx-icon usage">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </span>
+                    Usage
+                  </span>
+                </td>
+                <td>Research rate limiting <span class="text-muted">(Research)</span></td>
+                <td>Mar 14, 1:15 PM</td>
+                <td class="text-right" style="color: var(--color-error);">-$1.60</td>
+                <td class="text-right font-semibold">$56.90</td>
               </tr>
               <tr>
-                <td class="font-semibold">INV-2026-010</td>
-                <td>Feb 21 &ndash; Feb 28</td>
-                <td>Solo</td>
-                <td class="text-right">$99.00</td>
-                <td><span class="status-badge success">Paid</span></td>
-                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+                <td>
+                  <span class="tx-type">
+                    <span class="tx-icon usage">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </span>
+                    Usage
+                  </span>
+                </td>
+                <td>Refactor OAuth2 middleware <span class="text-muted">(Coder)</span></td>
+                <td>Mar 14, 11:00 AM</td>
+                <td class="text-right" style="color: var(--color-error);">-$3.20</td>
+                <td class="text-right font-semibold">$58.50</td>
               </tr>
               <tr>
-                <td class="font-semibold">INV-2026-009</td>
-                <td>Feb 14 &ndash; Feb 21</td>
-                <td>Solo</td>
-                <td class="text-right">$99.00</td>
-                <td><span class="status-badge success">Paid</span></td>
-                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+                <td>
+                  <span class="tx-type">
+                    <span class="tx-icon topup">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </span>
+                    Top-Up
+                  </span>
+                </td>
+                <td>Credit top-up via Stripe</td>
+                <td>Mar 10, 9:00 AM</td>
+                <td class="text-right" style="color: var(--color-success);">+$100.00</td>
+                <td class="text-right font-semibold">$100.00</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="tx-type">
+                    <span class="tx-icon usage">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </span>
+                    Usage
+                  </span>
+                </td>
+                <td>Write test suite <span class="text-muted">(QA)</span></td>
+                <td>Mar 9, 4:20 PM</td>
+                <td class="text-right" style="color: var(--color-error);">-$4.50</td>
+                <td class="text-right font-semibold">$0.00</td>
               </tr>
             </tbody>
           </table>
@@ -208,6 +454,86 @@
       </div>
     </main>
   </div>
+
+  <!-- Top-Up Modal -->
+  <div class="modal-overlay" id="topupModal" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Top Up Credits</span>
+        <button class="modal-close" onclick="closeTopup()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="topup-grid" id="topupOptions">
+          <div class="topup-option" onclick="selectTopup(this, 10)" data-amount="10">
+            <div class="topup-amount">$10</div>
+            <div class="topup-credits">10 credits</div>
+          </div>
+          <div class="topup-option" onclick="selectTopup(this, 25)" data-amount="25">
+            <div class="topup-amount">$25</div>
+            <div class="topup-credits">25 credits</div>
+          </div>
+          <div class="topup-option selected" onclick="selectTopup(this, 50)" data-amount="50">
+            <div class="topup-amount">$50</div>
+            <div class="topup-credits">50 credits</div>
+            <div class="topup-bonus">+5 bonus</div>
+          </div>
+          <div class="topup-option" onclick="selectTopup(this, 100)" data-amount="100">
+            <div class="topup-amount">$100</div>
+            <div class="topup-credits">100 credits</div>
+            <div class="topup-bonus">+15 bonus</div>
+          </div>
+        </div>
+        <div style="margin-top: var(--space-md); font-size: var(--text-xs); color: var(--color-text-muted);">
+          1 credit = $1 of AI usage. Bonus credits added on $50+ top-ups. Credits never expire.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" onclick="closeTopup()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="topupConfirmBtn" onclick="confirmTopup()">Pay $50</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Sticky Footer -->
+  <div class="sticky-footer">
+    <button class="btn btn-primary" onclick="openTopup()">Top Up Credits</button>
+  </div>
+
   <script src="interactions.js"></script>
+  <script>
+    let selectedAmount = 50;
+
+    function openTopup() {
+      document.getElementById('topupModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeTopup() {
+      document.getElementById('topupModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    function selectTopup(element, amount) {
+      selectedAmount = amount;
+      document.querySelectorAll('.topup-option').forEach(option => option.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('topupConfirmBtn').textContent = 'Pay $' + amount;
+    }
+
+    function confirmTopup() {
+      closeTopup();
+      const toast = document.createElement('div');
+      toast.textContent = '$' + selectedAmount + ' credits added';
+      toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--color-success);color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:1100;opacity:0;transition:opacity .2s;';
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.style.opacity = '1');
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 200); }, 2000);
+    }
+
+    document.getElementById('topupModal').addEventListener('click', function(evt) { if (evt.target === this) closeTopup(); });
+    document.addEventListener('keydown', function(evt) { if (evt.key === 'Escape') closeTopup(); });
+  </script>
 </body>
 </html>

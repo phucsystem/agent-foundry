@@ -1,0 +1,715 @@
+<!--
+  Screen: S-08 Hired Agent Detail
+  CJX Stage: usage
+  FR Mapping: REQ-4.2
+  Route: /agents/hired/{id}
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coder Agent - My Team - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    /* Agent Detail Header */
+    .ad-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .ad-header-info { flex: 1; }
+
+    .ad-header-name {
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: 2px;
+    }
+
+    .ad-header-role {
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .ad-header-meta {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    .ad-header-actions {
+      display: flex;
+      gap: var(--space-sm);
+      flex-shrink: 0;
+    }
+
+    /* Two-column layout */
+    .ad-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .ad-grid-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Section card */
+    .ad-section {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+    }
+
+    .ad-section-title {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ad-section-action {
+      font-size: var(--text-xs);
+      color: var(--color-primary);
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-weight: 500;
+    }
+
+    .ad-section-action:hover { text-decoration: underline; }
+
+    /* Instructions preview */
+    .instructions-preview {
+      font-family: monospace;
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .instructions-preview.empty {
+      color: var(--color-text-muted);
+      font-family: var(--font-family);
+      font-style: italic;
+    }
+
+    /* Knowledge file list */
+    .knowledge-file {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) 0;
+      font-size: var(--text-sm);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .knowledge-file:last-child { border-bottom: none; }
+
+    .knowledge-file-icon {
+      color: var(--color-text-muted);
+      flex-shrink: 0;
+    }
+
+    .knowledge-file-name {
+      flex: 1;
+      color: var(--color-text);
+    }
+
+    .knowledge-file-size {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* Tools & LLM badges */
+    .tool-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      margin-top: var(--space-sm);
+    }
+
+    /* Mini bar chart (CSS-only) */
+    .mini-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 48px;
+      margin-top: var(--space-sm);
+    }
+
+    .mini-chart-bar {
+      flex: 1;
+      background: var(--color-primary);
+      border-radius: 3px 3px 0 0;
+      min-height: 4px;
+      transition: height 0.3s ease;
+      position: relative;
+    }
+
+    .mini-chart-bar:hover {
+      opacity: 0.8;
+    }
+
+    .mini-chart-labels {
+      display: flex;
+      gap: 4px;
+      margin-top: var(--space-xs);
+    }
+
+    .mini-chart-label {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      color: var(--color-text-muted);
+    }
+
+    /* Status breakdown */
+    .status-breakdown {
+      display: flex;
+      gap: var(--space-lg);
+      margin-top: var(--space-md);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .status-breakdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: var(--text-sm);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+
+    /* Cost breakdown stacked bar */
+    .cost-bar-stack {
+      display: flex;
+      height: 10px;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin: var(--space-sm) 0;
+    }
+
+    .cost-bar-segment {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .cost-legend {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-sm);
+    }
+
+    .cost-legend-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: var(--text-xs);
+      color: var(--color-text-secondary);
+    }
+
+    .cost-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+
+    /* Week comparison */
+    .week-compare {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-sm) 0;
+      font-size: var(--text-sm);
+    }
+
+    .week-compare-label { color: var(--color-text-secondary); }
+    .week-compare-value { font-weight: 600; color: var(--color-text); }
+
+    /* Recent tasks table */
+    .recent-tasks-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--text-sm);
+    }
+
+    .recent-tasks-table th {
+      text-align: left;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding: var(--space-sm) var(--space-sm);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .recent-tasks-table td {
+      padding: var(--space-sm);
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text);
+    }
+
+    .recent-tasks-table tr:last-child td { border-bottom: none; }
+
+    .recent-tasks-table .task-title {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .recent-tasks-table .text-right { text-align: right; }
+    .recent-tasks-table .text-muted { color: var(--color-text-muted); }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .ad-grid { grid-template-columns: 1fr; }
+      .ad-grid-full { grid-column: 1; }
+    }
+
+    @media (max-width: 767px) {
+      .ad-header { flex-direction: column; text-align: center; }
+      .ad-header-actions { justify-content: center; }
+      .status-breakdown { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body class="cjx-usage">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="s01-agent-marketplace.html" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s07-hired-agents.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          My Team
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <!-- Back link -->
+      <div class="mb-lg">
+        <a href="s07-hired-agents.html" class="text-sm text-muted" style="text-decoration: none;">&larr; Back to My Team</a>
+      </div>
+
+      <!-- Agent Header -->
+      <div class="ad-header">
+        <div class="avatar avatar-lg" style="background: #3B82F6;">C</div>
+        <div class="ad-header-info">
+          <div class="ad-header-name">Coder</div>
+          <div class="ad-header-role">Code Interpreter &amp; GitHub Expert</div>
+          <div class="ad-header-meta">Solo $99/wk &middot; Hired Mar 1, 2026 &middot; Renews Mar 15, 2026</div>
+        </div>
+        <span class="status-badge success" style="flex-shrink: 0;">Active</span>
+        <div class="ad-header-actions">
+          <a href="s03-create-task.html" class="btn btn-primary btn-sm">Assign Task</a>
+          <button class="btn btn-secondary btn-sm" onclick="openSettings()">Edit Settings</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="kpi-grid" style="margin-bottom: var(--space-xl);">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Tasks</div>
+          <div class="kpi-value">47</div>
+          <div class="kpi-change positive">+12 this week</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Success Rate</div>
+          <div class="kpi-value" style="color: var(--color-success);">95%</div>
+          <div class="kpi-change positive">+2% vs last week</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Runtime</div>
+          <div class="kpi-value">42s</div>
+          <div class="kpi-change positive">-5s improvement</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Cost / Task</div>
+          <div class="kpi-value">$2.40</div>
+          <div class="kpi-change negative">+$0.20</div>
+        </div>
+      </div>
+
+      <!-- Two-column content -->
+      <div class="ad-grid">
+
+        <!-- Knowledge Summary -->
+        <div class="ad-section">
+          <div class="ad-section-title">
+            Knowledge &amp; Configuration
+            <button class="ad-section-action" onclick="openSettings()">Edit</button>
+          </div>
+
+          <div style="margin-bottom: var(--space-md);">
+            <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Custom Instructions</div>
+            <div class="instructions-preview">Follow our internal code standards. Use Python type hints on all functions. Prefer async/await for I/O. Never use print() for logging.</div>
+          </div>
+
+          <div style="margin-bottom: var(--space-md);">
+            <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Knowledge Files</div>
+            <div class="knowledge-file">
+              <svg class="knowledge-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="knowledge-file-name">code-standards.md</span>
+              <span class="knowledge-file-size">4.2 KB</span>
+            </div>
+            <div class="knowledge-file">
+              <svg class="knowledge-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="knowledge-file-name">api-conventions.md</span>
+              <span class="knowledge-file-size">2.1 KB</span>
+            </div>
+          </div>
+
+          <div style="margin-bottom: var(--space-md);">
+            <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Tools</div>
+            <div class="tool-badges">
+              <span class="status-badge info">Code Interpreter</span>
+              <span class="status-badge info">GitHub MCP</span>
+              <span class="status-badge info">Bash Terminal</span>
+              <span class="status-badge info">Web Search</span>
+              <span class="status-badge info">File I/O</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">LLM Backend</div>
+            <span class="text-sm">Claude Sonnet (primary) &middot; DeepSeek (code fallback)</span>
+          </div>
+        </div>
+
+        <!-- Cost Overview -->
+        <div class="ad-section">
+          <div class="ad-section-title">
+            Cost Overview
+            <a href="s06-billing-dashboard.html" class="ad-section-action">Full Billing</a>
+          </div>
+
+          <!-- Budget bar -->
+          <div style="margin-bottom: var(--space-md);">
+            <div class="flex justify-between text-sm mb-xs">
+              <span style="font-weight: 600;">$28.80 used</span>
+              <span class="text-muted">of $100/wk budget</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: 28.8%; background: var(--color-primary);"></div>
+            </div>
+          </div>
+
+          <!-- Cost breakdown -->
+          <div style="margin-bottom: var(--space-md);">
+            <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Spend Breakdown</div>
+            <div class="cost-bar-stack">
+              <div class="cost-bar-segment" style="width: 62%; background: var(--color-primary);"></div>
+              <div class="cost-bar-segment" style="width: 25%; background: var(--color-warning);"></div>
+              <div class="cost-bar-segment" style="width: 13%; background: var(--color-neutral);"></div>
+            </div>
+            <div class="cost-legend">
+              <div class="cost-legend-item">
+                <span class="cost-legend-dot" style="background: var(--color-primary);"></span>
+                LLM Tokens $17.86
+              </div>
+              <div class="cost-legend-item">
+                <span class="cost-legend-dot" style="background: var(--color-warning);"></span>
+                Tool Calls $7.20
+              </div>
+              <div class="cost-legend-item">
+                <span class="cost-legend-dot" style="background: var(--color-neutral);"></span>
+                Overhead $3.74
+              </div>
+            </div>
+          </div>
+
+          <!-- Week over week -->
+          <div style="border-top: 1px solid var(--color-border); padding-top: var(--space-md);">
+            <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Week Comparison</div>
+            <div class="week-compare">
+              <span class="week-compare-label">This week</span>
+              <span class="week-compare-value">$28.80</span>
+            </div>
+            <div class="week-compare">
+              <span class="week-compare-label">Last week</span>
+              <span class="week-compare-value">$22.40</span>
+            </div>
+            <div class="week-compare">
+              <span class="week-compare-label">Change</span>
+              <span class="week-compare-value" style="color: var(--color-error);">+$6.40 (+28.6%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Statistics — full width -->
+        <div class="ad-section ad-grid-full">
+          <div class="ad-section-title">
+            Task Statistics
+          </div>
+
+          <!-- Mini chart: tasks per day, last 7 days -->
+          <div class="text-xs text-muted mb-xs" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Tasks per Day (Last 7 Days)</div>
+          <div class="mini-chart">
+            <div class="mini-chart-bar" style="height: 25%;" title="Mon: 1 task"></div>
+            <div class="mini-chart-bar" style="height: 50%;" title="Tue: 2 tasks"></div>
+            <div class="mini-chart-bar" style="height: 75%;" title="Wed: 3 tasks"></div>
+            <div class="mini-chart-bar" style="height: 25%;" title="Thu: 1 task"></div>
+            <div class="mini-chart-bar" style="height: 50%;" title="Fri: 2 tasks"></div>
+            <div class="mini-chart-bar" style="height: 100%;" title="Sat: 4 tasks"></div>
+            <div class="mini-chart-bar" style="height: 0%;" title="Sun: 0 tasks"></div>
+          </div>
+          <div class="mini-chart-labels">
+            <span class="mini-chart-label">Mon</span>
+            <span class="mini-chart-label">Tue</span>
+            <span class="mini-chart-label">Wed</span>
+            <span class="mini-chart-label">Thu</span>
+            <span class="mini-chart-label">Fri</span>
+            <span class="mini-chart-label">Sat</span>
+            <span class="mini-chart-label">Sun</span>
+          </div>
+
+          <!-- Status breakdown -->
+          <div class="status-breakdown">
+            <div class="status-breakdown-item">
+              <span class="status-dot" style="background: var(--color-success);"></span>
+              <span>Completed: <strong>44</strong></span>
+            </div>
+            <div class="status-breakdown-item">
+              <span class="status-dot" style="background: var(--color-error);"></span>
+              <span>Failed: <strong>2</strong></span>
+            </div>
+            <div class="status-breakdown-item">
+              <span class="status-dot" style="background: var(--color-primary);"></span>
+              <span>Running: <strong>1</strong></span>
+            </div>
+            <div class="status-breakdown-item">
+              <span class="status-dot" style="background: var(--color-neutral);"></span>
+              <span>Queued: <strong>0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Tasks — full width -->
+        <div class="ad-section ad-grid-full">
+          <div class="ad-section-title">
+            Recent Tasks
+            <a href="s04-task-monitor.html" class="ad-section-action">View All Tasks</a>
+          </div>
+
+          <table class="recent-tasks-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Status</th>
+                <th>Cost</th>
+                <th>Runtime</th>
+                <th class="text-right">When</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="task-title">Fix authentication token refresh bug</td>
+                <td><span class="status-badge success" style="padding: 2px 8px; font-size: 11px;">Done</span></td>
+                <td>$2.10</td>
+                <td>38s</td>
+                <td class="text-right text-muted">14m ago</td>
+              </tr>
+              <tr>
+                <td class="task-title">Write unit tests for login flow</td>
+                <td><span class="status-badge info" style="padding: 2px 8px; font-size: 11px;">Running</span></td>
+                <td>$1.80</td>
+                <td>47s</td>
+                <td class="text-right text-muted">47s ago</td>
+              </tr>
+              <tr>
+                <td class="task-title">Refactor OAuth2 middleware to async</td>
+                <td><span class="status-badge success" style="padding: 2px 8px; font-size: 11px;">Done</span></td>
+                <td>$3.20</td>
+                <td>72s</td>
+                <td class="text-right text-muted">2h ago</td>
+              </tr>
+              <tr>
+                <td class="task-title">Add rate limiter to /api/tasks endpoint</td>
+                <td><span class="status-badge success" style="padding: 2px 8px; font-size: 11px;">Done</span></td>
+                <td>$2.50</td>
+                <td>55s</td>
+                <td class="text-right text-muted">5h ago</td>
+              </tr>
+              <tr>
+                <td class="task-title">Debug Celery worker memory leak</td>
+                <td><span class="status-badge error" style="padding: 2px 8px; font-size: 11px;">Failed</span></td>
+                <td>$4.10</td>
+                <td>120s</td>
+                <td class="text-right text-muted">1d ago</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Sticky Footer -->
+  <div class="sticky-footer">
+    <a href="s03-create-task.html" class="btn btn-primary">Assign Task</a>
+    <button class="btn btn-secondary" onclick="openSettings()">Edit Settings</button>
+  </div>
+
+  <!-- Settings Modal (reused from S-07 pattern) -->
+  <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+    <div style="background:var(--color-bg);border:1px solid var(--color-border);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:24px;border-bottom:1px solid var(--color-border);">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="avatar avatar-sm" style="background:#3B82F6;font-size:12px;">C</div>
+          <span id="modalTitle" style="font-size:16px;font-weight:600;color:var(--color-text);">Coder Settings</span>
+        </div>
+        <button onclick="closeSettings()" style="background:none;border:none;color:var(--color-text-muted);cursor:pointer;padding:4px;" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="padding:24px;display:flex;flex-direction:column;gap:24px;">
+        <div>
+          <label for="instructionPrompt" style="font-size:14px;font-weight:600;color:var(--color-text);display:block;margin-bottom:8px;">Custom Instructions</label>
+          <div style="font-size:12px;color:var(--color-text-muted);margin-bottom:8px;">Prepended to every task. Define tone, constraints, focus areas.</div>
+          <textarea id="instructionPrompt" style="width:100%;min-height:120px;padding:16px;border:1px solid var(--color-border);border-radius:8px;background:var(--color-surface);color:var(--color-text);font-family:monospace;font-size:14px;line-height:1.5;resize:vertical;" placeholder="e.g. Always use Python type hints. Follow our code standards.">Follow our internal code standards. Use Python type hints on all functions. Prefer async/await for I/O. Never use print() for logging.</textarea>
+        </div>
+        <div>
+          <label style="font-size:14px;font-weight:600;color:var(--color-text);display:block;margin-bottom:8px;">Knowledge Files</label>
+          <div style="font-size:12px;color:var(--color-text-muted);margin-bottom:8px;">Upload .md files as initial memory.</div>
+          <div id="uploadZone" onclick="document.getElementById('fileInput').click()" style="border:2px dashed var(--color-border);border-radius:8px;padding:24px 16px;text-align:center;cursor:pointer;">
+            <div style="font-size:14px;color:var(--color-text-secondary);"><strong style="color:var(--color-primary);">Click to upload</strong> or drag and drop</div>
+            <div style="font-size:12px;color:var(--color-text-muted);margin-top:4px;">Markdown (.md) up to 5 MB each</div>
+            <input type="file" id="fileInput" accept=".md,.markdown,.txt" multiple style="display:none;">
+          </div>
+          <div id="uploadedFiles" style="display:flex;flex-direction:column;gap:4px;margin-top:8px;"></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid var(--color-border);">
+        <button class="btn btn-secondary btn-sm" onclick="closeSettings()">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="interactions.js"></script>
+  <script>
+    const knowledgeFiles = [
+      { name: 'code-standards.md', size: '4.2 KB' },
+      { name: 'api-conventions.md', size: '2.1 KB' }
+    ];
+
+    function openSettings() {
+      const modal = document.getElementById('settingsModal');
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      renderFiles();
+      document.getElementById('instructionPrompt').focus();
+    }
+
+    function closeSettings() {
+      document.getElementById('settingsModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function saveSettings() {
+      closeSettings();
+      const toast = document.createElement('div');
+      toast.textContent = 'Settings saved';
+      toast.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--color-success);color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:1100;opacity:0;transition:opacity .2s;';
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.style.opacity = '1');
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 200); }, 1800);
+    }
+
+    function renderFiles() {
+      const container = document.getElementById('uploadedFiles');
+      container.innerHTML = '';
+      knowledgeFiles.forEach((file, idx) => {
+        const el = document.createElement('div');
+        el.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:8px;font-size:14px;';
+        el.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="color:var(--color-text-muted);flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span style="flex:1;color:var(--color-text);">${file.name}</span>
+          <span style="font-size:12px;color:var(--color-text-muted);">${file.size}</span>
+          <button onclick="removeFile(${idx})" style="background:none;border:none;color:var(--color-text-muted);cursor:pointer;padding:2px;" aria-label="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>`;
+        container.appendChild(el);
+      });
+    }
+
+    function removeFile(idx) {
+      knowledgeFiles.splice(idx, 1);
+      renderFiles();
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      Array.from(event.target.files).forEach(file => {
+        knowledgeFiles.push({ name: file.name, size: (file.size / 1024).toFixed(1) + ' KB' });
+      });
+      renderFiles();
+      event.target.value = '';
+    });
+
+    const uploadZone = document.getElementById('uploadZone');
+    uploadZone.addEventListener('dragover', (evt) => { evt.preventDefault(); uploadZone.style.borderColor = 'var(--color-primary)'; });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = 'var(--color-border)'; });
+    uploadZone.addEventListener('drop', (evt) => {
+      evt.preventDefault();
+      uploadZone.style.borderColor = 'var(--color-border)';
+      Array.from(evt.dataTransfer.files)
+        .filter(file => /\.(md|markdown|txt)$/i.test(file.name))
+        .forEach(file => { knowledgeFiles.push({ name: file.name, size: (file.size / 1024).toFixed(1) + ' KB' }); });
+      renderFiles();
+    });
+
+    document.getElementById('settingsModal').addEventListener('click', function(evt) { if (evt.target === this) closeSettings(); });
+    document.addEventListener('keydown', function(evt) { if (evt.key === 'Escape') closeSettings(); });
+  </script>
+</body>
+</html>

@@ -22,6 +22,8 @@ python -m http.server 8080
 | S-04 Task Board (Kanban) | `s04-task-monitor.html` | `/tasks` | usage | REQ-4.3 |
 | S-05 Task Detail | `s05-task-results.html` | `/tasks/{id}` | usage | REQ-4.3 |
 | S-06 Billing Dashboard | `s06-billing-dashboard.html` | `/billing` | retention | REQ-4.4 |
+| S-07 Hired Agents (My Team) | `s07-hired-agents.html` | `/agents/hired` | usage | REQ-4.2 |
+| S-08 Hired Agent Detail | `s08-hired-agent-detail.html` | `/agents/hired/{id}` | usage | REQ-4.2 |
 
 ## Shared Files
 
@@ -45,7 +47,7 @@ All design tokens extracted from `docs/design-guidelines.md`:
 | Stage | Screens | Animation |
 |-------|---------|-----------|
 | Discovery | S-01, S-02 | fadeInUp 0.8s (bold entrance, trust signals) |
-| Usage | S-03, S-04, S-05 | fadeIn 0.3s (clean, quick transitions) |
+| Usage | S-03, S-04, S-05, S-07, S-08 | fadeIn 0.3s (clean, quick transitions) |
 | Retention | S-06 | fadeIn 0.4s (help accessible, feedback channels) |
 
 ## Responsive Breakpoints
