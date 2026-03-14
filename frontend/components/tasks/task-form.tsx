@@ -10,7 +10,12 @@ import { Avatar } from "@/components/ui/avatar";
 
 const SELECTABLE_AGENTS = MOCK_AGENTS.filter((agent) => agent.available);
 
-export function TaskForm() {
+interface TaskFormProps {
+  onSubmit?: (agentId: string, goal: string, budgetUsd: number) => Promise<void>;
+  isSubmitting?: boolean;
+}
+
+export function TaskForm({ onSubmit, isSubmitting = false }: TaskFormProps) {
   const router = useRouter();
   const [goal, setGoal] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState(SELECTABLE_AGENTS[0]?.id ?? "");
@@ -20,13 +25,17 @@ export function TaskForm() {
 
   const [goalError, setGoalError] = useState("");
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!goal.trim()) {
       setGoalError("Please describe what you need the agent to do.");
       return;
     }
     setGoalError("");
-    router.push("/tasks");
+    if (onSubmit) {
+      await onSubmit(selectedAgentId, goal, budget);
+    } else {
+      router.push("/tasks");
+    }
   };
 
   return (
@@ -154,7 +163,9 @@ export function TaskForm() {
         </div>
         <div className="flex gap-2 mt-6 justify-end">
           <Button variant="secondary">Save Draft</Button>
-          <Button variant="primary" onClick={handleSubmit}>Submit Task</Button>
+          <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Task"}
+          </Button>
         </div>
       </Card>
     </>

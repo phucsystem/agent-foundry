@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MOCK_AGENTS } from "@/lib/mock-data";
+import { useAgents } from "@/lib/hooks/use-agents";
 import { AgentCard } from "@/components/agents/agent-card";
 import { AgentFilters } from "@/components/agents/agent-filters";
 import { Pagination } from "@/components/ui/pagination";
@@ -12,7 +12,9 @@ export default function AgentMarketplacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredAgents = MOCK_AGENTS.filter((agent) => {
+  const { data: agents = [], isLoading, error } = useAgents();
+
+  const filteredAgents = agents.filter((agent) => {
     const query = searchQuery.toLowerCase();
     return (
       agent.name.toLowerCase().includes(query) ||
@@ -44,24 +46,38 @@ export default function AgentMarketplacePage() {
 
       <AgentFilters searchQuery={searchQuery} onSearchChange={handleSearchChange} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {pagedAgents.map((agent) => (
-          <AgentCard key={agent.id} agent={agent} />
-        ))}
-      </div>
+      {isLoading && (
+        <div className="text-center py-12 text-text-secondary">Loading agents...</div>
+      )}
 
-      {filteredAgents.length === 0 && (
-        <div className="text-center py-12 text-text-secondary">
-          No agents found matching your search.
+      {error && (
+        <div className="text-center py-12 text-error">
+          Failed to load agents. Is the backend running?
         </div>
       )}
 
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={safeCurrentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+      {!isLoading && !error && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pagedAgents.map((agent) => (
+              <AgentCard key={agent.id} agent={agent} />
+            ))}
+          </div>
+
+          {filteredAgents.length === 0 && (
+            <div className="text-center py-12 text-text-secondary">
+              No agents found matching your search.
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
     </>
   );

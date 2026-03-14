@@ -18,6 +18,8 @@ async def list_agents() -> dict:
                 "id": config.id,
                 "name": config.name,
                 "role": config.role,
+                "goal": config.goal,
+                "backstory": config.backstory,
                 "version": config.version,
                 "pricing_cents_per_run": config.pricing_cents_per_run,
                 "tools": config.tools,

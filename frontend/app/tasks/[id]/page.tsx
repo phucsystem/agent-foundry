@@ -1,6 +1,9 @@
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { MOCK_TASKS, MOCK_TASK_DETAIL_METRICS, MOCK_TIMELINE, MOCK_COST_SEGMENTS } from "@/lib/mock-data";
+import { useTask } from "@/lib/hooks/use-tasks";
+import { MOCK_TASK_DETAIL_METRICS, MOCK_TIMELINE, MOCK_COST_SEGMENTS } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -15,12 +18,22 @@ interface TaskDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
-  const { id } = await params;
-  const task = MOCK_TASKS.find((taskItem) => taskItem.id === id);
+export default function TaskDetailPage({ params }: TaskDetailPageProps) {
+  const { id } = use(params);
+  const { data: task, isLoading, error } = useTask(id);
 
-  if (!task) {
-    notFound();
+  if (isLoading) {
+    return (
+      <div className="text-center py-12 text-text-secondary">Loading task...</div>
+    );
+  }
+
+  if (error || !task) {
+    return (
+      <div className="text-center py-12 text-error">
+        {error ? "Failed to load task. Is the backend running?" : "Task not found."}
+      </div>
+    );
   }
 
   const statusConfig = TASK_STATUS_CONFIG[task.status];

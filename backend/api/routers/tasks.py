@@ -33,6 +33,12 @@ class TaskResponse(BaseModel):
     status: str
 
 
+@router.get("/")
+async def list_tasks() -> dict:
+    """List recent tasks. DB integration in next phase."""
+    return {"tasks": []}
+
+
 @router.post("/", response_model=TaskResponse, status_code=202)
 async def create_task(request: CreateTaskRequest) -> TaskResponse:
     """Create and enqueue a new agent task."""

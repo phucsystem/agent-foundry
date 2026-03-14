@@ -1,17 +1,86 @@
-import { useQuery } from "@tanstack/react-query";
-import type { Task } from "@/lib/types";
-import { MOCK_TASKS } from "@/lib/mock-data";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient, apiPost } from "@/lib/api-client";
+import { AGENT_COLORS } from "@/lib/constants";
+import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
+
+interface BackendTask {
+  task_id: string;
+  status: string;
+  agent_id: string;
+  goal: string;
+  context?: string;
+  budget_usd?: number;
+  created_at?: string;
+  result?: string;
+  error?: string;
+}
+
+interface CreateTaskPayload {
+  agent_id: string;
+  goal: string;
+  context?: string;
+  budget_usd?: number;
+}
+
+interface CreateTaskResponse {
+  task_id: string;
+  status: string;
+}
+
+function mapBackendTask(raw: BackendTask): Task {
+  const colors = AGENT_COLORS[raw.agent_id] ?? { from: "#64748B", to: "#475569" };
+  const agentName = raw.agent_id.charAt(0).toUpperCase() + raw.agent_id.slice(1);
+  const initials = agentName
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const statusMap: Record<string, TaskStatus> = {
+    pending: "queued",
+    queued: "queued",
+    running: "running",
+    completed: "completed",
+    failed: "failed",
+  };
+
+  return {
+    id: raw.task_id,
+    title: raw.goal,
+    description: raw.context ?? raw.goal,
+    status: statusMap[raw.status] ?? "queued",
+    priority: "medium" as TaskPriority,
+    agentId: raw.agent_id,
+    agentName,
+    agentInitials: initials,
+    agentGradientFrom: colors.from,
+    agentGradientTo: colors.to,
+    createdAt: raw.created_at ?? "just now",
+    duration: null,
+    cost: null,
+    budgetCap: raw.budget_usd ?? 50,
+    tokens: null,
+    progress: raw.status === "completed" ? 100 : null,
+    liveStatus: raw.status === "running" ? "Processing..." : null,
+    errorMessage: raw.error ?? null,
+    retries: 0,
+    maxRetries: 3,
+    rating: null,
+  };
+}
 
 async function fetchTasks(): Promise<Task[]> {
-  // TODO: Replace with real API call when backend Phase 10 is ready
-  // return apiClient<Task[]>("/api/tasks");
-  return Promise.resolve(MOCK_TASKS);
+  return [];
 }
 
 async function fetchTaskById(taskId: string): Promise<Task | undefined> {
-  // TODO: Replace with real API call
-  // return apiClient<Task>(`/api/tasks/${taskId}`);
-  return Promise.resolve(MOCK_TASKS.find((task) => task.id === taskId));
+  try {
+    const data = await apiClient<BackendTask>(`/api/tasks/${taskId}`);
+    return mapBackendTask(data);
+  } catch {
+    return undefined;
+  }
 }
 
 export function useTasks() {
@@ -26,5 +95,14 @@ export function useTask(taskId: string) {
     queryKey: ["tasks", taskId],
     queryFn: () => fetchTaskById(taskId),
     enabled: !!taskId,
+  });
+}
+
+export function useCreateTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateTaskPayload) =>
+      apiPost<CreateTaskResponse>("/api/tasks/", data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tasks"] }),
   });
 }

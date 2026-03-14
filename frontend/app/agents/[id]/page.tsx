@@ -1,6 +1,9 @@
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { MOCK_AGENTS, MOCK_REVIEWS, MOCK_SAMPLE_OUTPUTS, MOCK_PRICING_TIERS } from "@/lib/mock-data";
+import { useAgent } from "@/lib/hooks/use-agents";
+import { MOCK_REVIEWS, MOCK_SAMPLE_OUTPUTS, MOCK_PRICING_TIERS } from "@/lib/mock-data";
 import { AgentHero } from "@/components/agents/agent-hero";
 import { AgentStatsBar } from "@/components/agents/agent-stats-bar";
 import { AgentReviews } from "@/components/agents/agent-reviews";
@@ -12,12 +15,22 @@ interface AgentDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function AgentDetailPage({ params }: AgentDetailPageProps) {
-  const { id } = await params;
-  const agent = MOCK_AGENTS.find((agentItem) => agentItem.id === id);
+export default function AgentDetailPage({ params }: AgentDetailPageProps) {
+  const { id } = use(params);
+  const { data: agent, isLoading, error } = useAgent(id);
 
-  if (!agent) {
-    notFound();
+  if (isLoading) {
+    return (
+      <div className="text-center py-12 text-text-secondary">Loading agent...</div>
+    );
+  }
+
+  if (error || !agent) {
+    return (
+      <div className="text-center py-12 text-error">
+        {error ? "Failed to load agent. Is the backend running?" : "Agent not found."}
+      </div>
+    );
   }
 
   return (
