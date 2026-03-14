@@ -1,12 +1,16 @@
-# System Requirement Definition (SRD) — Super Admin Page
+# System Requirement Definition (SRD) — Agent Foundry Platform
 
 ## 1. System Overview
 
-Add a platform administration interface to Agent Foundry, enabling the solo founder to monitor business metrics, manage users, track revenue, oversee agent operations, and check platform health — all from a single dashboard.
+Agent Foundry is a platform for building, deploying, and hiring specialised AI agents on weekly subscriptions. Users browse an agent marketplace, hire agents (Coder, Research, PM, QA, Copywriter), assign tasks, and track results in real time. The platform handles LLM routing, cost control, guardrails, and observability.
 
-**Scope:** Internal-only admin panel at `/admin/*` routes. No public access. No RBAC (single super_admin user).
+**Scope:** User-facing platform — marketplace, hiring, task management, billing. Admin panel covered separately in `docs/admin-srd.md`.
 
-**Context:** Aligns with Phase 3 Week 10 roadmap deliverable. All data sourced from existing database tables — no new tables required.
+**Target Users:** SMBs, agencies, enterprises needing on-demand AI workers.
+
+**Revenue Model:** Weekly subscriptions ($49–$1,500/week), usage-based overages, white-label licensing.
+
+**Current Status:** Phases 1–2 complete (5 agents, marketplace UI, hired agents, auth). Phase 3 (billing, visual agents) in progress.
 
 ---
 
@@ -14,29 +18,89 @@ Add a platform administration interface to Agent Foundry, enabling the solo foun
 
 | Actor | Description | Access |
 |-------|-------------|--------|
-| Super Admin | Platform owner (solo founder) | Full read/write access to all admin screens |
-| System | Automated data aggregation | Provides KPI calculations, health metrics |
+| Visitor | Unauthenticated user | Landing page, marketplace (read-only) |
+| User (free) | Registered, free tier | Browse agents, hire 1 agent, create tasks (limited budget) |
+| User (pro) | Paid subscriber | Hire multiple agents, higher budgets, priority execution |
+| User (team) | Team plan | Shared agents, shared task history, approval workflows |
+| Super Admin | Platform owner | Admin panel (`/admin/*`), see `admin-srd.md` |
+| System | Automated services | Task execution, cost tracking, health monitoring |
 
-**Auth:** User with `tier = 'super_admin'` in `users` table. All `/api/admin/*` endpoints reject non-super_admin requests with `403`.
+**Auth:** Logto Cloud OIDC. Users identified by `tier` in `users` table. JWT tokens via NextAuth.js (frontend) + PyJWKClient validation (backend).
 
 ---
 
 ## 3. Functional Requirements (FR-xx)
 
+### Authentication & Profile
+
 | ID | Feature | Priority | Description |
 |----|---------|----------|-------------|
-| FR-A01 | Admin Dashboard KPIs | P1 | Display key metrics: total users, active hires, MRR, tasks today, error rate |
-| FR-A02 | User Management | P1 | List all users with search, filter by tier, view user detail (hires + tasks) |
-| FR-A03 | User Actions | P3 | Suspend/unsuspend user, change tier |
-| FR-A04 | Subscription Overview | P1 | List all hired_agents with status, user info, renewal dates |
-| FR-A05 | Subscription Actions | P3 | Cancel/extend hire on behalf of user |
-| FR-A06 | Revenue KPIs | P1 | Show MRR, total revenue, average cost per task, profit margin estimate |
-| FR-A07 | Revenue Charts | P2 | Daily and weekly revenue trend line charts |
-| FR-A08 | Revenue Breakdown | P2 | Cost breakdown by agent (bar chart or table) |
-| FR-A09 | Agent Performance Table | P2 | Per-agent: success rate, avg runtime, avg cost, total tasks |
-| FR-A10 | Task Moderation List | P2 | Paginated task list with status/agent/date filters |
-| FR-A11 | Platform Health | P2 | LLM cost trends, error rate, active worker count |
-| FR-A12 | Admin Auth Guard | P1 | Middleware rejecting non-super_admin users on all admin routes |
+| FR-01 | Sign Up | P0 | Register via Logto Cloud (email/social), auto-create `users` row with `free` tier |
+| FR-02 | Sign In | P0 | Logto OIDC redirect → JWT cookie → authenticated session |
+| FR-03 | Sign Out | P0 | Clear session, redirect to landing page |
+| FR-04 | User Profile | P1 | View/edit name, email, tier, API key |
+| FR-05 | API Key Management | P2 | Generate/regenerate API key for programmatic access |
+
+### Agent Marketplace
+
+| ID | Feature | Priority | Description |
+|----|---------|----------|-------------|
+| FR-10 | Browse Agents | P0 | List all agents with avatar, name, role, weekly price, success rate |
+| FR-11 | Filter Agents | P1 | Filter by role, cost range, success rate; sort by popularity/cost/rating |
+| FR-12 | Agent Detail | P0 | Full profile: bio, tools, specialisation, stats, sample outputs, reviews, pricing tiers |
+| FR-13 | Agent Reviews | P2 | Display user reviews (rating + comment) on agent detail page |
+
+### Agent Hiring (Weekly Subscriptions)
+
+| ID | Feature | Priority | Description |
+|----|---------|----------|-------------|
+| FR-20 | Hire Agent | P0 | Select plan (Solo/Team/Squad), set weekly budget, create `hired_agents` row |
+| FR-21 | My Team Page | P0 | List all hired agents with status, plan, budget, renewal date, task count, costs |
+| FR-22 | Cancel Hire | P1 | Set hire status to `cancelled`, stop renewal |
+| FR-23 | Rehire Agent | P1 | Reactivate previously cancelled hire |
+| FR-24 | Custom Instructions | P1 | Add/edit domain-specific prompts per hired agent (injected into agent context) |
+| FR-25 | Knowledge Files | P1 | Upload .md files (max 5 MB) per hired agent for context injection |
+| FR-26 | Hired Agent Detail | P1 | Full stats: cost overview (weekly/all-time), daily task chart, recent tasks, knowledge files |
+
+### Task Management
+
+| ID | Feature | Priority | Description |
+|----|---------|----------|-------------|
+| FR-30 | Create Task | P0 | 5-step wizard: goal → context → agent → budget → review & submit |
+| FR-31 | Task Board (Kanban) | P0 | 4 columns: Queued, Running, Completed, Failed; KPI metrics row |
+| FR-32 | Real-Time Monitoring | P0 | SSE stream: live progress bars, agent reasoning trace, tool calls, cost accrual |
+| FR-33 | Task Results | P0 | Tabbed output: Report, Code, Reasoning Trace, Tool Calls; cost breakdown |
+| FR-34 | Task Rating | P1 | 5-star rating + optional comment; feeds agent success rate |
+| FR-35 | Task Assignment | P1 | Assign task to specific hired agent (with hire_id) for context injection |
+| FR-36 | Task Retry | P2 | Re-run failed task with same/modified parameters |
+| FR-37 | Task Download | P2 | Download results as PDF, Markdown, or JSON |
+
+### Billing & Subscriptions
+
+| ID | Feature | Priority | Description |
+|----|---------|----------|-------------|
+| FR-40 | Billing Dashboard | P1 | Current tier, weekly usage, cost breakdown by agent, projected total |
+| FR-41 | Tier Selection | P1 | View/switch between Solo ($49–$199), Team ($299–$499), Squad ($799–$1,499) |
+| FR-42 | Stripe Integration | P1 | Payment method, weekly subscription cycles, webhook handlers |
+| FR-43 | Usage Tracking | P1 | Track tasks, tokens, cost against weekly budget; alerts at 80%/100% |
+| FR-44 | Invoice History | P2 | List past invoices with download (PDF) |
+| FR-45 | Usage Overage | P2 | Per-task surcharge when exceeding weekly budget |
+
+### Landing & Onboarding
+
+| ID | Feature | Priority | Description |
+|----|---------|----------|-------------|
+| FR-50 | Landing Page | P1 | Value proposition, agent carousel, pricing table, CTA (Sign Up) |
+| FR-51 | Onboarding Flow | P2 | First-run checklist: create first task, hire first agent, explore results |
+
+### API Access
+
+| ID | Feature | Priority | Description |
+|----|---------|----------|-------------|
+| FR-60 | REST API | P0 | All CRUD operations available via authenticated API |
+| FR-61 | SSE Streaming | P0 | Real-time task progress via Server-Sent Events |
+| FR-62 | Webhooks | P2 | Task completion, billing alerts push to user-configured URLs |
+| FR-63 | Python SDK | P3 | `from agent_foundry import HireAgent` + CLI tool |
 
 ---
 
@@ -44,78 +108,129 @@ Add a platform administration interface to Agent Foundry, enabling the solo foun
 
 | ID | Screen Name | Route | Description |
 |----|-------------|-------|-------------|
-| S-A00 | Admin Dashboard | /admin | Overview KPI cards + mini revenue chart + recent users table |
-| S-A01 | User Management | /admin/users | Searchable user table with tier filter + detail drawer |
-| S-A02 | Subscriptions | /admin/subscriptions | All hired agents table with status filter + user link |
-| S-A03 | Revenue | /admin/revenue | MRR card + revenue line chart + agent cost breakdown |
-| S-A04 | Agent Operations | /admin/agents | Agent performance table + recent tasks list |
-| S-A05 | Platform Health | /admin/health | System health cards: LLM costs, errors, workers |
+| S-00 | Landing Page | / | Public landing: hero, agent carousel, pricing, CTA |
+| S-01 | Sign In | /auth/signin | Logto OIDC redirect |
+| S-02 | Agent Marketplace | /agents | Browse all agents, filter/sort, 4-column grid |
+| S-03 | Agent Detail | /agents/[id] | Hero, stats, sample outputs, reviews, pricing tiers |
+| S-04 | My Team | /agents/hired | Table of hired agents with status, budget, actions |
+| S-05 | Hired Agent Detail | /agents/hired/[hireId] | Cost overview, task chart, recent tasks, knowledge files |
+| S-06 | Task Board | /tasks | Kanban: Queued/Running/Completed/Failed + KPI row |
+| S-07 | Create Task | /tasks/new | 5-step wizard: goal → context → agent → budget → review |
+| S-08 | Task Detail | /tasks/[id] | Metrics, cost breakdown, tabbed output, timeline, rating |
+| S-09 | Billing | /billing | Tier card, weekly usage, agent cost breakdown, invoices |
+| S-10 | User Profile | /settings | Name, email, tier, API key management |
 
 ---
 
 ## 5. Entity List (E-xx)
 
-No new entities. All admin data derived from existing tables:
-
-| ID | Entity | Source Table | Admin Usage |
+| ID | Entity | Source Table | Description |
 |----|--------|-------------|-------------|
-| E-01 | User | `users` | User list, count, tier distribution |
-| E-02 | HiredAgent | `hired_agents` | Subscription list, MRR calculation |
-| E-03 | Task | `tasks` | Revenue (cost_usd), agent performance, task moderation |
-| E-04 | AgentConfig | `agent_configs` | Agent catalog reference for names/roles |
+| E-01 | User | `users` | Account: id, email, name, tier, api_key, created_at |
+| E-02 | AgentConfig | `agent_configs` | Agent definitions: agent_id, name, role, config_yaml, version |
+| E-03 | HiredAgent | `hired_agents` | Weekly subscription: user_id, agent_id, status, plan, budget, custom_instructions |
+| E-04 | KnowledgeFile | `knowledge_files` | Context files: hire_id, file_name, size_bytes, content_text |
+| E-05 | Task | `tasks` | Task execution: user_id, agent_id, hire_id, goal, status, cost_usd, output_data |
+| E-06 | AgentMemory | `agent_memories` | Semantic memory: agent_id, chunk_text, embedding (vector 1536) |
 
-### Derived Metrics (Computed, Not Stored)
+### Entity Relationships
 
-| Metric | Formula | Source |
-|--------|---------|--------|
-| MRR | `SUM(weekly_budget_usd) * 4.33` from active hired_agents | E-02 |
-| Total Revenue | `SUM(cost_usd)` from completed tasks | E-03 |
-| Avg Cost/Task | `AVG(cost_usd)` from completed tasks | E-03 |
-| Success Rate | `COUNT(status='completed') / COUNT(*)` per agent | E-03 |
-| Error Rate | `COUNT(status='failed') / COUNT(*)` for recent tasks | E-03 |
-| Active Users | `COUNT(DISTINCT user_id)` from tasks in last 7 days | E-03 |
+```
+User (E-01) ──1:N──> HiredAgent (E-03) ──1:N──> KnowledgeFile (E-04)
+User (E-01) ──1:N──> Task (E-05)
+HiredAgent (E-03) ──1:N──> Task (E-05)
+AgentConfig (E-02) ──1:N──> HiredAgent (E-03)
+AgentConfig (E-02) ──1:N──> Task (E-05)
+AgentConfig (E-02) ──1:N──> AgentMemory (E-06)
+```
 
 ---
 
 ## 6. Non-Functional Requirements
 
 ### Performance
-- Dashboard KPIs load in < 1s (use indexed queries, consider caching for aggregates)
-- User/task tables paginated (50 rows default, server-side pagination)
-- Revenue charts compute from pre-aggregated data or lightweight queries
-
-### Security
-- All `/api/admin/*` endpoints require `super_admin` tier check
-- Admin routes not discoverable from user-facing navigation
-- No sensitive data exposed in client-side bundles (API keys, passwords)
-
-### Usability
-- Desktop-only for MVP (no mobile responsiveness required)
-- Dark mode default (Vercel-inspired), light mode toggle available
-- Keyboard navigable tables (Tab, Enter for row actions)
+- Task startup: < 2s (agent initialization)
+- Task runtime: < 5 min average, < 30 min hard limit
+- API latency: p95 < 200ms (non-agent endpoints)
+- Dashboard: interactive within 1s
+- Concurrent tasks: scale to 100+ agents per instance
 
 ### Scalability
-- Queries should perform well up to 10K users, 100K tasks
-- Add database indexes if aggregation queries become slow
-- Consider materialized views for revenue aggregates at scale
+- Auto-scale Celery workers to match queue depth
+- Support 10K users, 1M tasks/month (Phase 3+)
+- PostgreSQL: B2ms→D4s (scale as needed)
+- Redis: Standard tier (1GB+)
+
+### Security
+- Logto Cloud OIDC (OAuth2) for all auth
+- TLS 1.2+ for all traffic
+- Secrets in Azure Key Vault (prod), .env (dev)
+- Agent sandboxing: code execution in isolated containers (Phase 2+)
+- Input sanitisation (SQL injection, prompt injection via InputGuardrail)
+- Audit logging: all API calls, agent executions, billing changes
+
+### Reliability
+- Uptime SLA: 99.5% (Phase 2+)
+- Circuit breaker for failing integrations (MCP, LLMs)
+- Graceful degradation: downgrade LLM model if quota exceeded
+- Daily PostgreSQL snapshots, 7-day retention
+
+### Observability
+- Langfuse: LLM tracing, token counting, cost per agent per user
+- OpenTelemetry: latency, error rate, queue depth → Azure Monitor
+- Structured JSON logs (agent_id, task_id, user_id, cost, duration)
+
+### Accessibility
+- WCAG 2.1 AA compliance
+- Dark mode support (default + toggle)
+- Mobile-responsive (Tailwind breakpoints)
 
 ---
 
 ## 7. API Endpoints
 
+### Auth
+
 | Method | URL | FR | Description |
 |--------|-----|----|-------------|
-| GET | /api/admin/stats | FR-A01 | Dashboard KPIs |
-| GET | /api/admin/users | FR-A02 | Paginated user list (search, filter) |
-| GET | /api/admin/users/{id} | FR-A02 | User detail + hires + tasks |
-| PUT | /api/admin/users/{id} | FR-A03 | Update tier, suspend/unsuspend |
-| GET | /api/admin/subscriptions | FR-A04 | All hired_agents with user info |
-| PUT | /api/admin/subscriptions/{id} | FR-A05 | Cancel/extend hire |
-| GET | /api/admin/revenue | FR-A06, FR-A07 | Revenue aggregates + time series |
-| GET | /api/admin/revenue/breakdown | FR-A08 | Cost breakdown by agent |
-| GET | /api/admin/agents/performance | FR-A09 | Per-agent metrics |
-| GET | /api/admin/tasks | FR-A10 | Paginated task list with filters |
-| GET | /api/admin/health | FR-A11 | Platform health metrics |
+| GET | /auth/signin | FR-02 | Logto OIDC sign-in redirect |
+| POST | /auth/callback | FR-02 | Logto OIDC callback handler |
+| GET | /users/me | FR-04 | Authenticated user profile |
+
+### Agents
+
+| Method | URL | FR | Description |
+|--------|-----|----|-------------|
+| GET | /agents | FR-10 | List agents with filters (role, cost, success rate) |
+| GET | /agents/{id} | FR-12 | Agent public profile + stats |
+
+### Hiring
+
+| Method | URL | FR | Description |
+|--------|-----|----|-------------|
+| POST | /agents/{agent_id}/hire | FR-20 | Hire agent (plan + budget) |
+| GET | /agents/hired | FR-21 | List user's hired agents (My Team) |
+| GET | /agents/hired/{hire_id} | FR-26 | Hired agent detail + stats |
+| PUT | /agents/hired/{hire_id}/settings | FR-24 | Update custom instructions |
+| DELETE | /agents/hired/{hire_id} | FR-22 | Cancel hire |
+| POST | /agents/hired/{hire_id}/rehire | FR-23 | Reactivate cancelled hire |
+| POST | /agents/hired/{hire_id}/knowledge | FR-25 | Upload knowledge file |
+| DELETE | /agents/hired/{hire_id}/knowledge/{file_id} | FR-25 | Delete knowledge file |
+| GET | /agents/hired/{hire_id}/tasks | FR-26 | Recent tasks for hired agent |
+
+### Tasks
+
+| Method | URL | FR | Description |
+|--------|-----|----|-------------|
+| POST | /tasks | FR-30 | Create + enqueue task (with optional hire_id) |
+| GET | /tasks/{id} | FR-33 | Task status + results |
+| GET | /tasks/{id}/stream | FR-32 | SSE stream for live progress |
+
+### Health
+
+| Method | URL | FR | Description |
+|--------|-----|----|-------------|
+| GET | /health | — | Service + dependency health check |
 
 ---
 
@@ -123,18 +238,59 @@ No new entities. All admin data derived from existing tables:
 
 | FR | Screen | API Endpoint | Entity |
 |----|--------|-------------|--------|
-| FR-A01 | S-A00 | GET /api/admin/stats | E-01, E-02, E-03 |
-| FR-A02 | S-A01 | GET /api/admin/users, GET /api/admin/users/{id} | E-01 |
-| FR-A03 | S-A01 | PUT /api/admin/users/{id} | E-01 |
-| FR-A04 | S-A02 | GET /api/admin/subscriptions | E-02 |
-| FR-A05 | S-A02 | PUT /api/admin/subscriptions/{id} | E-02 |
-| FR-A06 | S-A03 | GET /api/admin/revenue | E-03 |
-| FR-A07 | S-A03 | GET /api/admin/revenue | E-03 |
-| FR-A08 | S-A03 | GET /api/admin/revenue/breakdown | E-03, E-04 |
-| FR-A09 | S-A04 | GET /api/admin/agents/performance | E-03, E-04 |
-| FR-A10 | S-A04 | GET /api/admin/tasks | E-03 |
-| FR-A11 | S-A05 | GET /api/admin/health | E-03 |
-| FR-A12 | All | All /api/admin/* | E-01 |
+| FR-01 | S-01 | Logto Cloud (external) | E-01 |
+| FR-02 | S-01 | GET /auth/signin, POST /auth/callback | E-01 |
+| FR-04 | S-10 | GET /users/me | E-01 |
+| FR-10 | S-02 | GET /agents | E-02 |
+| FR-11 | S-02 | GET /agents?role=&cost_min=&cost_max= | E-02 |
+| FR-12 | S-03 | GET /agents/{id} | E-02 |
+| FR-20 | S-03 | POST /agents/{agent_id}/hire | E-03 |
+| FR-21 | S-04 | GET /agents/hired | E-03 |
+| FR-22 | S-04 | DELETE /agents/hired/{hire_id} | E-03 |
+| FR-23 | S-04 | POST /agents/hired/{hire_id}/rehire | E-03 |
+| FR-24 | S-04, S-05 | PUT /agents/hired/{hire_id}/settings | E-03 |
+| FR-25 | S-05 | POST/DELETE .../knowledge | E-04 |
+| FR-26 | S-05 | GET /agents/hired/{hire_id} | E-03, E-04, E-05 |
+| FR-30 | S-07 | POST /tasks | E-05 |
+| FR-31 | S-06 | GET /tasks (filtered by status) | E-05 |
+| FR-32 | S-06, S-08 | GET /tasks/{id}/stream | E-05 |
+| FR-33 | S-08 | GET /tasks/{id} | E-05 |
+| FR-34 | S-08 | (future endpoint) | E-05 |
+| FR-35 | S-07 | POST /tasks (with hire_id) | E-03, E-05 |
+| FR-40 | S-09 | (future billing endpoints) | E-03, E-05 |
+| FR-42 | S-09 | (Stripe webhooks) | E-01, E-03 |
+| FR-50 | S-00 | — (static page) | — |
+
+---
+
+## 9. Dependencies & Risks
+
+### Dependencies
+- Logto Cloud (auth provider availability)
+- LLM APIs: Anthropic, OpenRouter, DeepSeek (quota, pricing changes)
+- Stripe (billing, Phase 3)
+- GitHub/Notion APIs (MCP integrations)
+
+### Risks
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| LLM API costs spike | High | Critical | Langfuse monitoring, route to cheaper models, hard budget limits |
+| Agent hallucination >5% | Medium | High | Output validation, guardrails, human review for critical tasks |
+| Logto Cloud downtime | Low | High | JWT tokens cached locally; mock auth for dev |
+| Stripe integration bugs | Low | High | Sandbox testing, webhook replay |
+| Low customer adoption | Low | Critical | Internal dogfood, feature feedback loop, iterative UI |
+
+---
+
+## 10. Out of Scope
+
+- Admin panel (see `docs/admin-srd.md`)
+- On-device LLM / mobile app (Phase 4)
+- White-label packaging (Phase 4)
+- Multi-cloud deployment (Phase 3+)
+- Agent training / fine-tuning (Phase 4+)
+- Team collaboration features (Phase 3)
 
 ---
 
@@ -143,4 +299,5 @@ No new entities. All admin data derived from existing tables:
 - **Created:** 2026-03-15
 - **Owner:** Product (Solo Founder)
 - **Status:** Draft — pending GATE 2 validation
-- **Lean Report:** plans/reports/lean-20260315-super-admin-page.md
+- **Admin SRD:** docs/admin-srd.md
+- **PDR Reference:** docs/project-overview-pdr.md

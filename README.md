@@ -170,10 +170,12 @@ All project documentation lives in [`/docs`](./docs/). Read in the order below t
 
 | Document | What You'll Learn |
 |----------|-------------------|
-| **[SRD — Super Admin](./docs/SRD.md)** | System requirement definition for admin panel (metrics, user mgmt, health) |
+| **[SRD — Platform](./docs/SRD.md)** | System requirement definition for the main platform (marketplace, hiring, tasks, billing) |
+| **[SRD — Admin](./docs/admin-srd.md)** | System requirement definition for admin panel (metrics, user mgmt, health) |
 | **[API Specification](./docs/API_SPEC.md)** | Endpoint matrix for agent marketplace, hiring, and team management |
 | **[DB Design](./docs/DB_DESIGN.md)** | ER diagrams, schema extensions for agent hiring, settings, knowledge files |
-| **[UI Specification](./docs/UI_SPEC.md)** | Design system (Vercel-inspired dark mode), component specs, admin layouts |
+| **[UI Specification — Platform](./docs/UI_SPEC.md)** | Screen specs, flows, and design system for user-facing platform |
+| **[UI Specification — Admin](./docs/admin-ui-spec.md)** | Admin panel screen specs (Vercel-inspired dark mode, dashboard layouts) |
 
 ### Standards & Guidelines
 

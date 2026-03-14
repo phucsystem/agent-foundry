@@ -1,452 +1,580 @@
-# Basic Design (UI Specification) — Super Admin Page
+# Basic Design (UI Specification) — Agent Foundry Platform
 
 ## 1. Design System
 
 ### Reference Source
-- Style: Vercel-inspired minimal dark mode
-- Inspiration: Vercel Dashboard, Linear App
-- Extracted: 2026-03-15
+- Style: Established in `docs/design-guidelines.md`
+- Framework: Tailwind CSS v4 + @theme tokens
+- Mode: Dark mode default with toggle
+- Implemented: 2026-03-14 (Phases 1–2, 11)
 
-### Color Palette (Admin-Specific)
+### Color Palette
 
-Inherits from `docs/design-guidelines.md` with admin-specific overrides:
+Inherits from `docs/design-guidelines.md`:
 
 | Token | Light | Dark | Usage |
 |-------|-------|------|-------|
-| --admin-bg | #FFFFFF | #0A0A0A | Page background (pure black for Vercel feel) |
-| --admin-surface | #FAFAFA | #111111 | Card/panel background |
-| --admin-surface-hover | #F5F5F5 | #1A1A1A | Hover state on cards/rows |
-| --admin-border | #EAEAEA | #222222 | Borders, dividers |
-| --admin-text-primary | #000000 | #EDEDED | Primary text |
-| --admin-text-secondary | #666666 | #888888 | Secondary/muted text |
-| --admin-text-tertiary | #999999 | #555555 | Captions, timestamps |
-| --admin-accent | #3B82F6 | #3B82F6 | Primary accent (blue, same both modes) |
-| --admin-success | #10B981 | #10B981 | Positive metrics, active status |
-| --admin-warning | #F59E0B | #F59E0B | Caution, renewing_soon |
-| --admin-error | #EF4444 | #EF4444 | Failures, cancelled |
-| --admin-chart-1 | #3B82F6 | #3B82F6 | Revenue line |
-| --admin-chart-2 | #10B981 | #10B981 | Tasks line |
-| --admin-chart-3 | #8B5CF6 | #8B5CF6 | Users line (purple) |
-| --admin-chart-expense | #EF4444 | #EF4444 | Expense line (red) |
+| --color-primary | #3B82F6 | #3B82F6 | CTAs, links, active states, agent cards |
+| --color-success | #10B981 | #10B981 | Completed tasks, agent ready, positive deltas |
+| --color-warning | #F59E0B | #F59E0B | Budget warnings, long runtime, renewing_soon |
+| --color-error | #EF4444 | #EF4444 | Failed tasks, agent unavailable, cancel actions |
+| --color-neutral | #64748B | #64748B | Secondary text, dividers |
+| --color-bg | #FFFFFF | #0F172A | Page background |
+| --color-surface | #F8FAFC | #1E293B | Card background |
+| --color-border | #E2E8F0 | #334155 | Borders, dividers |
+| --color-text | #0F172A | #F8FAFC | Primary text |
+| --color-text-muted | #64748B | #94A3B8 | Secondary text, labels |
 
 ### Typography
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| --font-admin | 'Inter', -apple-system, system-ui, sans-serif | All admin text |
-| --admin-h1 | 24px / 700 | Page titles |
-| --admin-h2 | 18px / 600 | Section headings |
-| --admin-h3 | 14px / 600 | Card titles, column headers |
-| --admin-body | 14px / 400 | Table cells, descriptions |
-| --admin-caption | 12px / 400 | Timestamps, helper text |
-| --admin-kpi-value | 32px / 700 | KPI card numbers |
-| --admin-kpi-label | 12px / 500 | KPI card labels (uppercase tracking) |
+| --font-sans | -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif | All text |
+| --text-h1 | 32px / 700 | Page titles |
+| --text-h2 | 24px / 600 | Section headings |
+| --text-h3 | 20px / 600 | Subsection headings |
+| --text-body | 16px / 400 | Main text |
+| --text-sm | 14px / 400 | Labels, secondary text |
+| --text-xs | 12px / 400 | Captions, timestamps |
 
-### Spacing
+### Spacing Scale
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| --admin-page-x | 32px | Horizontal page padding |
-| --admin-page-y | 24px | Vertical page padding |
-| --admin-section-gap | 24px | Gap between sections |
-| --admin-card-padding | 20px | Card internal padding |
-| --admin-card-gap | 16px | Gap between KPI cards |
-| --admin-table-row-h | 48px | Table row height |
+| Token | Value | Tailwind |
+|-------|-------|----------|
+| xs | 4px | gap-1 |
+| sm | 8px | gap-2 |
+| md | 16px | gap-4 |
+| lg | 24px | gap-6 |
+| xl | 32px | gap-8 |
+| 2xl | 48px | gap-12 |
 
 ### Border & Shadow
 
-| Token | Light | Dark |
-|-------|-------|------|
-| --admin-radius-sm | 6px | 6px |
-| --admin-radius-md | 8px | 8px |
-| --admin-radius-lg | 12px | 12px |
-| --admin-shadow | 0 1px 3px rgba(0,0,0,0.04) | none |
-| --admin-border-width | 1px | 1px |
+| Token | Value |
+|-------|-------|
+| --radius-sm | 6px |
+| --radius-md | 8px |
+| --radius-lg | 12px |
+| --shadow-sm | 0 1px 2px rgba(0,0,0,0.05) |
+| --shadow-md | 0 4px 6px rgba(0,0,0,0.1) |
 
 ### Component Patterns
 
-**KPI Card:** Minimal card with label (uppercase, muted), large value, optional delta badge (+12%).
-```
-┌──────────────────┐
-│ MONTHLY REVENUE  │  ← --admin-kpi-label, uppercase, letter-spacing
-│ $4,200           │  ← --admin-kpi-value
-│ ↑ 12% vs last wk │  ← --admin-caption + success/error color
-└──────────────────┘
-```
+**Agent Card:** Avatar (gradient bg), name, role badge, weekly price, success rate bar, 2 sample outputs truncated, "Hire" CTA.
 
-**Data Table:** Clean rows, no zebra stripes, subtle hover, right-aligned numbers.
+**Kanban Card:** Status color-coded left border, agent avatar, goal (truncated), progress bar (running), cost + duration (completed), error message (failed).
 
-**Sidebar:** Narrow (240px), icon + label nav items, active state = subtle background + accent border-left.
+**KPI Card:** Label (muted), large value, delta indicator (green up / red down).
 
-**Charts:** Recharts with admin palette. Minimal grid lines. Tooltip on hover. No legends if single series.
+**Status Badge:** Pill shape, color-coded: pending (slate), running (blue), completed (green), failed (red), active (green), cancelled (red).
 
 ---
 
 ## 2. Screen Flow
 
 ```
-                    ┌─────────────┐
-                    │  /admin     │
-                    │  Dashboard  │
-                    │  (S-A00)    │
-                    └──────┬──────┘
-           ┌───────────┬───┴───┬───────────┬──────────┐
-           ▼           ▼       ▼           ▼          ▼
-     ┌──────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
-     │ /admin/  │ │/admin/ │ │/admin/ │ │/admin/ │ │/admin/ │
-     │ users    │ │subscr. │ │rev&exp │ │agents  │ │health  │
-     │ (S-A01)  │ │(S-A02) │ │(S-A03) │ │(S-A04) │ │(S-A05) │
-     └──────────┘ └────────┘ └────────┘ └────────┘ └────────┘
+                ┌──────────┐
+                │   S-00   │
+                │ Landing  │
+                │    /     │
+                └────┬─────┘
+                     │ [Sign In]
+                     ▼
+                ┌──────────┐
+                │   S-01   │
+                │ Sign In  │◄──── Logto Cloud OIDC
+                └────┬─────┘
+                     │ [Authenticated]
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+    ┌──────────┐ ┌────────┐ ┌────────┐
+    │   S-02   │ │  S-06  │ │  S-04  │
+    │Marketplace│ │ Tasks  │ │My Team │
+    │ /agents  │ │ /tasks │ │/hired  │
+    └────┬─────┘ └───┬────┘ └───┬────┘
+         │           │          │
+         ▼           ▼          ▼
+    ┌──────────┐ ┌────────┐ ┌────────┐
+    │   S-03   │ │  S-07  │ │  S-05  │
+    │  Detail  │ │ Create │ │  Hire  │
+    │/agents/id│ │/tasks/ │ │ Detail │
+    └──────────┘ │  new   │ └────────┘
+         │       └───┬────┘
+         │ [Hire]    │ [Submit]
+         ▼           ▼
+    ┌──────────┐ ┌────────┐
+    │   S-04   │ │  S-08  │
+    │ My Team  │ │ Task   │
+    │ (refresh)│ │ Detail │
+    └──────────┘ │/tasks/id│
+                 └────────┘
 
-Navigation: Sidebar always visible. All screens accessible from any other.
-Dashboard links: KPI cards link to respective detail screens.
+Sidebar navigation: S-02, S-06, S-04, S-09, S-10 always accessible.
 ```
 
 ---
 
 ## 3. Screen Specifications
 
-### S-A00: Admin Dashboard (`/admin`)
+### S-00: Landing Page (`/`)
 
-**Purpose:** At-a-glance platform overview. North Star metric: MRR (top-left).
+**Purpose:** Convert visitors to sign-ups. Public, no auth required.
+
+**Layout:**
+```
+┌──────────────────────────────────────────────────────┐
+│ [Logo]  Agents  Pricing  [Sign In]  [Get Started]    │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│           Hire Expert AI Agents                      │
+│     Deploy specialists instantly. Weekly rental.     │
+│     No hiring friction.                              │
+│                                                      │
+│           [Get Started — Free]                       │
+│                                                      │
+├──────────────────────────────────────────────────────┤
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐       │
+│  │ Coder  │ │Research│ │   PM   │ │   QA   │       │
+│  │ $50/wk │ │ $35/wk │ │ $45/wk │ │ $40/wk │       │
+│  │ 94%    │ │  89%   │ │  91%   │ │  87%   │       │
+│  └────────┘ └────────┘ └────────┘ └────────┘       │
+│                                                      │
+├──────────────────────────────────────────────────────┤
+│  Pricing                                             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
+│  │  Solo    │ │  Team    │ │  Squad   │            │
+│  │  $49/wk  │ │ $299/wk  │ │ $799/wk  │            │
+│  │  1 agent │ │ 3 agents │ │ 5+ agents│            │
+│  │ [Select] │ │ [Select] │ │ [Select] │            │
+│  └──────────┘ └──────────┘ └──────────┘            │
+└──────────────────────────────────────────────────────┘
+```
+
+**Elements:**
+- Navigation bar: logo, links, Sign In, CTA
+- Hero: headline, subheadline, primary CTA
+- Agent carousel: 4+ agent cards (horizontal scroll on mobile)
+- Pricing grid: 3 tiers (Solo, Team, Squad)
+- Footer: links, contact
+
+**Transitions:**
+- "Get Started" → S-01 Sign In (if unauthenticated) → S-02 Marketplace
+- Agent card click → S-03 Agent Detail
+
+---
+
+### S-02: Agent Marketplace (`/agents`)
+
+**Purpose:** Browse and discover agents to hire.
 
 **Layout:**
 ```
 ┌──────┬──────────────────────────────────────────────────┐
-│      │  Admin Dashboard                  [dark toggle]  │
+│      │  Hire Expert AI Agents            [dark toggle]  │
 │ SIDE │                                                  │
-│ BAR  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────┐│
-│      │  │   MRR    │ │  Users   │ │  Tasks   │ │Error ││
-│ ● Ov │  │  $4,200  │ │   127    │ │  892     │ │ 2.1% ││
-│ ○ Us │  │  ↑ 12%   │ │  ↑ 8    │ │  today:47│ │ ↓0.3%││
-│ ○ Su │  └──────────┘ └──────────┘ └──────────┘ └──────┘│
-│ ○ Re │                                                  │
-│ ○ Ag │  Revenue (7 days) ──────────────────────────     │
-│ ○ He │  ┌──────────────────────────────────────────┐    │
-│      │  │  📈 Mini line chart (daily revenue)      │    │
-│      │  │     Last 7 days, single blue line        │    │
-│      │  └──────────────────────────────────────────┘    │
+│ BAR  │  [🔍 Search agents...]  [Role ▼] [Cost ▼]       │
 │      │                                                  │
-│      │  Recent Users ──────────────────── [View all →]  │
-│      │  ┌──────────────────────────────────────────┐    │
-│      │  │ Email          Tier    Joined     Tasks   │    │
-│      │  │ john@ex.com    pro     Mar 12     23      │    │
-│      │  │ sara@ex.com    free    Mar 10     5       │    │
-│      │  │ dev@ex.com     team    Mar 8      41      │    │
-│      │  └──────────────────────────────────────────┘    │
+│ ● Ag │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
+│ ○ Ta │  │ Coder  │ │Research│ │   PM   │ │   QA   │   │
+│ ○ My │  │ 💻     │ │ 🔍    │ │ 📋    │ │ 🧪    │   │
+│ ○ Bi │  │ 94%    │ │  89%   │ │  91%   │ │  87%   │   │
+│      │  │ $50/wk │ │ $35/wk │ │ $45/wk │ │ $40/wk │   │
+│      │  │ [Hire] │ │ [Hire] │ │ [Hire] │ │ [Hire] │   │
+│      │  └────────┘ └────────┘ └────────┘ └────────┘   │
+│      │                                                  │
+│      │  ┌────────┐ ┌────────┐ ┌────────┐              │
+│      │  │Copywrt │ │ Image* │ │ Video* │              │
+│      │  │ ✍️     │ │ 🎨    │ │ 🎬    │              │
+│      │  │  93%   │ │ Coming │ │ Coming │              │
+│      │  │ $30/wk │ │  Soon  │ │  Soon  │              │
+│      │  │ [Hire] │ │ [Wait] │ │ [Wait] │              │
+│      │  └────────┘ └────────┘ └────────┘              │
 └──────┴──────────────────────────────────────────────────┘
 ```
 
 **Elements:**
-- 4x KPI cards (MRR, Total Users, Total Tasks, Error Rate) — clickable, link to detail screens
-- Mini revenue line chart (last 7 days, compact, no axis labels)
-- Recent users table (5 rows, columns: email, tier, joined, task count)
-- "View all →" link to S-A01
+- Search input (debounced, searches name + role)
+- Filter dropdowns: Role (All, Coder, Research, PM, QA, Copywriter), Cost range
+- 4-column responsive grid (4 cols desktop, 2 tablet, 1 mobile)
+- Agent cards: avatar (gradient bg), name, role, success rate, weekly price, "Hire" CTA
+- Pagination (bottom, if >8 agents)
 
 **Data Sources:**
-- KPIs: `GET /api/admin/stats`
-- Chart: `GET /api/admin/revenue?period=7d`
-- Users: `GET /api/admin/users?limit=5&sort=created_at:desc`
+- Agents: `GET /agents?role=&cost_min=&cost_max=&sort=`
 
 **Transitions:**
-- Click MRR card → S-A03 Revenue & Expenses
-- Click Users card → S-A01 Users
-- Click Tasks card → S-A04 Agent Operations
-- Click Error card → S-A05 Health
-- Click "View all →" → S-A01 Users
+- Card click → S-03 Agent Detail
+- "Hire" button → S-03 (scroll to pricing section)
 
 ---
 
-### S-A01: User Management (`/admin/users`)
+### S-03: Agent Detail (`/agents/[id]`)
 
-**Purpose:** Browse, search, and manage platform users.
+**Purpose:** Full agent profile — convince user to hire.
 
 **Layout:**
 ```
 ┌──────┬──────────────────────────────────────────────────┐
-│      │  Users                              127 total    │
-│ SIDE │                                                  │
-│ BAR  │  [🔍 Search by email...]  [Tier ▼] [Sort ▼]     │
+│      │  ┌────────────────────────────────────────────┐  │
+│ SIDE │  │ 💻 Coder Agent                    [← Back] │  │
+│ BAR  │  │ "Expert coder for bugs, PRs, and tests"    │  │
+│      │  │ Tools: Code Interpreter, GitHub, Terminal   │  │
+│      │  │                           [Hire This Agent] │  │
+│      │  └────────────────────────────────────────────┘  │
 │      │                                                  │
-│ ○ Ov │  ┌──────────────────────────────────────────┐    │
-│ ● Us │  │ Email        Name     Tier   Joined  Tasks│    │
-│ ○ Su │  │ john@...     John D   pro    Mar 12   23  │    │
-│ ○ Re │  │ sara@...     Sara L   free   Mar 10   5   │    │
-│ ○ Ag │  │ dev@...      Dev T    team   Mar 8    41  │    │
-│ ○ He │  │ ...          ...      ...    ...      ... │    │
+│      │  ┌──────────┐┌──────────┐┌──────────┐┌────────┐ │
+│      │  │Success   ││Avg Cost  ││Avg Time  ││ Tasks  │ │
+│      │  │ 94%      ││ $2.37    ││ 45s      ││  523   │ │
+│      │  └──────────┘└──────────┘└──────────┘└────────┘ │
+│      │                                                  │
+│      │  Sample Outputs ──────────────────────────       │
+│      │  ┌──────────────────┐ ┌──────────────────┐      │
+│      │  │ "Fixed auth bug" │ │ "Wrote unit tests"│      │
+│      │  │  snippet...      │ │  snippet...       │      │
+│      │  └──────────────────┘ └──────────────────┘      │
+│      │                                                  │
+│      │  Reviews ─────────────────────────────────       │
+│      │  ⭐⭐⭐⭐⭐ "Excellent work on our API..."    │
+│      │  ⭐⭐⭐⭐  "Good but took longer than..."     │
+│      │                                                  │
+│      │  Pricing ─────────────────────────────────       │
+│      │  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│      │  │  Solo    │ │  Team    │ │  Squad   │        │
+│      │  │  $50/wk  │ │ included │ │ included │        │
+│      │  │ [Hire]   │ │ [Hire]   │ │ [Hire]   │        │
+│      │  └──────────┘ └──────────┘ └──────────┘        │
+│      │                                                  │
+│      │  ┌──────────────────────────────────────────┐   │
+│      │  │     [Hire This Agent — $50/week]          │   │ ← Mobile sticky
+│      │  └──────────────────────────────────────────┘   │
+└──────┴──────────────────────────────────────────────────┘
+```
+
+**Elements:**
+- Hero: agent avatar (XL), name, role, bio, tools list, primary CTA
+- Stats bar: 4 metrics (success rate, avg cost, avg runtime, total tasks)
+- Sample outputs: 2-column grid, truncated task results
+- Reviews: 3 recent reviews (star rating + comment + author)
+- Pricing tiers: 3-tier grid (Solo, Team, Squad)
+- Mobile: sticky bottom bar with "Hire" CTA
+
+**Data Sources:**
+- Agent: `GET /agents/{id}`
+
+**Transitions:**
+- "Hire" → `POST /agents/{id}/hire` → redirect to S-04 My Team
+
+---
+
+### S-04: My Team (`/agents/hired`)
+
+**Purpose:** Manage hired agents — view status, edit settings, cancel/rehire.
+
+**Layout:**
+```
+┌──────┬──────────────────────────────────────────────────┐
+│      │  My Team                          [+ Hire More]  │
+│ SIDE │                                                  │
+│ BAR  │  [Active] [Cancelled]                            │
+│      │                                                  │
+│ ○ Ag │  ┌──────────────────────────────────────────┐    │
+│ ○ Ta │  │ Agent    Status  Plan  Budget  Renews  ⚙ │    │
+│ ● My │  │ Coder   🟢actv  solo  $100/w  Mar 19  ⚙ │    │
+│ ○ Bi │  │ Research🟢actv  solo  $50/w   Mar 17  ⚙ │    │
+│      │  │ PM      🔴canc  team   —      —       ↻ │    │
 │      │  └──────────────────────────────────────────┘    │
 │      │                                                  │
+│      │  Weekly Total: $150 / $200 budget                │
+└──────┴──────────────────────────────────────────────────┘
+```
+
+**Elements:**
+- Tab filter: Active / Cancelled
+- Data table: agent name, status badge, plan, weekly budget, renewal date, settings gear
+- Gear icon opens settings modal (custom instructions + knowledge upload)
+- Cancel / Rehire action buttons per row
+- Weekly budget summary footer
+- "+ Hire More" links to S-02
+
+**Data Sources:**
+- List: `GET /agents/hired`
+
+**Transitions:**
+- Row click → S-05 Hired Agent Detail
+- Gear → settings modal (inline)
+- "+ Hire More" → S-02 Marketplace
+
+---
+
+### S-05: Hired Agent Detail (`/agents/hired/[hireId]`)
+
+**Purpose:** Deep view into a hired agent — costs, tasks, knowledge, settings.
+
+**Layout:**
+```
+┌──────┬──────────────────────────────────────────────────┐
+│      │  ← My Team    Coder Agent             🟢 Active  │
+│ SIDE │  Role: Coder · LLM: Claude Sonnet · Plan: Solo  │
+│ BAR  │                                                  │
+│      │  Custom Instructions ─────────── [Edit]          │
+│      │  "Focus on TypeScript, follow our code stds..."  │
+│      │                                                  │
+│      │  Knowledge Files ─────────────── [Upload]        │
+│      │  ┌──────────────────────────────────────────┐    │
+│      │  │ coding-standards.md   12KB  Mar 14  [✕]  │    │
+│      │  │ api-conventions.md     8KB  Mar 14  [✕]  │    │
+│      │  └──────────────────────────────────────────┘    │
+│      │                                                  │
+│      │  Cost Overview ──── [This Week] [All Time]       │
+│      │  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│      │  │  Budget  │ │  Spent   │ │Remaining │        │
+│      │  │  $100/wk │ │  $42.50  │ │  $57.50  │        │
+│      │  └──────────┘ └──────────┘ └──────────┘        │
+│      │                                                  │
+│      │  Tasks (7 days) ────── ▓▓▓░░▓▓▓▓░▓▓             │
+│      │  (bar chart: daily task count)                   │
+│      │                                                  │
+│      │  Recent Tasks ────────────────────────────       │
+│      │  ┌──────────────────────────────────────────┐    │
+│      │  │ Goal            Status  Cost    Date     │    │
+│      │  │ Fix auth bug    ✅     $2.50   Mar 14    │    │
+│      │  │ Write tests     ✅     $3.80   Mar 13    │    │
+│      │  │ Review PR       ❌     $0.80   Mar 12    │    │
+│      │  └──────────────────────────────────────────┘    │
 │      │  [← Prev]  Page 1 of 3  [Next →]               │
 └──────┴──────────────────────────────────────────────────┘
 ```
 
 **Elements:**
-- Search input (debounced, searches email and name)
-- Tier filter dropdown (All, free, pro, team, super_admin)
-- Sort dropdown (Newest, Oldest, Most Tasks)
-- Data table: email, name, tier (badge), joined date, task count
-- Pagination (server-side, 50 per page)
-- Row click opens **detail drawer** (slide-in from right)
-
-**Detail Drawer:**
-```
-┌─────────────────────────┐
-│ ✕  User Detail          │
-│                         │
-│ john@example.com        │
-│ John Doe                │
-│ Tier: [pro ▼]           │
-│ Joined: 2026-03-12      │
-│ API Key: ****-abcd      │
-│                         │
-│ ── Hired Agents (2) ──  │
-│ Coder    active  $100/w │
-│ Research active  $50/w  │
-│                         │
-│ ── Recent Tasks (5) ──  │
-│ #892 coder   ✅ $2.50  │
-│ #891 research ✅ $1.20  │
-│ #890 coder   ❌ $0.80  │
-│                         │
-│ [Suspend User]          │
-└─────────────────────────┘
-```
+- Agent header: name, role, tools, LLM model, status badge, plan
+- Custom instructions section + edit modal
+- Knowledge files list (file_name, size, uploaded_at, delete button)
+- Cost overview: 3 cards (budget, spent, remaining) + weekly/all-time toggle
+- Tasks bar chart: daily task count for last 7 days
+- Recent tasks table: paginated (goal, status, cost, date)
 
 **Data Sources:**
-- List: `GET /api/admin/users?search=&tier=&sort=&page=&limit=50`
-- Detail: `GET /api/admin/users/{id}`
-- Actions: `PUT /api/admin/users/{id}` (tier change, suspend)
+- Detail: `GET /agents/hired/{hire_id}`
+- Tasks: `GET /agents/hired/{hire_id}/tasks?page=&limit=10`
 
 ---
 
-### S-A02: Subscriptions (`/admin/subscriptions`)
+### S-06: Task Board (`/tasks`)
 
-**Purpose:** Overview of all active/cancelled agent hires across all users.
+**Purpose:** Kanban view of all user tasks across all agents.
 
 **Layout:**
 ```
 ┌──────┬──────────────────────────────────────────────────┐
-│      │  Subscriptions                    42 total       │
+│      │  Task Board                       [+ New Task]   │
 │ SIDE │                                                  │
-│ BAR  │  [Status ▼: All]  [Agent ▼: All]                │
+│ BAR  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────┐│
+│      │  │  Total   │ │ Success  │ │ Avg Time │ │Cost ││
+│ ○ Ag │  │   47     │ │   91%    │ │   43s    │ │$142 ││
+│ ● Ta │  └──────────┘ └──────────┘ └──────────┘ └─────┘│
+│ ○ My │                                                  │
+│ ○ Bi │  Queued     Running     Completed    Failed      │
+│      │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
+│      │  │ #893   │ │ #892   │ │ #891   │ │ #890   │   │
+│      │  │ PM     │ │ Coder  │ │ Research│ │ QA     │   │
+│      │  │ Write  │ │ Fix bug│ │ Market │ │ Login  │   │
+│      │  │ PRD... │ │ ████░░ │ │ $1.20  │ │ Timeout│   │
+│      │  └────────┘ │ $1.80  │ │ 62s    │ │ [Retry]│   │
+│      │             └────────┘ └────────┘ └────────┘   │
 │      │                                                  │
-│ ○ Ov │  ┌──────────────────────────────────────────┐    │
-│ ○ Us │  │ User        Agent    Status  Budget  Renews│    │
-│ ● Su │  │ john@..     Coder   🟢active $100   Mar 19│    │
-│ ○ Re │  │ sara@..     Research🟡renew  $50    Mar 17│    │
-│ ○ Ag │  │ dev@..      PM      🔴cancel  -    Mar 15│    │
-│ ○ He │  │ ...         ...     ...     ...    ...    │    │
-│      │  └──────────────────────────────────────────┘    │
-│      │                                                  │
-│      │  Summary: 35 active · 3 renewing · 4 cancelled  │
-│      │  Total weekly budget: $4,250                     │
+│      │  [🔍 Search] [Agent ▼] [Priority ▼] [Date ▼]   │
 └──────┴──────────────────────────────────────────────────┘
 ```
 
 **Elements:**
-- Status filter (All, Active, Renewing Soon, Cancelled, Expired)
-- Agent filter (All, Coder, Research, PM, QA, Copywriter)
-- Data table: user email, agent name, status badge, weekly budget, renewal date
-- Summary footer: counts by status + total weekly budget
-- Row click → user detail drawer (same as S-A01)
+- KPI metrics row: Total Tasks, Success Rate, Avg Duration, Total Cost
+- 4 kanban columns: Queued, Running, Completed, Failed
+- Kanban cards: agent avatar, goal (truncated), progress bar (running), cost + duration (completed), error + retry (failed)
+- Filter bar: search, agent, priority, date range
+- "+ New Task" links to S-07
 
 **Data Sources:**
-- List: `GET /api/admin/subscriptions?status=&agent=&page=&limit=50`
+- Tasks: `GET /tasks` (grouped by status on frontend)
+
+**Transitions:**
+- Card click → S-08 Task Detail
+- "+ New Task" → S-07 Create Task
 
 ---
 
-### S-A03: Revenue & Expenses (`/admin/revenue`)
+### S-07: Create Task (`/tasks/new`)
 
-**Purpose:** Revenue and expense analytics — MRR, net profit, trends, per-agent breakdown.
+**Purpose:** 5-step wizard to create and submit a task.
 
 **Layout:**
 ```
 ┌──────┬──────────────────────────────────────────────────┐
-│      │  Revenue & Expenses    [📅 date range] [7d][30d][90d]│
+│      │  Create Task                                     │
 │ SIDE │                                                  │
-│ BAR  │  ┌──────────────────────────┐ ┌──────────────┐  │
-│      │  │  Revenue & Exp Over Time │ │  MRR         │  │
-│ ○ Ov │  │  ● Revenue ● Expenses   │ │  $4,200      │  │
-│ ○ Us │  │  ┌────────────────────┐  │ │  ↑ 12%      │  │
-│ ○ Su │  │  │ 📈 Dual line chart │  │ ├──────────────┤  │
-│ ● Re │  │  │  (2/3 width)       │  │ │  Tot Revenue │  │
-│ ○ Ag │  │  │  Blue=rev Red=exp  │  │ │  $12,400     │  │
-│ ○ He │  │  └────────────────────┘  │ ├──────────────┤  │
-│      │  └──────────────────────────┘ │  Tot Expenses│  │
-│      │                               │  $3,820      │  │
-│      │                               ├──────────────┤  │
-│      │                               │  Net Profit  │  │
-│      │                               │  $8,580      │  │
-│      │                               ├──────────────┤  │
-│      │                               │  Avg Cost/Tk │  │
-│      │                               │  $3.82       │  │
-│      │                               └──────────────┘  │
+│ BAR  │  Step: ①── ②── ③── ④── ⑤                       │
 │      │                                                  │
-│      │  Revenue & Expenses by Agent ───────────────     │
+│      │  Step 1: Define Your Task ───────────────        │
 │      │  ┌──────────────────────────────────────────┐    │
-│      │  │ Agent     Tasks  Revenue  Expense  Profit │    │
-│      │  │ Coder     523   $1,240   $380     $860    │    │
-│      │  │ Research  312   $480     $145     $335    │    │
-│      │  │ PM        98    $290     $88      $202    │    │
-│      │  │ QA        45    $110     $34      $76     │    │
-│      │  │ Copywriter 22   $38      $12      $26     │    │
+│      │  │ What do you need done?                    │    │
+│      │  │ ┌──────────────────────────────────────┐  │    │
+│      │  │ │ Write unit tests for the login flow  │  │    │
+│      │  │ │ and auth middleware...                │  │    │
+│      │  │ └──────────────────────────────────────┘  │    │
+│      │  │                              143 / 2000   │    │
 │      │  └──────────────────────────────────────────┘    │
+│      │                                                  │
+│      │                         [Back]  [Next →]         │
 └──────┴──────────────────────────────────────────────────┘
 ```
 
-**Elements:**
-- Date range picker (start date – end date inputs) + period shortcut tabs (7d, 30d, 90d)
-- Split layout: chart (2/3 width, left) + metrics sidebar (1/3 width, right)
-- Chart: dual line chart — daily revenue (blue) and daily expenses (red) with gradient area fill, legend in chart header
-- 5x metric cards stacked vertically on right: MRR (↑12%), Total Revenue, Total Expenses (red), Net Profit (green), Avg Cost/Task
-- Revenue & Expenses by Agent table: agent name, task count, total revenue, total expense (LLM cost), profit — sorted by revenue desc
+**Steps:**
+1. **Goal** — Textarea with character counter (max 2000)
+2. **Context** — Drop zone for PDFs/markdown (visual only MVP)
+3. **Agent** — Radio grid: select from hired agents or marketplace agents
+4. **Budget** — Slider ($10–$500) with cost estimate preview
+5. **Review** — Summary table + Submit button
 
 **Data Sources:**
-- KPIs: `GET /api/admin/revenue?period=30d`
-- Chart: `GET /api/admin/revenue?period=30d` (includes `daily_revenue_series` and `daily_expense_series` arrays)
-- Breakdown: `GET /api/admin/revenue/breakdown?period=30d` (includes expense and profit per agent)
+- Submit: `POST /tasks` (with optional hire_id)
+
+**Transitions:**
+- Submit → redirect to S-06 Task Board (task appears in Queued)
 
 ---
 
-### S-A04: Agent Operations (`/admin/agents`)
+### S-08: Task Detail (`/tasks/[id]`)
 
-**Purpose:** Monitor agent health and moderate tasks.
+**Purpose:** Full task results, metrics, output, rating.
 
 **Layout:**
 ```
 ┌──────┬──────────────────────────────────────────────────┐
-│      │  Agent Operations                                │
-│ SIDE │                                                  │
-│ BAR  │  Agent Performance ─────────────────────────     │
+│      │  Task #892: Fix auth bug          ✅ Completed   │
+│ SIDE │  Agent: Coder · Priority: High    [Re-run][Share]│
+│ BAR  │                                                  │
+│      │  ┌────────┐┌────────┐┌────────┐┌────────┐      │
+│      │  │Duration││  Cost  ││ Tokens ││ Tools  │      │
+│      │  │  45s   ││ $2.50  ││ 3,400  ││   4    │      │
+│      │  └────────┘└────────┘└────────┘└────────┘      │
+│      │                                                  │
+│      │  Cost Breakdown ──────────────────────────       │
+│      │  ▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░  Input: $0.80               │
+│      │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  Output: $1.40              │
+│      │  ▓▓▓▓░░░░░░░░░░░░░░  Tools: $0.30               │
+│      │                                                  │
+│      │  Output ── [Report] [Code] [Trace] [Tools]       │
 │      │  ┌──────────────────────────────────────────┐    │
-│ ○ Ov │  │ Agent     Success  AvgTime  AvgCost Tasks │    │
-│ ○ Us │  │ Coder     94%      45s      $2.37   523   │    │
-│ ○ Su │  │ Research  89%      62s      $1.54   312   │    │
-│ ○ Re │  │ PM        91%      38s      $2.96   98    │    │
-│ ● Ag │  │ QA        87%      55s      $2.44   45    │    │
-│ ○ He │  │ Copywriter 93%     22s      $1.73   22    │    │
+│      │  │ ## Auth Bug Fix Report                    │    │
+│      │  │ Found issue in jwt_handler.py line 42...  │    │
+│      │  │ ### Changes Made                          │    │
+│      │  │ - Fixed token expiry check...             │    │
 │      │  └──────────────────────────────────────────┘    │
 │      │                                                  │
-│      │  Recent Tasks ── [Status ▼] [Agent ▼] ──────    │
-│      │  ┌──────────────────────────────────────────┐    │
-│      │  │ ID    Agent    Goal (trunc)  Status Cost  │    │
-│      │  │ #892  Coder    Fix auth bug  ✅    $2.50  │    │
-│      │  │ #891  Research Market analys ✅    $1.20  │    │
-│      │  │ #890  QA       Test login    ❌    $0.80  │    │
-│      │  │ #889  PM       Write PRD     ⏳    $0.00  │    │
-│      │  └──────────────────────────────────────────┘    │
-│      │  [← Prev]  Page 1 of 18  [Next →]              │
+│      │  Timeline ────────────────────────────────       │
+│      │  ● 10:30:23  Agent started                       │
+│      │  ● 10:30:45  Analyzing code (code_interpreter)   │
+│      │  ● 10:31:02  Found bug in auth module            │
+│      │  ● 10:31:15  Writing fix                         │
+│      │  ● 10:31:30  Running tests                       │
+│      │  ✓ 10:31:45  Task completed                      │
+│      │                                                  │
+│      │  Rate This Agent ─────────────────────────       │
+│      │  ⭐⭐⭐⭐⭐  [Submit Rating]                   │
+│      │                                                  │
+│      │  [Hire Again]  [Back to Board]  [Browse Agents]  │
 └──────┴──────────────────────────────────────────────────┘
 ```
 
 **Elements:**
-- Agent Performance table: agent name, success rate (color-coded: green >90%, yellow 80-90%, red <80%), avg runtime, avg cost, total tasks
-- Recent Tasks table: task ID, agent, goal (truncated 40 chars), status badge, cost
-- Status filter (All, Pending, Running, Completed, Failed)
-- Agent filter dropdown
-- Pagination (50 per page)
-- Row click on task → links to existing `/tasks/{id}` detail page
+- Task header: goal, status badge, agent, priority, Re-run/Share buttons
+- 4-metric grid: Duration, Cost, Tokens, Tool Calls
+- Cost breakdown: stacked bar (input/output/tools segments)
+- Tabbed output: Report (markdown), Code (syntax highlighted), Reasoning Trace, Tool Calls
+- Execution timeline: vertical line with colored entries
+- Rating form: 5-star interactive + optional comment
+- Bottom actions: Hire Again, Back to Board, Browse Agents
 
 **Data Sources:**
-- Performance: `GET /api/admin/agents/performance`
-- Tasks: `GET /api/admin/tasks?status=&agent=&page=&limit=50`
+- Task: `GET /tasks/{id}`
+- Stream: `GET /tasks/{id}/stream` (SSE, while status = running)
 
 ---
 
-### S-A05: Platform Health (`/admin/health`)
+### S-09: Billing (`/billing`)
 
-**Purpose:** System monitoring — LLM costs, errors, worker health.
+**Purpose:** Subscription management, usage tracking, invoices.
 
 **Layout:**
 ```
 ┌──────┬──────────────────────────────────────────────────┐
-│      │  Platform Health                                 │
+│      │  Billing                                         │
 │ SIDE │                                                  │
-│ BAR  │  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│      │  │LLM Cost  │ │Error Rate│ │Avg Runtim│        │
-│ ○ Ov │  │$142 today│ │ 2.1%     │ │  43s     │        │
-│ ○ Us │  │↑ $18     │ │ ↓ 0.3%   │ │ ↑ 2s     │        │
-│ ○ Su │  └──────────┘ └──────────┘ └──────────┘        │
-│ ○ Re │                                                  │
-│ ○ Ag │  LLM Cost Trend (7d) ──────────────────────     │
-│ ● He │  ┌──────────────────────────────────────────┐    │
-│      │  │  📈 Line chart: daily LLM spend           │    │
-│      │  └──────────────────────────────────────────┘    │
-│      │                                                  │
-│      │  Error Log ─────────────────────────────────     │
+│ BAR  │  Current Plan ──────────────────── [Change Plan] │
 │      │  ┌──────────────────────────────────────────┐    │
-│      │  │ Time       Task   Agent   Error Message   │    │
-│      │  │ 14:23      #890   QA      Timeout after.. │    │
-│      │  │ 13:01      #887   Coder   API rate limit  │    │
-│      │  │ 11:45      #882   PM      Invalid output  │    │
-│      │  └──────────────────────────────────────────┘    │
+│ ○ Ag │  │  Solo Plan · $49/week · Renews Mar 19    │    │
+│ ○ Ta │  │  1 agent · $100 weekly budget             │    │
+│ ○ My │  └──────────────────────────────────────────┘    │
+│ ● Bi │                                                  │
+│      │  This Week's Usage ───────────────────────       │
+│      │  ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│      │  │  Tasks   │ │  Cost    │ │ Budget   │        │
+│      │  │   12     │ │  $42.50  │ │ 42% used │        │
+│      │  └──────────┘ └──────────┘ └──────────┘        │
 │      │                                                  │
-│      │  System Status ─────────────────────────────     │
-│      │  │ API Server     🟢 Running                │    │
-│      │  │ Celery Worker  🟢 Running (3 active)     │    │
-│      │  │ Redis          🟢 Connected              │    │
-│      │  │ PostgreSQL     🟢 Connected              │    │
-│      │  │ LiteLLM        🟢 Healthy                │    │
+│      │  Cost by Agent ───────────────────────────       │
+│      │  Coder      ▓▓▓▓▓▓▓▓▓▓▓▓▓▓  $32.00             │
+│      │  Research   ▓▓▓▓▓           $10.50              │
+│      │                                                  │
+│      │  Invoices ────────────────────────────────       │
+│      │  ┌──────────────────────────────────────────┐    │
+│      │  │ Date       Amount  Status     Download   │    │
+│      │  │ Mar 12     $49.00  ✅ Paid    [PDF]      │    │
+│      │  │ Mar 5      $49.00  ✅ Paid    [PDF]      │    │
+│      │  └──────────────────────────────────────────┘    │
 └──────┴──────────────────────────────────────────────────┘
 ```
 
 **Elements:**
-- 3x KPI cards: LLM Cost Today, Error Rate (7d), Avg Runtime
-- LLM Cost Trend chart (last 7 days, orange/amber line)
-- Error Log table: recent failed tasks with timestamps, limited to 20 rows
-- System Status list: service name + health indicator (green/red dot)
+- Current plan card: tier name, price, renewal date, agent count, budget
+- "Change Plan" links to tier selection modal
+- Usage KPIs: tasks this week, cost this week, budget utilization %
+- Cost by agent: horizontal bar chart
+- Invoice history table: date, amount, status badge, download PDF
 
 **Data Sources:**
-- All: `GET /api/admin/health`
-- Errors: `GET /api/admin/tasks?status=failed&limit=20&sort=created_at:desc`
+- Subscription: `GET /subscriptions` (future)
+- Usage: derived from `GET /tasks` (filtered current week)
 
 ---
 
 ## 4. Shared Components
 
-### Admin Sidebar
+### Sidebar Navigation
 
 ```
 ┌────────────────────┐
 │ Agent Foundry      │
-│ ADMIN              │
 │                    │
-│ ● Overview         │  ← Active: bg-surface + left accent border
-│ ○ Users            │
-│ ○ Subscriptions    │
-│ ○ Revenue & Exp    │
-│ ○ Agents           │
-│ ○ Health           │
+│ 🏪 Marketplace    │  ← /agents
+│ 📋 Tasks          │  ← /tasks
+│ 👥 My Team        │  ← /agents/hired
+│ 💳 Billing        │  ← /billing
 │                    │
 │ ────────────────── │
-│ ← Back to App      │  ← Returns to user-facing /agents
-│                    │
-│ [☀/🌙]             │  ← Theme toggle at bottom
+│ ⚙ Settings        │  ← /settings
+│ [☀/🌙]            │  ← Theme toggle
 └────────────────────┘
 ```
 
-- Width: 240px (fixed, not collapsible for MVP)
-- Icon + label for each nav item
-- Active state: subtle background + 2px left border in accent color
-- "Back to App" link at bottom to exit admin
+- Width: 240px (desktop), hidden (mobile → hamburger menu)
+- Active state: subtle background + 2px left border accent
+- Collapsible on tablet (icons only)
 
-### Admin KPI Card
+### Mobile Navigation
 
-Reusable component for all dashboard metric cards:
-- Label: uppercase, --admin-kpi-label
-- Value: large, --admin-kpi-value
-- Delta: small, colored (green positive, red negative)
-- Optional: click handler to navigate to detail screen
-
-### Admin Data Table
-
-Reusable table component:
-- Server-side pagination (page, limit params)
-- Column sorting (sort param)
-- Row hover highlight
-- Optional row click handler
-- Loading skeleton state
-- Empty state message
+- Hamburger menu (top-left)
+- Bottom tab bar: Agents, Tasks, My Team, Billing (4 items)
+- Sticky header with page title
 
 ---
 
@@ -454,15 +582,15 @@ Reusable table component:
 
 | Decision | Rationale |
 |----------|-----------|
-| Dark mode default | Vercel-inspired; admin = power user tool; reduces eye strain for extended monitoring |
-| Pure black (#0A0A0A) background | Matches Vercel aesthetic, high contrast with content |
-| No zebra stripes in tables | Cleaner minimal look; hover state sufficient for row tracking |
-| Sidebar navigation (not top tabs) | More nav items (6 screens); sidebar scales better than horizontal tabs |
-| Drawer for user detail (not new page) | Quick glance without losing table context; faster navigation |
-| KPI cards link to detail screens | Progressive disclosure; dashboard → detail is natural flow |
-| Server-side pagination | Scales to 10K+ users/100K+ tasks without client memory issues |
-| Recharts for charts | Already in React ecosystem; lightweight; good dark mode support |
-| No mobile responsive | Admin is desktop-only tool for solo founder; reduces scope |
+| Dark mode default | Modern SaaS aesthetic; target users are developers/tech teams |
+| 4-column agent grid | Maximizes agent visibility; responsive down to 1-col mobile |
+| Kanban for tasks | Familiar pattern (Trello/Linear); instant status overview |
+| 5-step task wizard | Progressive disclosure; prevents overwhelming single-page form |
+| Sticky "Hire" on mobile | Critical CTA always accessible; reduces drop-off |
+| Sidebar nav (not top) | 5+ nav items; sidebar scales better; consistent with admin panel |
+| Server-side pagination | Scales to 100K+ tasks without client memory issues |
+| SSE for live updates | Real-time feel without WebSocket complexity |
+| Tabbed output | Multiple output types (report, code, trace) without page sprawl |
 
 ---
 
@@ -470,24 +598,29 @@ Reusable table component:
 
 | Screen | CJX Stage | Intent |
 |--------|-----------|--------|
-| S-A00 Dashboard | Usage | Daily check-in, quick health scan |
-| S-A01 Users | Usage | User investigation, tier management |
-| S-A02 Subscriptions | Retention | Monitor churn, track renewals |
-| S-A03 Revenue & Expenses | Usage | Business health, growth tracking, cost control |
-| S-A04 Agents | Usage | Quality monitoring, issue detection |
-| S-A05 Health | Usage | System reliability, cost control |
+| S-00 Landing | Onboarding | Awareness, conversion to sign-up |
+| S-01 Sign In | Onboarding | Authentication |
+| S-02 Marketplace | Discovery | Explore available agents |
+| S-03 Agent Detail | Discovery | Evaluate agent capabilities |
+| S-04 My Team | Usage | Manage hired agents |
+| S-05 Hired Agent Detail | Usage | Configure + monitor specific agent |
+| S-06 Task Board | Usage | Monitor all active work |
+| S-07 Create Task | Usage | Submit new work to agents |
+| S-08 Task Detail | Usage | Review results, rate quality |
+| S-09 Billing | Retention | Manage subscription, track spend |
+| S-10 Settings | Retention | Profile management, API keys |
 
 ---
 
-## 🚦 GATE 2: Requirements Validation
+## GATE 2: Requirements Validation
 
 Before proceeding to `/ipa:design`:
 
 - [ ] Stakeholders reviewed SRD.md
-- [ ] Feature priorities (P1/P2/P3) confirmed
-- [ ] Scope still matches /lean output (3 phases, 5+1 screens, 11 endpoints)
+- [ ] Feature priorities (P0/P1/P2/P3) confirmed
+- [ ] Scope matches existing codebase (Phases 1–2 implemented)
 - [ ] No scope creep detected
-- [ ] Design style confirmed (Vercel minimal dark)
+- [ ] Design system consistent with `docs/design-guidelines.md`
 
 **Next:** `/ipa:design` to generate HTML prototypes from this UI_SPEC
 
@@ -499,4 +632,5 @@ Before proceeding to `/ipa:design`:
 - **Owner:** Product (Solo Founder)
 - **Status:** Draft — pending GATE 2 validation
 - **SRD Reference:** docs/SRD.md
-- **Lean Report:** plans/reports/lean-20260315-super-admin-page.md
+- **Admin UI_SPEC:** docs/admin-ui-spec.md
+- **Design System:** docs/design-guidelines.md
