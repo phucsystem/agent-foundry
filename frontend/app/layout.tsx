@@ -2,6 +2,7 @@ import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Providers } from "@/components/layout/providers";
+import { AuthGuard } from "@/components/layout/auth-guard";
 
 export default function RootLayout({
   children,
@@ -21,13 +22,15 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-surface text-slate-900 dark:bg-[#0F172A] dark:text-slate-100">
         <Providers>
-          <MobileNav />
-          <div className="flex min-h-screen">
-            <Sidebar />
-            <main className="flex-1 md:ml-[var(--width-sidebar)] p-4 md:p-8 min-h-screen">
-              {children}
-            </main>
-          </div>
+          <AuthGuard>
+            <MobileNav />
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <main className="flex-1 md:ml-[var(--width-sidebar)] p-4 md:p-8 min-h-screen">
+                {children}
+              </main>
+            </div>
+          </AuthGuard>
         </Providers>
       </body>
     </html>

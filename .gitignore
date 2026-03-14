@@ -50,3 +50,6 @@ htmlcov/
 # Misc
 *.log
 *.tmp
+
+# Symlinked env
+frontend/.env

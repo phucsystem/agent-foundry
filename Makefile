@@ -34,8 +34,9 @@ migrate:
 seed:
 	@echo "TODO: python scripts/seed.py"
 
-# Frontend
+# Frontend (loads root .env via symlink)
 fe:
+	@test -L frontend/.env || ln -sf ../.env frontend/.env
 	cd frontend && pnpm run dev
 
 # Quality

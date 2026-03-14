@@ -2,6 +2,16 @@
 
 import { useSession, signIn, signOut } from "next-auth/react";
 
+const LOGTO_END_SESSION_URL =
+  `${process.env.NEXT_PUBLIC_LOGTO_ENDPOINT ?? "https://pk5k15.logto.app"}/oidc/session/end` +
+  `?post_logout_redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000")}`;
+
+function handleSignOut() {
+  signOut({ redirect: false }).then(() => {
+    window.location.href = LOGTO_END_SESSION_URL;
+  });
+}
+
 export function AuthButton() {
   const { data: session, status } = useSession();
 
@@ -18,7 +28,7 @@ export function AuthButton() {
           {session.user.email ?? session.user.name ?? "User"}
         </div>
         <button
-          onClick={() => signOut()}
+          onClick={handleSignOut}
           className="text-xs text-text-muted hover:text-primary transition-colors"
         >
           Sign out

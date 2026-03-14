@@ -2,6 +2,9 @@ import NextAuth from "next-auth";
 import Logto from "next-auth/providers/logto";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  pages: {
+    error: "/auth/error",
+  },
   providers: [
     Logto({
       authorization: {
