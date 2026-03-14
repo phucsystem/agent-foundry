@@ -12,8 +12,15 @@ export function MobileNav() {
   return (
     <div className="md:hidden">
       <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#020617] border-b border-border">
-        <Link href="/agents" className="text-lg font-bold text-primary no-underline">
-          Agent Foundry
+        <Link href="/agents" className="flex items-center gap-2.5 no-underline">
+          <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#8B5CF6]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+          </div>
+          <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+            agent<span className="text-[#00D4FF]">4</span>startup
+          </span>
         </Link>
         <button
           type="button"

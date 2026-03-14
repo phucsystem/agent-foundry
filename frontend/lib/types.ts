@@ -101,7 +101,7 @@ export interface KpiData {
 export interface NavItem {
   label: string;
   href: string;
-  iconPath: string;
+  icon: string;
 }
 
 // Hired agent types

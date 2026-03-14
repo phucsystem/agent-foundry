@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@iconify-icon/react": "^3.0.3",
     "@logto/next": "^4.2.9",
     "@microsoft/fetch-event-source": "^2",
     "@tamagui/core": "^1",

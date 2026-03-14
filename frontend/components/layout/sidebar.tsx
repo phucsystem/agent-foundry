@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Icon } from "@iconify-icon/react";
 import { NAV_ITEMS } from "@/lib/constants";
 import { ThemeToggle } from "./theme-toggle";
 import { AuthButton } from "./auth-button";
@@ -13,9 +14,16 @@ export function Sidebar() {
     <nav className="w-[var(--width-sidebar)] bg-white dark:bg-[#020617] border-r border-border fixed top-0 left-0 bottom-0 overflow-y-auto z-10 flex-col hidden md:flex">
       <Link
         href="/agents"
-        className="block px-6 mb-8 mt-6 text-lg font-bold text-primary no-underline"
+        className="flex items-center gap-2.5 px-6 mb-8 mt-6 no-underline"
       >
-        Agent Foundry
+        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-[#00D4FF] to-[#8B5CF6]">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+        </div>
+        <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+          agent<span className="text-[#00D4FF]">4</span>startup
+        </span>
       </Link>
 
       <ul className="list-none">
@@ -40,15 +48,7 @@ export function Sidebar() {
                     : "text-text-secondary hover:bg-surface hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  className="w-5 h-5 shrink-0"
-                >
-                  <path d={item.iconPath} />
-                </svg>
+                <Icon icon={item.icon} width={20} height={20} className="shrink-0" />
                 {item.label}
               </Link>
             </li>
