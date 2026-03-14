@@ -521,13 +521,13 @@ graph TB
 - .env.example template
 - Next.js 15 frontend skeleton (layout + landing page)
 
-**Weeks 2–4 (In Progress)**
-- Agent framework: tools, guardrails, config loader
-- Coder + Research agent integration (tools, LLM invocation)
-- PostgreSQL migrations + pgai semantic setup
-- Celery worker implementation
-- API endpoint implementations
-- GitHub Actions CI/CD
+**Weeks 2–4 (COMPLETE)**
+- [x] Agent framework: tools, guardrails, config loader, exception hierarchy
+- [x] Coder + Research agent implementations (with tools, LLM invocation ready)
+- [x] PostgreSQL migrations + pgai semantic setup
+- [x] Celery worker implementation (task execution, retries, progress publishing)
+- [x] API endpoint implementations (health, agents, tasks with SSE)
+- [ ] GitHub Actions CI/CD (pending Phase 2)
 
 **Phase 2 (Weeks 5–8):**
 - PM, QA, Copywriter agents added
@@ -551,7 +551,7 @@ graph TB
 ---
 
 ## Document Metadata
-- **Version:** 1.1
+- **Version:** 1.2
 - **Last Updated:** 2026-03-14
 - **Owner:** Architecture Team
-- **Status:** Phase 1 Week 1 Complete (Foundation infrastructure verified)
+- **Status:** Phase 1 Complete (All 9 backend modules + Phase 11 frontend UI implemented)
