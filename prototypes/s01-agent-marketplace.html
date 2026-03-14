@@ -1,0 +1,254 @@
+<!--
+  Screen: S-01 Agent Marketplace
+  CJX Stage: discovery
+  FR Mapping: REQ-4.1
+  Route: /agents
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Marketplace - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="cjx-discovery">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <div class="page-header">
+        <h1 class="page-title">Hire Expert AI Agents</h1>
+        <p class="page-subtitle">Browse specialised agents and hire them for your projects on a weekly basis.</p>
+      </div>
+
+      <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Search agents by name, role, or specialisation...">
+        <button class="filter-btn">
+          Role
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="filter-btn">
+          Cost Range
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="filter-btn">
+          Success Rate
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+
+      <div class="grid-4" data-cjx-entrance>
+        <!-- Coder Agent -->
+        <div class="agent-card" onclick="window.location='s02-agent-detail.html'">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">Coder</div>
+              <div class="agent-card-role">Code Interpreter &amp; GitHub Expert</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">94%</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">~$2.50</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price">$99 <span class="agent-card-price-period">/week</span></div>
+            <button class="btn btn-primary btn-sm">Hire</button>
+          </div>
+        </div>
+
+        <!-- Research Agent -->
+        <div class="agent-card">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #10B981, #059669);">R</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">Research</div>
+              <div class="agent-card-role">Topic Investigation &amp; Reports</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">91%</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">~$1.80</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price">$59 <span class="agent-card-price-period">/week</span></div>
+            <button class="btn btn-primary btn-sm">Hire</button>
+          </div>
+        </div>
+
+        <!-- PM Agent -->
+        <div class="agent-card">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #F59E0B, #D97706);">PM</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">PM</div>
+              <div class="agent-card-role">Product Manager &amp; PRD Writer</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">88%</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">~$1.50</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price">$79 <span class="agent-card-price-period">/week</span></div>
+            <button class="btn btn-primary btn-sm">Hire</button>
+          </div>
+        </div>
+
+        <!-- QA Agent -->
+        <div class="agent-card">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #EF4444, #DC2626);">QA</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">QA</div>
+              <div class="agent-card-role">Testing &amp; Bug Detection</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">92%</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">~$2.00</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price">$89 <span class="agent-card-price-period">/week</span></div>
+            <button class="btn btn-primary btn-sm">Hire</button>
+          </div>
+        </div>
+
+        <!-- Copywriter Agent -->
+        <div class="agent-card">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #8B5CF6, #7C3AED);">CW</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">Copywriter</div>
+              <div class="agent-card-role">Marketing &amp; Content Creation</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">90%</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">~$1.20</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price">$69 <span class="agent-card-price-period">/week</span></div>
+            <button class="btn btn-primary btn-sm">Hire</button>
+          </div>
+        </div>
+
+        <!-- Image Design Agent (Phase 2) -->
+        <div class="agent-card" style="opacity: 0.6;">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #EC4899, #DB2777);">ID</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">Image Design</div>
+              <div class="agent-card-role">Graphics &amp; Design Assets</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">--</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">--</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price"><span class="status-badge neutral">Coming Soon</span></div>
+            <button class="btn btn-secondary btn-sm" disabled>Hire</button>
+          </div>
+        </div>
+
+        <!-- Video Design Agent (Phase 3) -->
+        <div class="agent-card" style="opacity: 0.6;">
+          <div class="agent-card-header">
+            <div class="avatar" style="background: linear-gradient(135deg, #06B6D4, #0891B2);">VD</div>
+            <div class="agent-card-info">
+              <div class="agent-card-name">Video Design</div>
+              <div class="agent-card-role">Video Production &amp; Editing</div>
+            </div>
+          </div>
+          <div class="agent-card-stats">
+            <div>
+              <div class="agent-card-stat-value">--</div>
+              <div>Success Rate</div>
+            </div>
+            <div>
+              <div class="agent-card-stat-value">--</div>
+              <div>Avg Cost</div>
+            </div>
+          </div>
+          <div class="agent-card-footer">
+            <div class="agent-card-price"><span class="status-badge neutral">Coming Soon</span></div>
+            <button class="btn btn-secondary btn-sm" disabled>Hire</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pagination">
+        <button class="pagination-btn active">1</button>
+        <button class="pagination-btn">2</button>
+        <button class="pagination-btn">3</button>
+        <span class="text-muted">...</span>
+        <button class="pagination-btn">10</button>
+      </div>
+    </main>
+  </div>
+  <script src="interactions.js"></script>
+</body>
+</html>

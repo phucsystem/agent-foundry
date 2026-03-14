@@ -1,0 +1,213 @@
+<!--
+  Screen: S-06 Billing Dashboard
+  CJX Stage: retention
+  FR Mapping: REQ-4.4
+  Route: /billing
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing Dashboard - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="cjx-retention">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <div class="page-header">
+        <h1 class="page-title">Billing Dashboard</h1>
+        <p class="page-subtitle">Track your usage, manage your subscription, and download invoices.</p>
+      </div>
+
+      <!-- Current Tier Card -->
+      <div class="card mb-xl" style="border-left: 4px solid var(--color-primary);">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="text-sm text-muted mb-xs">Current Plan</div>
+            <div class="font-bold" style="font-size: var(--text-xl);">Small Team</div>
+            <div class="text-sm text-muted">PM + Coder + QA &middot; Renews March 21, 2026</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="font-bold" style="font-size: var(--text-xl); color: var(--color-primary);">$349/week</div>
+            <button class="btn btn-secondary btn-sm mt-md">Change Plan</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage This Week -->
+      <div class="section">
+        <h2 class="section-title">Usage This Week</h2>
+        <div class="kpi-grid" data-cjx-entrance>
+          <div class="kpi-card">
+            <div class="kpi-label">Tasks Completed</div>
+            <div class="kpi-value">23</div>
+            <div class="kpi-change positive">+8 from last week</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Cost</div>
+            <div class="kpi-value">$45.20</div>
+            <div class="kpi-change positive">Under budget</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Projected Total</div>
+            <div class="kpi-value">$68.50</div>
+            <div class="kpi-change neutral" style="color: var(--color-text-secondary);">Based on current pace</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Budget Remaining</div>
+            <div class="kpi-value">$54.80</div>
+            <div class="kpi-change">
+              <span class="status-badge success">Healthy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Bar -->
+      <div class="card mb-xl">
+        <div class="usage-bar-container">
+          <div class="usage-bar-header">
+            <span class="font-semibold">You've used $45.20 of your $100 weekly budget</span>
+            <span class="text-muted">45%</span>
+          </div>
+          <div class="usage-bar">
+            <div class="usage-bar-fill" style="width: 45%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Breakdown Chart + Tier Selector -->
+      <div class="chart-row">
+        <!-- Cost Breakdown by Agent -->
+        <div class="chart-card">
+          <div class="chart-card-title">Cost Breakdown by Agent</div>
+          <svg class="donut-chart" viewBox="0 0 400 200" style="width: 100%; max-width: 400px; margin: 0 auto; display: block;">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#E2E8F0" stroke-width="25"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#3B82F6" stroke-width="25"
+                    stroke-dasharray="176 264" transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#10B981" stroke-width="25"
+                    stroke-dasharray="110 330" stroke-dashoffset="-176" transform="rotate(-90 100 100)"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#F59E0B" stroke-width="25"
+                    stroke-dasharray="66 374" stroke-dashoffset="-286" transform="rotate(-90 100 100)"/>
+            <text x="100" y="95" text-anchor="middle" font-size="11" fill="#64748B">Total</text>
+            <text x="100" y="112" text-anchor="middle" font-size="16" font-weight="bold" fill="#0F172A">$45.20</text>
+            <!-- Legend -->
+            <rect x="230" y="50" width="12" height="12" rx="2" fill="#3B82F6"/>
+            <text x="248" y="61" font-size="12" fill="#64748B">Coder — $22.50 (50%)</text>
+            <rect x="230" y="80" width="12" height="12" rx="2" fill="#10B981"/>
+            <text x="248" y="91" font-size="12" fill="#64748B">PM — $13.70 (30%)</text>
+            <rect x="230" y="110" width="12" height="12" rx="2" fill="#F59E0B"/>
+            <text x="248" y="121" font-size="12" fill="#64748B">QA — $9.00 (20%)</text>
+          </svg>
+        </div>
+
+        <!-- Upgrade Prompt -->
+        <div class="chart-card">
+          <div class="chart-card-title">Upgrade to Full Squad for more agents</div>
+          <p class="text-sm text-muted mb-md">Get access to 5+ agents with orchestrated workflows, custom pipelines, and dedicated support.</p>
+          <div style="text-align: center; padding: var(--space-md) 0;">
+            <div class="font-bold" style="font-size: var(--text-xl); color: var(--color-primary); margin-bottom: var(--space-sm);">$999/week</div>
+            <ul class="tier-features" style="margin-bottom: var(--space-md);">
+              <li>5+ agents, orchestrated</li>
+              <li>Custom workflows</li>
+              <li>Dedicated support</li>
+              <li>SLA guarantees</li>
+            </ul>
+            <button class="btn btn-primary" style="width: 100%;">Upgrade Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Alerts -->
+      <div class="section">
+        <h2 class="section-title">Alerts</h2>
+        <div class="alert alert-info">
+          You're at 45% of your weekly budget. On track to stay within limits.
+        </div>
+      </div>
+
+      <!-- Invoice History -->
+      <div class="section">
+        <h2 class="section-title">Invoice History</h2>
+        <div class="table-container" data-cjx-entrance>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Period</th>
+                <th>Plan</th>
+                <th class="text-right">Amount</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-semibold">INV-2026-012</td>
+                <td>Mar 7 &ndash; Mar 14</td>
+                <td>Small Team</td>
+                <td class="text-right">$349.00</td>
+                <td><span class="status-badge success">Paid</span></td>
+                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+              </tr>
+              <tr>
+                <td class="font-semibold">INV-2026-011</td>
+                <td>Feb 28 &ndash; Mar 7</td>
+                <td>Small Team</td>
+                <td class="text-right">$349.00</td>
+                <td><span class="status-badge success">Paid</span></td>
+                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+              </tr>
+              <tr>
+                <td class="font-semibold">INV-2026-010</td>
+                <td>Feb 21 &ndash; Feb 28</td>
+                <td>Solo</td>
+                <td class="text-right">$99.00</td>
+                <td><span class="status-badge success">Paid</span></td>
+                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+              </tr>
+              <tr>
+                <td class="font-semibold">INV-2026-009</td>
+                <td>Feb 14 &ndash; Feb 21</td>
+                <td>Solo</td>
+                <td class="text-right">$99.00</td>
+                <td><span class="status-badge success">Paid</span></td>
+                <td class="text-right"><button class="btn btn-secondary btn-sm">Download</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="interactions.js"></script>
+</body>
+</html>

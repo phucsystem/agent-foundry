@@ -1,0 +1,414 @@
+<!--
+  Screen: S-04 Task Board (Kanban)
+  CJX Stage: usage
+  FR Mapping: REQ-4.3
+  Route: /tasks
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Board - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="cjx-usage">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <!-- Page Header -->
+      <div class="flex justify-between items-center mb-lg">
+        <div>
+          <h1 class="page-title">Task Board</h1>
+          <p class="page-subtitle">This week &middot; March 10 &ndash; 16, 2026</p>
+        </div>
+        <div class="flex gap-sm">
+          <button class="btn btn-secondary btn-sm" id="view-toggle-list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            List
+          </button>
+          <button class="btn btn-primary btn-sm" id="view-toggle-kanban">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+            Board
+          </button>
+          <a href="s03-create-task.html" class="btn btn-primary btn-sm">+ New Task</a>
+        </div>
+      </div>
+
+      <!-- KPI Metrics -->
+      <div class="kpi-grid mb-lg" data-cjx-entrance>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Tasks</div>
+          <div class="kpi-value">24</div>
+          <div class="kpi-change positive">+8 from last week</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Success Rate</div>
+          <div class="kpi-value">91.7%</div>
+          <div class="kpi-change positive">+2.3%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Duration</div>
+          <div class="kpi-value">1m 42s</div>
+          <div class="kpi-change positive">-12s faster</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Cost</div>
+          <div class="kpi-value">$58.40</div>
+          <div class="kpi-change negative">+$12.30</div>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="flex items-center gap-sm mb-lg">
+        <input type="text" class="search-input" placeholder="Search tasks..." style="max-width: 280px;">
+        <button class="filter-btn">
+          Agent
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="filter-btn">
+          Priority
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button class="filter-btn">
+          Date Range
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+
+      <!-- Kanban Board -->
+      <div class="kanban-board">
+
+        <!-- Queued Column -->
+        <div class="kanban-column">
+          <div class="kanban-column-header">
+            <div class="kanban-column-title">
+              <span class="kanban-dot" style="background: var(--color-neutral);"></span>
+              Queued
+            </div>
+            <span class="kanban-count">3</span>
+          </div>
+          <div class="kanban-cards">
+            <a href="s05-task-results.html" class="kanban-card">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-high">High</span>
+                <span class="text-xs text-muted">2m ago</span>
+              </div>
+              <div class="kanban-card-title">Generate API documentation for billing endpoints</div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width: 22px; height: 22px; font-size: 10px;">R</div>
+                  <span>Research</span>
+                </div>
+                <span>~$1.50</span>
+              </div>
+            </a>
+            <a href="s05-task-results.html" class="kanban-card">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-medium">Medium</span>
+                <span class="text-xs text-muted">5m ago</span>
+              </div>
+              <div class="kanban-card-title">Write integration tests for payment webhook handler</div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB); width: 22px; height: 22px; font-size: 10px;">C</div>
+                  <span>Coder</span>
+                </div>
+                <span>~$3.00</span>
+              </div>
+            </a>
+            <a href="s05-task-results.html" class="kanban-card">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-low">Low</span>
+                <span class="text-xs text-muted">12m ago</span>
+              </div>
+              <div class="kanban-card-title">Summarise competitor pricing page changes</div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width: 22px; height: 22px; font-size: 10px;">R</div>
+                  <span>Research</span>
+                </div>
+                <span>~$0.80</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Running Column -->
+        <div class="kanban-column">
+          <div class="kanban-column-header">
+            <div class="kanban-column-title">
+              <span class="kanban-dot" style="background: var(--color-primary);"></span>
+              Running
+            </div>
+            <span class="kanban-count">2</span>
+          </div>
+          <div class="kanban-cards">
+            <a href="s05-task-results.html" class="kanban-card kanban-card-running">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-high">High</span>
+                <span class="text-xs text-muted">47s</span>
+              </div>
+              <div class="kanban-card-title">Write unit tests for login flow</div>
+              <div class="kanban-card-progress">
+                <div class="progress-bar" style="height: 4px;">
+                  <div class="progress-fill kanban-progress-animated" style="width: 65%; background: var(--color-primary);"></div>
+                </div>
+                <span class="text-xs text-muted">65%</span>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB); width: 22px; height: 22px; font-size: 10px;">C</div>
+                  <span>Coder</span>
+                </div>
+                <span>$1.20 / $50</span>
+              </div>
+              <div class="kanban-card-live">
+                <span class="kanban-live-dot"></span>
+                Analysing codebase structure...
+              </div>
+            </a>
+            <a href="s05-task-results.html" class="kanban-card kanban-card-running">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-medium">Medium</span>
+                <span class="text-xs text-muted">1m 22s</span>
+              </div>
+              <div class="kanban-card-title">Research best practices for rate limiting in FastAPI</div>
+              <div class="kanban-card-progress">
+                <div class="progress-bar" style="height: 4px;">
+                  <div class="progress-fill kanban-progress-animated" style="width: 40%; background: var(--color-primary);"></div>
+                </div>
+                <span class="text-xs text-muted">40%</span>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width: 22px; height: 22px; font-size: 10px;">R</div>
+                  <span>Research</span>
+                </div>
+                <span>$0.60 / $20</span>
+              </div>
+              <div class="kanban-card-live">
+                <span class="kanban-live-dot"></span>
+                Searching web for recent articles...
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Completed Column -->
+        <div class="kanban-column">
+          <div class="kanban-column-header">
+            <div class="kanban-column-title">
+              <span class="kanban-dot" style="background: var(--color-success);"></span>
+              Completed
+            </div>
+            <span class="kanban-count">17</span>
+          </div>
+          <div class="kanban-cards">
+            <a href="s05-task-results.html" class="kanban-card">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-high">High</span>
+                <span class="text-xs text-muted">14m ago</span>
+              </div>
+              <div class="kanban-card-title">Fix authentication token refresh bug</div>
+              <div class="kanban-card-metrics">
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Duration</span>
+                  <span class="kanban-metric-value">45s</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Cost</span>
+                  <span class="kanban-metric-value">$1.80</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Tokens</span>
+                  <span class="kanban-metric-value">14.2K</span>
+                </div>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB); width: 22px; height: 22px; font-size: 10px;">C</div>
+                  <span>Coder</span>
+                </div>
+                <div class="star-rating" style="font-size: 12px;">
+                  <span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span>
+                </div>
+              </div>
+            </a>
+            <a href="s05-task-results.html" class="kanban-card">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-medium">Medium</span>
+                <span class="text-xs text-muted">1h ago</span>
+              </div>
+              <div class="kanban-card-title">Investigate memory leak in Celery worker pool</div>
+              <div class="kanban-card-metrics">
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Duration</span>
+                  <span class="kanban-metric-value">2m 10s</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Cost</span>
+                  <span class="kanban-metric-value">$3.40</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Tokens</span>
+                  <span class="kanban-metric-value">22.8K</span>
+                </div>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width: 22px; height: 22px; font-size: 10px;">R</div>
+                  <span>Research</span>
+                </div>
+                <div class="star-rating" style="font-size: 12px;">
+                  <span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star">&#9733;</span>
+                </div>
+              </div>
+            </a>
+            <a href="s05-task-results.html" class="kanban-card">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-low">Low</span>
+                <span class="text-xs text-muted">3h ago</span>
+              </div>
+              <div class="kanban-card-title">Draft weekly team standup summary from Slack</div>
+              <div class="kanban-card-metrics">
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Duration</span>
+                  <span class="kanban-metric-value">32s</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Cost</span>
+                  <span class="kanban-metric-value">$0.40</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Tokens</span>
+                  <span class="kanban-metric-value">5.1K</span>
+                </div>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width: 22px; height: 22px; font-size: 10px;">R</div>
+                  <span>Research</span>
+                </div>
+                <div class="star-rating" style="font-size: 12px;">
+                  <span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span><span class="star filled">&#9733;</span>
+                </div>
+              </div>
+            </a>
+          </div>
+          <button class="kanban-show-more">Show 14 more</button>
+        </div>
+
+        <!-- Failed Column -->
+        <div class="kanban-column">
+          <div class="kanban-column-header">
+            <div class="kanban-column-title">
+              <span class="kanban-dot" style="background: var(--color-error);"></span>
+              Failed
+            </div>
+            <span class="kanban-count">2</span>
+          </div>
+          <div class="kanban-cards">
+            <a href="s05-task-results.html" class="kanban-card kanban-card-failed">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-high">High</span>
+                <span class="text-xs text-muted">2h ago</span>
+              </div>
+              <div class="kanban-card-title">Deploy staging environment to Azure Container Apps</div>
+              <div class="kanban-card-error">
+                BudgetExceededError: Task cost $52.10 exceeded $50.00 limit
+              </div>
+              <div class="kanban-card-metrics">
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Duration</span>
+                  <span class="kanban-metric-value">4m 58s</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Cost</span>
+                  <span class="kanban-metric-value text-error">$52.10</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Retries</span>
+                  <span class="kanban-metric-value">2/3</span>
+                </div>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB); width: 22px; height: 22px; font-size: 10px;">C</div>
+                  <span>Coder</span>
+                </div>
+                <button class="btn btn-sm" style="padding: 2px 8px; min-height: 24px; font-size: 11px; background: rgba(239,68,68,0.1); color: var(--color-error); border: 1px solid rgba(239,68,68,0.2);">Retry</button>
+              </div>
+            </a>
+            <a href="s05-task-results.html" class="kanban-card kanban-card-failed">
+              <div class="kanban-card-header">
+                <span class="kanban-priority priority-medium">Medium</span>
+                <span class="text-xs text-muted">5h ago</span>
+              </div>
+              <div class="kanban-card-title">Scrape pricing data from competitor websites</div>
+              <div class="kanban-card-error">
+                ToolExecutionError: WebSearchTool timed out after 30s
+              </div>
+              <div class="kanban-card-metrics">
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Duration</span>
+                  <span class="kanban-metric-value">30s</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Cost</span>
+                  <span class="kanban-metric-value">$0.20</span>
+                </div>
+                <div class="kanban-metric">
+                  <span class="kanban-metric-label">Retries</span>
+                  <span class="kanban-metric-value">3/3</span>
+                </div>
+              </div>
+              <div class="kanban-card-meta">
+                <div class="flex items-center gap-xs">
+                  <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9); width: 22px; height: 22px; font-size: 10px;">R</div>
+                  <span>Research</span>
+                </div>
+                <button class="btn btn-sm" style="padding: 2px 8px; min-height: 24px; font-size: 11px; background: rgba(239,68,68,0.1); color: var(--color-error); border: 1px solid rgba(239,68,68,0.2);">Retry</button>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /kanban-board -->
+    </main>
+  </div>
+
+  <!-- Sticky Footer (mobile) -->
+  <div class="sticky-footer">
+    <a href="s03-create-task.html" class="btn btn-primary">+ New Task</a>
+  </div>
+
+  <script src="interactions.js"></script>
+</body>
+</html>

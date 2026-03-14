@@ -1,0 +1,359 @@
+<!--
+  Screen: S-05 Task Detail
+  CJX Stage: usage
+  FR Mapping: REQ-4.3
+  Route: /tasks/{id}
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Detail - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="cjx-usage">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <!-- Breadcrumb -->
+      <div class="flex items-center gap-sm mb-lg text-sm">
+        <a href="s04-task-monitor.html" style="color: var(--color-primary); text-decoration: none;">Task Board</a>
+        <span class="text-muted">/</span>
+        <span class="text-muted">TASK-0042</span>
+      </div>
+
+      <!-- Task Header Card -->
+      <div class="card mb-lg">
+        <div class="flex justify-between items-center mb-md">
+          <div class="flex items-center gap-md">
+            <span class="status-badge success">Completed</span>
+            <span class="kanban-priority priority-high" style="display: inline-flex;">High</span>
+          </div>
+          <div class="flex gap-sm">
+            <button class="btn btn-secondary btn-sm">Re-run Task</button>
+            <button class="btn btn-secondary btn-sm">Share</button>
+          </div>
+        </div>
+        <h1 class="page-title mb-sm">Write unit tests for login flow</h1>
+        <p class="text-sm text-muted mb-md">Generate comprehensive unit tests for the authentication login flow covering valid credentials, invalid inputs, token refresh, rate limiting, and SQL injection prevention.</p>
+        <div class="flex gap-lg text-sm text-muted" style="flex-wrap: wrap;">
+          <div class="flex items-center gap-sm">
+            <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
+            <strong style="color: var(--color-text);">Coder v1.2</strong>
+          </div>
+          <span>Created 14 min ago</span>
+          <span>By: phuc@agentfoundry.io</span>
+          <span>ID: TASK-0042</span>
+        </div>
+      </div>
+
+      <!-- Metrics Grid -->
+      <div class="task-metrics-grid mb-lg" data-cjx-entrance>
+        <div class="task-metric-card">
+          <div class="task-metric-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--color-success);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="task-metric-label">Duration</div>
+            <div class="task-metric-value">1m 07s</div>
+            <div class="task-metric-detail">Queued: 3s &middot; Exec: 64s</div>
+          </div>
+        </div>
+        <div class="task-metric-card">
+          <div class="task-metric-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--color-primary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div>
+            <div class="task-metric-label">Total Cost</div>
+            <div class="task-metric-value">$2.50</div>
+            <div class="task-metric-detail">LLM: $2.15 &middot; Tools: $0.35</div>
+          </div>
+        </div>
+        <div class="task-metric-card">
+          <div class="task-metric-icon" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <div class="task-metric-label">Tokens</div>
+            <div class="task-metric-value">18,200</div>
+            <div class="task-metric-detail">In: 6,400 &middot; Out: 11,800</div>
+          </div>
+        </div>
+        <div class="task-metric-card">
+          <div class="task-metric-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--color-warning);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div>
+            <div class="task-metric-label">Tool Calls</div>
+            <div class="task-metric-value">7</div>
+            <div class="task-metric-detail">code_interpreter: 4 &middot; github: 3</div>
+          </div>
+        </div>
+        <div class="task-metric-card">
+          <div class="task-metric-icon" style="background: rgba(236, 72, 153, 0.1); color: #EC4899;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <div>
+            <div class="task-metric-label">LLM Model</div>
+            <div class="task-metric-value" style="font-size: var(--text-sm);">Claude Sonnet 4.6</div>
+            <div class="task-metric-detail">via LiteLLM &middot; No fallback</div>
+          </div>
+        </div>
+        <div class="task-metric-card">
+          <div class="task-metric-icon" style="background: rgba(20, 184, 166, 0.1); color: #14B8A6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          </div>
+          <div>
+            <div class="task-metric-label">Retries</div>
+            <div class="task-metric-value">0 / 3</div>
+            <div class="task-metric-detail">First attempt succeeded</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Breakdown Bar -->
+      <div class="card mb-lg" data-cjx-entrance>
+        <h3 class="section-title" style="margin-bottom: var(--space-md);">Cost Breakdown</h3>
+        <div class="cost-breakdown-bar mb-md">
+          <div class="cost-segment" style="width: 34.8%; background: var(--color-primary);" title="Input tokens: $0.87"></div>
+          <div class="cost-segment" style="width: 51.2%; background: #8B5CF6;" title="Output tokens: $1.28"></div>
+          <div class="cost-segment" style="width: 14%; background: var(--color-warning);" title="Tool execution: $0.35"></div>
+        </div>
+        <div class="flex gap-lg text-sm" style="flex-wrap: wrap;">
+          <div class="flex items-center gap-xs">
+            <span class="cost-legend-dot" style="background: var(--color-primary);"></span>
+            Input tokens <strong>$0.87</strong> (34.8%)
+          </div>
+          <div class="flex items-center gap-xs">
+            <span class="cost-legend-dot" style="background: #8B5CF6;"></span>
+            Output tokens <strong>$1.28</strong> (51.2%)
+          </div>
+          <div class="flex items-center gap-xs">
+            <span class="cost-legend-dot" style="background: var(--color-warning);"></span>
+            Tool execution <strong>$0.35</strong> (14.0%)
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Section -->
+      <div class="section">
+        <div class="flex justify-between items-center mb-md">
+          <h2 class="section-title" style="margin-bottom: 0;">Task Output</h2>
+          <div class="flex gap-sm">
+            <button class="btn btn-secondary btn-sm">Download PDF</button>
+            <button class="btn btn-secondary btn-sm">Download Markdown</button>
+            <button class="btn btn-secondary btn-sm">Download JSON</button>
+          </div>
+        </div>
+
+        <div class="tab-group">
+          <div class="tab-item active">Report</div>
+          <div class="tab-item">Code</div>
+          <div class="tab-item">Reasoning Trace</div>
+          <div class="tab-item">Tool Calls</div>
+        </div>
+
+        <div class="result-output">
+          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-md);">Unit Test Report: Authentication Module</h3>
+          <p class="text-sm text-muted mb-md">Generated 12 unit tests covering the authentication login flow, including edge cases for token expiry, invalid credentials, and rate limiting.</p>
+
+          <h4 class="text-sm font-semibold mb-sm">Test Summary</h4>
+          <div class="table-container mb-lg">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Test</th>
+                  <th>Status</th>
+                  <th class="text-right">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>test_login_valid_credentials</td>
+                  <td><span class="status-badge success">Pass</span></td>
+                  <td class="text-right">0.12s</td>
+                </tr>
+                <tr>
+                  <td>test_login_invalid_password</td>
+                  <td><span class="status-badge success">Pass</span></td>
+                  <td class="text-right">0.08s</td>
+                </tr>
+                <tr>
+                  <td>test_login_nonexistent_user</td>
+                  <td><span class="status-badge success">Pass</span></td>
+                  <td class="text-right">0.09s</td>
+                </tr>
+                <tr>
+                  <td>test_login_expired_token_refresh</td>
+                  <td><span class="status-badge success">Pass</span></td>
+                  <td class="text-right">0.15s</td>
+                </tr>
+                <tr>
+                  <td>test_login_rate_limit_exceeded</td>
+                  <td><span class="status-badge success">Pass</span></td>
+                  <td class="text-right">0.22s</td>
+                </tr>
+                <tr>
+                  <td>test_login_sql_injection_prevention</td>
+                  <td><span class="status-badge success">Pass</span></td>
+                  <td class="text-right">0.11s</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 class="text-sm font-semibold mb-sm">Sample Code</h4>
+          <pre><code>import pytest
+from unittest.mock import patch, MagicMock
+from auth.login import authenticate_user
+
+class TestLoginFlow:
+    def test_login_valid_credentials(self, db_session):
+        """Valid email/password returns access + refresh tokens."""
+        result = authenticate_user(
+            email="user@example.com",
+            password="correct-password",
+            session=db_session
+        )
+        assert result.access_token is not None
+        assert result.refresh_token is not None
+        assert result.expires_in == 3600
+
+    def test_login_invalid_password(self, db_session):
+        """Wrong password raises AuthenticationError."""
+        with pytest.raises(AuthenticationError):
+            authenticate_user(
+                email="user@example.com",
+                password="wrong-password",
+                session=db_session
+            )</code></pre>
+        </div>
+      </div>
+
+      <!-- Execution Timeline -->
+      <div class="section" data-cjx-entrance>
+        <h2 class="section-title">Execution Timeline</h2>
+        <div class="timeline">
+          <div class="timeline-entry">
+            <div class="timeline-dot" style="background: var(--color-neutral);"></div>
+            <div class="timeline-content">
+              <div class="flex justify-between items-center">
+                <strong class="text-sm">Task queued</strong>
+                <span class="text-xs text-muted">10:30:02</span>
+              </div>
+              <p class="text-xs text-muted">Priority: High &middot; Budget: $50.00</p>
+            </div>
+          </div>
+          <div class="timeline-entry">
+            <div class="timeline-dot" style="background: var(--color-primary);"></div>
+            <div class="timeline-content">
+              <div class="flex justify-between items-center">
+                <strong class="text-sm">Agent initialised</strong>
+                <span class="text-xs text-muted">10:30:05</span>
+              </div>
+              <p class="text-xs text-muted">Coder v1.2 &middot; Claude Sonnet 4.6 &middot; 3 tools loaded</p>
+            </div>
+          </div>
+          <div class="timeline-entry">
+            <div class="timeline-dot" style="background: var(--color-warning);"></div>
+            <div class="timeline-content">
+              <div class="flex justify-between items-center">
+                <strong class="text-sm">Tool: code_interpreter</strong>
+                <span class="text-xs text-muted">10:30:16</span>
+              </div>
+              <p class="text-xs text-muted">python analyze_code.py --target auth/ &middot; 0.8s &middot; $0.12</p>
+            </div>
+          </div>
+          <div class="timeline-entry">
+            <div class="timeline-dot" style="background: var(--color-warning);"></div>
+            <div class="timeline-content">
+              <div class="flex justify-between items-center">
+                <strong class="text-sm">Tool: code_interpreter</strong>
+                <span class="text-xs text-muted">10:30:30</span>
+              </div>
+              <p class="text-xs text-muted">python generate_tests.py --module auth.login &middot; 2.1s &middot; $0.08</p>
+            </div>
+          </div>
+          <div class="timeline-entry">
+            <div class="timeline-dot" style="background: var(--color-warning);"></div>
+            <div class="timeline-content">
+              <div class="flex justify-between items-center">
+                <strong class="text-sm">Tool: github_mcp</strong>
+                <span class="text-xs text-muted">10:30:52</span>
+              </div>
+              <p class="text-xs text-muted">Create PR #47: "Add auth login unit tests" &middot; 1.2s &middot; $0.15</p>
+            </div>
+          </div>
+          <div class="timeline-entry">
+            <div class="timeline-dot" style="background: var(--color-success);"></div>
+            <div class="timeline-content">
+              <div class="flex justify-between items-center">
+                <strong class="text-sm">Task completed</strong>
+                <span class="text-xs text-muted">10:31:09</span>
+              </div>
+              <p class="text-xs text-muted">12 tests generated &middot; All passing &middot; Output validated by guardrails</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rating -->
+      <div class="section">
+        <h2 class="section-title">Rate this result</h2>
+        <div class="rating-form">
+          <div class="rating-stars-interactive">
+            <span class="star">&#9733;</span>
+            <span class="star">&#9733;</span>
+            <span class="star">&#9733;</span>
+            <span class="star">&#9733;</span>
+            <span class="star">&#9733;</span>
+          </div>
+          <div class="form-field" style="margin-bottom: 0;">
+            <label class="form-label" for="review-comment">Comment (optional)</label>
+            <textarea class="form-textarea" id="review-comment" placeholder="Share your experience with this agent..." style="min-height: 80px;"></textarea>
+          </div>
+          <div class="flex gap-sm">
+            <button class="btn btn-primary">Submit Review</button>
+            <button class="btn btn-secondary">Skip</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-sm mb-xl">
+        <button class="btn btn-primary" onclick="window.location='s03-create-task.html'">Hire This Agent Again</button>
+        <button class="btn btn-secondary" onclick="window.location='s04-task-monitor.html'">Back to Board</button>
+        <button class="btn btn-secondary" onclick="window.location='s01-agent-marketplace.html'">Browse Agents</button>
+      </div>
+    </main>
+  </div>
+  <script src="interactions.js"></script>
+</body>
+</html>

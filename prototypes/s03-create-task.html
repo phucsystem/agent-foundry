@@ -1,0 +1,194 @@
+<!--
+  Screen: S-03 Create Task
+  CJX Stage: usage
+  FR Mapping: REQ-4.3
+  Route: /tasks/create
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Define Your Task - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="cjx-usage">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <div class="page-header">
+        <h1 class="page-title">Define Your Task</h1>
+        <p class="page-subtitle">Tell us what you need and we'll match you with the right agent.</p>
+      </div>
+
+      <!-- Step Indicators -->
+      <div class="task-steps">
+        <div class="task-step active">
+          <span class="step-number">1</span>
+          <span>Goal</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="task-step">
+          <span class="step-number">2</span>
+          <span>Context</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="task-step">
+          <span class="step-number">3</span>
+          <span>Agent</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="task-step">
+          <span class="step-number">4</span>
+          <span>Budget</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="task-step">
+          <span class="step-number">5</span>
+          <span>Review</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Goal -->
+      <div class="card mb-xl">
+        <h2 class="section-title">1. What do you need?</h2>
+        <div class="form-field">
+          <label class="form-label" for="task-goal">Task Goal</label>
+          <textarea class="form-textarea" id="task-goal" placeholder="e.g., Write unit tests for login flow"></textarea>
+          <span class="form-helper">Describe what you need the agent to do. Be specific about the expected output.</span>
+        </div>
+      </div>
+
+      <!-- Step 2: Context Upload -->
+      <div class="card mb-xl">
+        <h2 class="section-title">2. Upload Context Documents</h2>
+        <div class="drop-zone">
+          <div class="drop-zone-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="font-semibold mb-xs">Drag & drop files here</p>
+          <p class="text-sm text-muted">Supports PDF, Markdown, and text files. Max 10MB per file.</p>
+        </div>
+      </div>
+
+      <!-- Step 3: Agent Selection -->
+      <div class="card mb-xl">
+        <h2 class="section-title">3. Select Agent</h2>
+        <div class="alert alert-info mb-md">
+          Based on your goal, we recommend <strong>Coder</strong> for this task.
+        </div>
+        <div class="grid-3">
+          <label class="card" style="cursor: pointer; border: 2px solid var(--color-primary); padding: var(--space-md);">
+            <input type="radio" name="agent" checked style="display: none;">
+            <div class="flex items-center gap-sm mb-sm">
+              <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
+              <strong class="text-sm">Coder</strong>
+            </div>
+            <p class="text-xs text-muted">Code, bugs, PRs</p>
+          </label>
+          <label class="card" style="cursor: pointer; padding: var(--space-md);">
+            <input type="radio" name="agent" style="display: none;">
+            <div class="flex items-center gap-sm mb-sm">
+              <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #10B981, #059669);">R</div>
+              <strong class="text-sm">Research</strong>
+            </div>
+            <p class="text-xs text-muted">Topics, reports</p>
+          </label>
+          <label class="card" style="cursor: pointer; padding: var(--space-md);">
+            <input type="radio" name="agent" style="display: none;">
+            <div class="flex items-center gap-sm mb-sm">
+              <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #F59E0B, #D97706);">PM</div>
+              <strong class="text-sm">PM</strong>
+            </div>
+            <p class="text-xs text-muted">PRDs, backlog</p>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 4: Budget -->
+      <div class="card mb-xl">
+        <h2 class="section-title">4. Set Budget</h2>
+        <div class="budget-slider-container">
+          <input type="range" class="budget-slider" id="budget-slider" min="10" max="500" value="50">
+          <div class="budget-range">
+            <span>$10</span>
+            <span>$500</span>
+          </div>
+          <div class="budget-preview" id="budget-preview">This task will likely cost ~$50 based on similar tasks</div>
+        </div>
+      </div>
+
+      <!-- Step 5: Review & Submit -->
+      <div class="card mb-xl">
+        <h2 class="section-title">5. Review &amp; Submit</h2>
+        <div class="table-container">
+          <table class="data-table">
+            <tbody>
+              <tr>
+                <td class="font-semibold" style="width: 150px;">Goal</td>
+                <td class="text-muted">Write unit tests for login flow</td>
+              </tr>
+              <tr>
+                <td class="font-semibold">Context Files</td>
+                <td class="text-muted">auth-module.md (24KB)</td>
+              </tr>
+              <tr>
+                <td class="font-semibold">Agent</td>
+                <td>
+                  <div class="flex items-center gap-sm">
+                    <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
+                    Coder
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="font-semibold">Estimated Cost</td>
+                <td class="text-muted">~$3.50</td>
+              </tr>
+              <tr>
+                <td class="font-semibold">Budget Cap</td>
+                <td class="text-muted">$50.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex gap-sm mt-lg" style="justify-content: flex-end;">
+          <button class="btn btn-secondary">Save Draft</button>
+          <button class="btn btn-primary" onclick="window.location='s04-task-monitor.html'">Submit Task</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="interactions.js"></script>
+</body>
+</html>

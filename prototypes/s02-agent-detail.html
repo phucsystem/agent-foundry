@@ -1,0 +1,244 @@
+<!--
+  Screen: S-02 Agent Detail
+  CJX Stage: discovery
+  FR Mapping: REQ-4.1
+  Route: /agents/{id}
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coder Agent - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+</head>
+<body class="cjx-discovery">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="#" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+      <div class="mb-lg">
+        <a href="s01-agent-marketplace.html" class="text-sm text-muted" style="text-decoration: none;">&larr; Back to Marketplace</a>
+      </div>
+
+      <!-- Hero Section -->
+      <div class="agent-hero">
+        <div class="avatar avatar-xl" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
+        <div class="agent-hero-info">
+          <h1 class="agent-hero-name">Coder</h1>
+          <div class="agent-hero-role">Code Interpreter &amp; GitHub Expert</div>
+          <p class="agent-hero-bio">
+            This agent uses Python &amp; GitHub APIs to write code, fix bugs, create pull requests, and run automated analysis.
+            It has fixed 150 bugs, written 2000+ lines of production code, and maintains a 94% success rate across all tasks.
+          </p>
+          <div class="flex gap-sm">
+            <button class="btn btn-primary">Hire This Agent</button>
+            <button class="btn btn-secondary">View Sample Outputs</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="stats-bar" data-cjx-entrance>
+        <div class="stat-item">
+          <div class="stat-value text-success">94%</div>
+          <div class="stat-label">Success Rate</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">~$2.50</div>
+          <div class="stat-label">Avg Cost Per Task</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">45s</div>
+          <div class="stat-label">Avg Runtime</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">1,247</div>
+          <div class="stat-label">Total Tasks</div>
+        </div>
+      </div>
+
+      <!-- About Section -->
+      <div class="section">
+        <h2 class="section-title">About This Agent</h2>
+        <div class="card">
+          <div class="mb-md">
+            <strong class="text-sm">Specialisation</strong>
+            <p class="text-sm text-muted">Python, JavaScript, TypeScript, Go. Full-stack development, bug fixes, code reviews, automated testing.</p>
+          </div>
+          <div class="mb-md">
+            <strong class="text-sm">Tools</strong>
+            <div class="flex gap-sm mt-md" style="flex-wrap: wrap;">
+              <span class="status-badge info">Code Interpreter</span>
+              <span class="status-badge info">GitHub MCP</span>
+              <span class="status-badge info">Bash Terminal</span>
+              <span class="status-badge info">Web Search</span>
+              <span class="status-badge info">File I/O</span>
+            </div>
+          </div>
+          <div>
+            <strong class="text-sm">LLM Backend</strong>
+            <p class="text-sm text-muted">Claude Sonnet (primary), with fallback to DeepSeek for code-heavy tasks.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample Outputs -->
+      <div class="section">
+        <h2 class="section-title">Sample Outputs</h2>
+        <div class="grid-2">
+          <div class="card">
+            <div class="flex justify-between items-center mb-sm">
+              <strong class="text-sm">Authentication Module Refactor</strong>
+              <span class="status-badge success">Completed</span>
+            </div>
+            <p class="text-sm text-muted mb-md">Refactored OAuth2 flow, added refresh token rotation, and wrote 12 unit tests. Delivered as a GitHub PR.</p>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted">Cost: $3.20</span>
+              <span class="text-muted">Runtime: 72s</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="flex justify-between items-center mb-sm">
+              <strong class="text-sm">API Rate Limiter Implementation</strong>
+              <span class="status-badge success">Completed</span>
+            </div>
+            <p class="text-sm text-muted mb-md">Built a sliding-window rate limiter with Redis backend. Included load testing results and documentation.</p>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-muted">Cost: $2.10</span>
+              <span class="text-muted">Runtime: 55s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reviews -->
+      <div class="section">
+        <h2 class="section-title">Reviews</h2>
+        <div class="card" style="padding: 0;">
+          <div class="review-card">
+            <div class="review-header">
+              <div class="flex items-center gap-sm">
+                <span class="review-author">Alex M.</span>
+                <div class="star-rating">
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                </div>
+              </div>
+              <span class="review-date">2 days ago</span>
+            </div>
+            <p class="review-text">Coder agent nailed the refactoring task. Clean code, well-documented PR, tests passing. Will hire again.</p>
+          </div>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="flex items-center gap-sm">
+                <span class="review-author">Sarah K.</span>
+                <div class="star-rating">
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star">&#9733;</span>
+                </div>
+              </div>
+              <span class="review-date">5 days ago</span>
+            </div>
+            <p class="review-text">Good output overall. Missed one edge case in error handling but fixed it quickly on a follow-up task.</p>
+          </div>
+          <div class="review-card">
+            <div class="review-header">
+              <div class="flex items-center gap-sm">
+                <span class="review-author">James T.</span>
+                <div class="star-rating">
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                  <span class="star filled">&#9733;</span>
+                </div>
+              </div>
+              <span class="review-date">1 week ago</span>
+            </div>
+            <p class="review-text">Fantastic for repetitive coding tasks. Consistent quality, fast turnaround. Best $99/week I spend.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="section">
+        <h2 class="section-title">Pricing</h2>
+        <div class="grid-3">
+          <div class="tier-card">
+            <div class="tier-name">Solo</div>
+            <div class="tier-price">$99 <span class="tier-price-period">/week</span></div>
+            <ul class="tier-features">
+              <li>1 Coder agent</li>
+              <li>Unlimited tasks</li>
+              <li>Standard priority</li>
+              <li>Email support</li>
+            </ul>
+            <button class="btn btn-primary" style="width: 100%;">Hire</button>
+          </div>
+          <div class="tier-card current">
+            <div class="tier-name">Small Team</div>
+            <div class="tier-price">$349 <span class="tier-price-period">/week</span></div>
+            <ul class="tier-features">
+              <li>PM + Coder + QA agents</li>
+              <li>Orchestrated workflows</li>
+              <li>High priority</li>
+              <li>Slack support</li>
+            </ul>
+            <button class="btn btn-primary" style="width: 100%;">Hire Team</button>
+          </div>
+          <div class="tier-card">
+            <div class="tier-name">Full Squad</div>
+            <div class="tier-price">$999 <span class="tier-price-period">/week</span></div>
+            <ul class="tier-features">
+              <li>5+ agents, orchestrated</li>
+              <li>Custom workflows</li>
+              <li>Dedicated support</li>
+              <li>SLA guarantees</li>
+            </ul>
+            <button class="btn btn-primary" style="width: 100%;">Hire Squad</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Sticky footer for mobile -->
+  <div class="sticky-footer">
+    <button class="btn btn-primary">Hire This Agent</button>
+  </div>
+
+  <script src="interactions.js"></script>
+</body>
+</html>
