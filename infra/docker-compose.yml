@@ -127,6 +127,62 @@ services:
     networks:
       - agent-foundry
 
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: af-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agentfoundry}
+      REDIS_URL: redis://redis:6379/0
+      MEMGRAPH_URL: bolt://memgraph:7687
+      LITELLM_BASE_URL: http://litellm:4000/v1
+      LOGTO_ENDPOINT: http://logto:3001
+      LOGTO_APP_ID: ${LOGTO_APP_ID:-}
+      LOGTO_API_RESOURCE: http://localhost:8000
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-in-production-32ch}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+      LANGFUSE_HOST: http://langfuse:3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - agent-foundry
+
+  worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: af-worker
+    restart: unless-stopped
+    command: ["celery", "-A", "workers.celery_app", "worker", "--loglevel=info", "--max-tasks-per-child=100"]
+    volumes:
+      - ../backend:/app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agentfoundry}
+      REDIS_URL: redis://redis:6379/0
+      MEMGRAPH_URL: bolt://memgraph:7687
+      LITELLM_BASE_URL: http://litellm:4000/v1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - agent-foundry
+
   frontend:
     build:
       context: ../frontend
@@ -141,7 +197,7 @@ services:
       - /app/.next
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-      LOGTO_ENDPOINT: http://localhost:3001
+      LOGTO_ENDPOINT: http://logto:3001
       LOGTO_APP_ID: ${LOGTO_APP_ID:-}
       LOGTO_APP_SECRET: ${LOGTO_APP_SECRET:-}
       LOGTO_COOKIE_SECRET: ${LOGTO_COOKIE_SECRET:-complex_password_at_least_32_characters_long}
@@ -150,10 +206,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - logto
+      - backend
     networks:
       - agent-foundry
 
