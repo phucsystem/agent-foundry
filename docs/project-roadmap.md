@@ -131,30 +131,30 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 - [ ] Integration tests (multi-agent workflows)
 
 #### Week 6: Frontend Marketplace (Part 1)
-- [ ] Next.js project setup (App Router, Tailwind)
+- [x] Next.js project setup (App Router, Tailwind)
 - [ ] Authentication (NextAuth.js)
-- [ ] Agent marketplace page
-  - [ ] Browse all agents
-  - [ ] Filter by role, cost, tier
-  - [ ] Sort by success rate
-  - [ ] Agent detail page (bio, tools, past outputs, reviews)
-- [ ] Task creation form
-  - [ ] Goal input
-  - [ ] Context upload (PDF, markdown)
-  - [ ] Budget slider
-  - [ ] Agent selector (manual or auto)
-  - [ ] Cost estimate preview
+- [x] Agent marketplace page
+  - [x] Browse all agents
+  - [x] Filter by role, cost, tier
+  - [x] Sort by success rate
+  - [x] Agent detail page (bio, tools, past outputs, reviews)
+- [x] Task creation form
+  - [x] Goal input
+  - [x] Context upload (PDF, markdown)
+  - [x] Budget slider
+  - [x] Agent selector (manual or auto)
+  - [x] Cost estimate preview
 
 #### Week 7: Frontend Marketplace (Part 2) + Billing
-- [ ] Task monitoring (real-time SSE)
-  - [ ] Live progress bar
-  - [ ] Agent reasoning trace
-  - [ ] Tool call log
-  - [ ] Time elapsed, cost accruing
-- [ ] Task results page
-  - [ ] Display output (markdown, code, PDF)
-  - [ ] Download options
-  - [ ] Agent rating form
+- [x] Task monitoring (kanban board + real-time SSE hook)
+  - [x] Live progress bar
+  - [x] Agent reasoning trace
+  - [x] Tool call log
+  - [x] Time elapsed, cost accruing
+- [x] Task results page
+  - [x] Display output (markdown, code, PDF)
+  - [x] Download options
+  - [x] Agent rating form
   - [ ] Share results (link copy)
 - [ ] Billing dashboard (Phase 2A, basic)
   - [ ] Current subscription tier
@@ -368,13 +368,14 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 
 ## Milestones & Success Metrics
 
-| Milestone | Timeline | Target Metric |
-|-----------|----------|-----------------|
-| Phase 1 Complete | 2026-04-15 | 2 agents live, success rate >90%, internal testing |
-| Phase 2 Complete | 2026-05-17 | 5 agents, UI launch, 50 internal users |
-| Phase 3 Complete | 2026-07-02 | Public launch, 50 paying customers, 500 tasks/month |
-| Phase 4 Week 15 | 2026-07-20 | White-label ready, public API live |
-| Phase 4 Week 20+ | 2026-08-24+ | 500+ users, $50K MRR, enterprise tier |
+| Milestone | Timeline | Target Metric | Status |
+|-----------|----------|-----------------|--------|
+| Phase 1 Complete | 2026-04-15 | 2 agents live, success rate >90%, internal testing | ON TRACK |
+| Phase 11 UI Complete | 2026-03-14 | Marketplace UI 5 screens, build passes, 102KB bundle | ✅ COMPLETE |
+| Phase 2 Complete | 2026-05-17 | 5 agents, UI launch, 50 internal users | PENDING |
+| Phase 3 Complete | 2026-07-02 | Public launch, 50 paying customers, 500 tasks/month | PENDING |
+| Phase 4 Week 15 | 2026-07-20 | White-label ready, public API live | PENDING |
+| Phase 4 Week 20+ | 2026-08-24+ | 500+ users, $50K MRR, enterprise tier | PENDING |
 
 ---
 
