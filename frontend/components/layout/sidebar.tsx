@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/lib/constants";
 import { ThemeToggle } from "./theme-toggle";
+import { AuthButton } from "./auth-button";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -48,7 +49,10 @@ export function Sidebar() {
         })}
       </ul>
 
-      <ThemeToggle />
+      <div className="mt-auto">
+        <AuthButton />
+        <ThemeToggle />
+      </div>
     </nav>
   );
 }

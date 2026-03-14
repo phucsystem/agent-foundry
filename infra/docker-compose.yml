@@ -37,6 +37,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./init-langfuse-db.sh:/docker-entrypoint-initdb.d/00-langfuse-db.sh:ro
+      - ./init-logto-db.sh:/docker-entrypoint-initdb.d/00-logto-db.sh:ro
       - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     networks:
       - agent-foundry
@@ -144,6 +145,29 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - agent-foundry
+
+  logto:
+    image: svhd/logto:latest
+    container_name: af-logto
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    environment:
+      TRUST_PROXY_HEADER: "1"
+      DB_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/logto
+      ENDPOINT: http://localhost:3001
+      ADMIN_ENDPOINT: http://localhost:3002
+    entrypoint: ["sh", "-c", "npm run cli db seed -- --swe && npm start"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.logto.rule=Host(`auth.localhost`)"
+      - "traefik.http.services.logto.loadbalancer.server.port=3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - agent-foundry
 
