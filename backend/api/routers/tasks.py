@@ -79,11 +79,14 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
         "budget_usd": request.budget_usd,
     }
 
+    # TODO: Get real user_id from auth when Logto is wired
+    mock_user_id = "00000000-0000-0000-0000-000000000001"
+
     if database.is_connected:
         await database.execute(
-            """INSERT INTO tasks (id, agent_id, goal, context, status, input_data)
-               VALUES ($1::uuid, $2, $3, $4, 'queued', $5::jsonb)""",
-            task_id, request.agent_id, request.goal,
+            """INSERT INTO tasks (id, user_id, agent_id, goal, context, status, input_data)
+               VALUES ($1::uuid, $2::uuid, $3, $4, $5, 'queued', $6::jsonb)""",
+            task_id, mock_user_id, request.agent_id, request.goal,
             request.context, json.dumps(input_data),
         )
 
