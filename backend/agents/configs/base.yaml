@@ -1,0 +1,14 @@
+# Shared defaults — agents inherit via `extends: base.yaml`
+llm:
+  model: "claude-sonnet"
+  base_url: "http://litellm.localhost/v1"
+  api_key: "dummy"
+  temperature: 0.3
+  max_tokens: 4096
+memory_enabled: true
+guardrails:
+  max_budget_usd: 10.0
+  max_runtime_seconds: 300
+  output_schema: "TaskResult"
+  block_prompt_injection: true
+pricing_cents_per_run: 50

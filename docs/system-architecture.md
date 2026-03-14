@@ -8,45 +8,31 @@ Agent-foundry is a distributed system separating **deterministic flow** (routing
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     FRONTEND (Next.js + Tamagui)               │
-│  [Marketplace] → [Task Creator] → [Live Monitor] → [Dashboard] │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │ HTTP + SSE
-┌──────────────────────▼──────────────────────────────────────────┐
-│                FastAPI Gateway + Auth                          │
-│  [Route /agents] [Route /tasks] [Route /billing] [Route /teams]│
-└──────────────────────┬──────────────────────────────────────────┘
-                       │
-        ┌──────────────┼──────────────┐
-        │              │              │
-   ┌────▼────┐  ┌─────▼────┐  ┌─────▼────┐
-   │Orchestr.│  │  Task    │  │ Memory & │
-   │(CrewAI/ │  │ Executor │  │Guardrails│
-   │LangGraph)  │ (Celery) │  │(Validate)│
-   └────┬────┘  └─────┬────┘  └─────┬────┘
-        │             │             │
-        └─────────────┼─────────────┘
-                      │
-        ┌─────────────┼──────────────┐
-        │             │              │
-   ┌────▼────┐  ┌─────▼────┐  ┌─────▼──────┐
-   │ PostgreSQL │  │  pgai   │  │ Memgraph  │
-   │ (Auth,     │  │(Semantic│  │(Relational│
-   │ Billing,   │  │ Memory, │  │ Graph)    │
-   │ Audit)     │  │ RAG)    │  │           │
-   └────────────┘  └─────────┘  └───────────┘
-        │             │              │
-        └─────────────┼──────────────┘
-                      │
-    ┌─────────────────┼─────────────────┐
-    │                 │                 │
-┌───▼────┐  ┌────────▼─────┐  ┌────────▼─┐
-│ Langfuse│  │ OpenTelemetry│  │Azure     │
-│(LLM     │  │(App Metrics) │  │Monitor   │
-│Tracing) │  └──────────────┘  └──────────┘
-└─────────┘
+```mermaid
+graph TD
+    FE["Frontend - Next.js 15 + React 19"]
+    FE -->|HTTP + SSE| API["FastAPI Gateway"]
+    API --> AReg["Agent Registry"]
+    API --> TQ["Task Queue - Celery/Redis"]
+    AReg --> CAG["CrewAI Agents"]
+    CAG --> LLMP["LiteLLM Proxy"]
+    LLMP --> LLMs["LLMs - Claude/GPT/Gemini"]
+    CAG --> TR["Tool Registry"]
+    CAG --> GP["Guardrail Pipeline"]
+    API --> LF["Langfuse - LLM Tracing"]
+    TQ --> PG["PostgreSQL<br/>Users, Tasks, Config"]
+    TQ --> PGV["pgvector<br/>Semantic Memory"]
+    TQ --> MG["Memgraph<br/>Graph Memory"]
+
+    style FE fill:#e1f5ff
+    style API fill:#fff3e0
+    style CAG fill:#f3e5f5
+    style LLMP fill:#fce4ec
+    style GP fill:#ffe0b2
+    style PG fill:#c8e6c9
+    style PGV fill:#b2dfdb
+    style MG fill:#d1c4e9
+    style LF fill:#ffccbc
 ```
 
 ---
@@ -113,47 +99,65 @@ TaskResult (aggregated output)
 **Agent Anatomy:**
 | Layer | Implementation |
 |-------|-----------------|
-| **Identity** | YAML config (id, name, role, goal, backstory, specialisation prompt) |
+| **Identity** | YAML config (id, name, role, goal, backstory, version) |
 | **Brain** | LLM via LiteLLM (Claude Sonnet, GPT-4o, Gemini, etc.) |
-| **Tools** | Base `Tool` class (name, description, async callable) |
+| **Tools** | BaseTool ABC + @tool decorator (SimpleTool) / MCPToolAdapter |
 | **Memory** | Short-term (session) + pgai semantic search + Memgraph relationships |
-| **Guardrails** | Output validation (schema), cost limits, hallucination detection |
+| **Guardrails** | Input/Output validation, cost limits, prompt injection detection |
 | **I/O Contract** | TaskInput → TaskResult (Pydantic) |
 
-**Agent Classes (Inherits from CrewAI Agent):**
+**Agent Framework Architecture:**
 
-```python
-class Agent(BaseModel):
-    id: str                              # "coder", "research"
-    name: str                            # "Code Expert"
-    role: str                            # Goal + specialisation
-    goal: str                            # What it's trying to achieve
-    backstory: str                       # Personality + expertise
-    llm_provider: str                    # "claude", "gpt-4o", "gemini", "ollama"
-    tools: list[Tool]                    # Available tools
-    memory_backend: str                  # "pgai" for semantic search
-    guardrails: GuardrailConfig          # Cost limits, validation rules
-    pricing_cents_per_run: int           # Estimated cost (used for forecasting)
+```mermaid
+graph TD
+    YAML["base.yaml<br/>coder.yaml<br/>researcher.yaml"]
+    YAML -->|load| LC["AgentConfig<br/>Pydantic"]
+    LC -->|inherit| ACF["AgentConfig<br/>single-level"]
+    ACF -->|instantiate| BA["BaseAgent ABC"]
+    BA --> CA["CoderAgent"]
+    BA --> RA["ResearcherAgent"]
+    BA --> GA["GenericAgent<br/>fallback"]
+    CA --> CR["CrewAI Agent"]
+    RA --> CR
+    GA --> CR
+    CR -->|execute| CE["CrewAI Execution"]
+
+    style YAML fill:#fff9c4
+    style LC fill:#f1f8e9
+    style BA fill:#e0f2f1
+    style CR fill:#f3e5f5
 ```
 
-**Tool Interface:**
-```python
-class Tool(BaseModel):
-    name: str
-    description: str
-    async def execute(self, **kwargs) -> str:
-        """Execute tool and return result."""
-        pass
+**Pydantic Models (config.py):**
+- `AgentConfig` — Full agent configuration (id, name, role, goal, llm, tools, guardrails)
+- `LLMConfig` — LLM provider routing (model, base_url, temperature, max_tokens)
+- `TaskInput` — Task contract (agent_id, goal, context, budget_usd, timeout_seconds)
+- `TaskResult` — Result contract (status, output, error, tokens_used, cost_usd, duration_seconds)
+- `GuardrailConfig` — Safety limits (max_budget_usd, max_runtime_seconds, output_schema)
+- `ToolConfig` — Tool configuration (name, enabled, config dict)
+
+**Tool System:**
+
+```mermaid
+graph TD
+    BT["BaseTool ABC"]
+    BT --> ST["SimpleTool<br/>@tool decorator"]
+    BT --> MCP["MCPToolAdapter<br/>cached"]
+    ST -->|register| TR["ToolRegistry<br/>singleton"]
+    MCP -->|register| TR
+    TR -->|get_crewai_tools| CA["CrewAI Agent"]
+    ST -->|to_crewai_tool| CW["CrewAI Tool Wrapper"]
+    CW --> CA
+
+    style BT fill:#ffe0b2
+    style ST fill:#ffcc80
+    style TR fill:#f9a825
 ```
 
-**Pre-built Tools:**
-- `GitHubMCPTool` → Create PRs, read repos, commit code
-- `NotionMCPTool` → Read/write Notion pages
-- `WebSearchTool` → Search web, return snippets
-- `FileIOTool` → Read/write files locally
-- `CodeInterpreterTool` → Execute Python/Node.js in sandbox
-- `PlaywrightTool` → Browser automation for QA
-- `TerminalTool` → Run bash commands (with safeguards)
+**Pre-built Tools (via @tool decorator):**
+- Web search, file I/O, code interpretation
+- GitHub MCP integration (planned Phase 2)
+- Notion MCP integration (planned Phase 2)
 
 ---
 
@@ -162,27 +166,58 @@ class Tool(BaseModel):
 
 **Responsibilities:**
 - Dequeue tasks from Redis
-- Instantiate agent from config
-- Invoke orchestrator with task input
-- Capture output, logs, metrics
+- Instantiate agent from AgentRegistry
+- Run GuardrailPipeline.run_input_checks() (prompt injection, budget)
+- Invoke CrewAI Agent with resolved tools
+- Capture output, logs, metrics from CrewAI
+- Run GuardrailPipeline.run_output_checks() (schema validation, cost warning)
 - Store result in PostgreSQL
-- Publish completion events (Langfuse, webhooks, SSE)
+- Publish completion events (Langfuse, SSE)
 - Retry on transient failures (exponential backoff)
-- Hard timeout (30min default)
+- Hard timeout (300s default from GuardrailConfig.max_runtime_seconds)
 
-**Queue Topology:**
-```
-Task Created (FastAPI)
-    ↓
-Redis Queue
-    ↓
-[Celery Workers] (auto-scaled based on queue depth)
-    ↓
-Orchestrator → Agent → LLM + Tools
-    ↓
-Result → PostgreSQL + Webhooks + Langfuse
-    ↓
-Frontend SSE (live updates)
+**Task Execution Flow:**
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant API as FastAPI
+    participant Redis as Redis Queue
+    participant Worker as Celery Worker
+    participant Reg as AgentRegistry
+    participant Pipe as GuardrailPipeline
+    participant CrewAI as CrewAI Agent
+    participant LLM as LiteLLM
+    participant DB as PostgreSQL
+
+    User->>API: POST /api/tasks
+    API->>API: Validate TaskInput (Pydantic)
+    API->>Redis: Enqueue task_id
+    API-->>User: Return task_id (polling/SSE)
+
+    Redis-->>Worker: Dequeue task_id
+    Worker->>Reg: get_agent(agent_id)
+    Reg->>Reg: Load AgentConfig
+    Reg-->>Worker: Agent instance
+
+    Worker->>Pipe: run_input_checks(task)
+    Pipe->>Pipe: InputGuardrail - block injection
+    Pipe->>Pipe: CostGuardrail - pre-flight budget
+    Pipe-->>Worker: OK
+
+    Worker->>CrewAI: execute(task.goal)
+    CrewAI->>LLM: completion request
+    LLM-->>CrewAI: response
+    CrewAI-->>Worker: TaskResult
+
+    Worker->>Pipe: run_output_checks(result)
+    Pipe->>Pipe: OutputGuardrail - schema validation
+    Pipe->>Pipe: CostGuardrail - cost warning
+    Pipe-->>Worker: OK
+
+    Worker->>DB: Save TaskResult
+    Worker->>API: Publish SSE event
+    API-->>User: Live update
 ```
 
 ---
@@ -232,64 +267,68 @@ LIMIT 5;
 ```
 
 #### 5c. Memgraph (Relational Graph)
-**Purpose:** Track agent-task-project-client relationships, enable "find similar agents", reputation scoring
+**Purpose:** Track agent-task relationships and enable analytics (Phase 2+ evaluation).
 
-**Node Types:**
-- `Agent` (id, name, role, success_rate, avg_cost, avg_duration)
-- `Task` (id, goal, status, cost, duration)
-- `Project` (id, name, client_id)
-- `Client` (id, name, tier)
-- `Tool` (name, category)
+**Status:** Stub implementation — not fully integrated yet. Evaluation in Phase 2 will determine if graph queries add value over PostgreSQL + pgai.
 
-**Relationships:**
-- `Agent -[:EXECUTES]-> Task`
-- `Task -[:BELONGS_TO]-> Project`
-- `Project -[:BELONGS_TO]-> Client`
-- `Agent -[:USES]-> Tool`
-- `Agent -[:COLLABORATES_WITH]-> Agent` (agents in same workflow)
-
-**Queries:**
-```cypher
-// Find agents with similar success rates & skill overlap
-MATCH (agent:Agent)-[:USES]->(tool:Tool)<-[:USES]-(similarAgent:Agent)
-WHERE agent.id = "coder" AND similarAgent.success_rate > agent.success_rate * 0.8
-RETURN similarAgent, count(tool) as skill_overlap
-ORDER BY skill_overlap DESC
-LIMIT 5;
-```
-
-**Evaluation (Phase 1-2):** Determine if relational queries justify complexity. May remove if pgai + PostgreSQL sufficient.
+**Planned Usage:** Agent success metrics, workflow recommendations, skill overlap analysis.
 
 ---
 
 ### 6. Guardrails & Cost Control
 
-**Input Validation:**
-- Pydantic schema validation (required fields, types, constraints)
-- Prompt injection detection (reject obvious payloads)
-- Budget pre-flight check (will task exceed limit?)
+**Guardrail Pipeline Architecture:**
 
-**Output Validation:**
-- JSON schema validation (must match expected TaskResult format)
-- Hallucination detection (for research agent: flag unverified claims)
-- Toxicity filtering (reject harmful outputs)
-- Format validation (code is syntactically valid, reports have citations)
+```mermaid
+graph LR
+    IN["TaskInput"]
+    IGR["InputGuardrail<br/>prompt injection"]
+    CGR1["CostGuardrail<br/>pre-flight budget"]
+    EX["Execute<br/>CrewAI Agent"]
+    CGR2["CostGuardrail<br/>cost warning"]
+    OGR["OutputGuardrail<br/>schema validation"]
+    OUT["TaskResult"]
 
-**Cost Control:**
-- Per-task budget: `max_budget_usd = 10.0`
-- Per-agent daily budget: enforced at API level
-- Per-user subscription budget: "Solo" tier = $50/week max
-- Hard stop: if LLM call would exceed budget, return error (agent halts)
-- Forecasting: estimate cost before execution, warn user if approaching limit
+    IN -->|validate| IGR
+    IGR -->|check| CGR1
+    CGR1 -->|approved| EX
+    EX -->|result| CGR2
+    CGR2 -->|check| OGR
+    OGR -->|valid| OUT
 
-**Example Guard:**
-```python
-class CostGuardrail:
-    def validate_before_execution(self, task: TaskInput) -> bool:
-        estimated_cost = estimate_llm_cost(task.goal, agent.llm_model)
-        if estimated_cost + user_usage_this_week > user_budget:
-            raise BudgetExceededError(f"Task would cost ${estimated_cost}, budget remaining ${remaining}")
-        return True
+    style IGR fill:#ffcdd2
+    style CGR1 fill:#fff9c4
+    style CGR2 fill:#fff9c4
+    style OGR fill:#c8e6c9
+```
+
+**Guardrail Implementation (guardrails/ module):**
+
+| Class | Responsibility |
+|-------|-----------------|
+| `GuardrailBase` | Abstract base with async validate_input/validate_output methods |
+| `GuardrailPipeline` | Composes multiple guardrails, runs in sequence |
+| `InputGuardrail` | Detects prompt injection patterns, validates required fields |
+| `CostGuardrail` | Pre-flight budget check, cost forecasting, warns if approaching limit |
+| `OutputGuardrail` | Validates TaskResult schema, checks token count |
+
+**Cost Control (via GuardrailConfig):**
+- Per-task budget: `max_budget_usd = 10.0` (default, per config)
+- Per-agent max runtime: `max_runtime_seconds = 300` (5 minutes)
+- Output schema validation: `output_schema = "TaskResult"` (enforced)
+- Prompt injection detection: `block_prompt_injection = True` (default)
+
+**Exception Hierarchy (exceptions.py):**
+```
+AgentError (base)
+├── AgentConfigError → Invalid config
+├── AgentExecutionError → Task failed
+├── AgentNotFoundError → Agent not in registry
+├── ToolNotFoundError → Tool not in registry
+└── GuardrailViolation (base)
+    ├── BudgetExceededError → Budget limit exceeded
+    ├── OutputValidationError → Result schema invalid
+    └── InputValidationError → Prompt injection detected
 ```
 
 ---
@@ -337,125 +376,114 @@ response = litellm.completion(
 ### 8. Observability & Tracing
 
 #### Langfuse (LLM Tracing)
-**Captures:**
-- Every LLM call (prompt, completion, tokens, cost)
-- Agent execution traces (start → tool calls → LLM → end)
-- Task lifecycle (created → queued → running → completed)
-- User → Agent → Cost breakdown
+Captures LLM calls, agent execution traces, task lifecycle, and cost breakdowns. Enables cost tracking per agent per user.
 
-**Enabled for Cost Tracking:**
-- Track actual LLM tokens per agent per user
-- Alert if token usage >10% above forecast
-- Identify expensive agents (may need prompt optimization)
-
-#### OpenTelemetry (App Metrics)
-**Captures:**
-- API latency (histogram: p50, p95, p99)
-- Error rate (by endpoint, by agent)
-- Queue depth (tasks waiting)
-- Worker utilization (% CPU, memory)
-- Database query latency
-
-**Exporters:**
-- Azure Monitor (metrics, logs, performance counters)
-- Prometheus (optional, for local dev dashboards)
-
-#### Application Logging
-**Format:** Structured JSON (fields: timestamp, level, service, agent_id, task_id, user_id, message)
-
-```json
-{
-  "timestamp": "2026-03-14T10:30:45Z",
-  "level": "INFO",
-  "service": "task-executor",
-  "agent_id": "coder",
-  "task_id": "task-abc123",
-  "user_id": "user-xyz789",
-  "message": "Agent completed task in 2.3s",
-  "duration_seconds": 2.3,
-  "tokens_used": 1250,
-  "cost_usd": 0.45
-}
-```
+#### Observability
+- **OpenTelemetry:** API latency, error rates, queue depth, worker utilization
+- **Azure Monitor:** Metrics, logs, performance counters
+- **Application Logs:** Structured JSON with timestamp, level, service, agent_id, task_id, user_id
 
 ---
 
 ## Data Flow: Task Execution
 
-**Sequence:**
+**Request-Response Sequence:**
+
+```mermaid
+graph TD
+    A["1. User submits TaskInput"] -->|POST /api/tasks| B["2. FastAPI validates<br/>Pydantic model"]
+    B --> C["3. Check user budget"]
+    C --> D["4. Store task<br/>status: pending"]
+    D --> E["5. Enqueue to Redis<br/>Return task_id"]
+
+    E -->|async| F["6. Worker dequeues"]
+    F --> G["7. AgentRegistry<br/>get_agent"]
+    G --> H["8. GuardrailPipeline<br/>run_input_checks"]
+    H --> I["9. Resolve tools<br/>ToolRegistry"]
+    I --> J["10. CrewAI Agent<br/>execute goal"]
+    J --> K["11. LiteLLM<br/>LLM call"]
+    K --> L["12. CrewAI<br/>Tool calls"]
+    L --> M["13. Synthesize<br/>TaskResult"]
+    M --> N["14. GuardrailPipeline<br/>run_output_checks"]
+    N --> O["15. Store in DB<br/>status: completed"]
+    O --> P["16. Publish SSE<br/>to frontend"]
+
+    P -->|real-time| Q["17. Frontend<br/>displays result"]
+
+    style A fill:#e3f2fd
+    style F fill:#f3e5f5
+    style J fill:#e8f5e9
+    style Q fill:#fff3e0
 ```
-1. User submits task (goal, context, budget)
-   → FastAPI validates input (Pydantic)
-   → Check user budget & quota
-   → Store task in PostgreSQL (status: pending)
 
-2. FastAPI enqueues task to Redis
-   → Return task_id to user (polling or SSE)
+**Key Data Structures in Flow:**
 
-3. Celery worker dequeues task
-   → Load agent config from PostgreSQL
-   → Retrieve relevant context from pgai (semantic search)
-   → Invoke orchestrator
-
-4. Orchestrator routes to agent(s)
-   → Validate agent readiness
-   → Invoke LLM with tools available
-   → LLM reasons, decides tool calls
-   → Tools execute (code, GitHub, Notion, etc.)
-   → LLM synthesises output
-
-5. Worker captures result
-   → Validate output (guardrails)
-   → Store in PostgreSQL (status: completed)
-   → Calculate actual cost from Langfuse
-   → Update user usage counter
-   → Memgraph: record Agent-Task relationship + success_rate
-   → Publish event (webhooks, Langfuse, user SSE)
-
-6. Frontend updates in real-time
-   → User downloads result (PDF, code, markdown)
-   → Reviews cost breakdown
-   → Rates agent
-```
+| Stage | Structure | Details |
+|-------|-----------|---------|
+| Input | `TaskInput` | agent_id, goal, context, budget_usd, timeout_seconds, metadata |
+| Config | `AgentConfig` | Loaded from YAML (base.yaml with inheritance) |
+| Execution | `CrewAI Agent` | role, goal, backstory, llm, tools, memory |
+| Output | `TaskResult` | status, output, error, tokens_used, cost_usd, duration_seconds |
+| Guardrails | `GuardrailConfig` | max_budget_usd, max_runtime_seconds, output_schema, block_prompt_injection |
 
 ---
 
 ## Deployment Topology (Azure)
 
+```mermaid
+graph TB
+    FD["Azure Front Door + CDN<br/>DDoS protection, caching"]
+
+    subgraph compute["Compute Layer"]
+        SWA["Static Web Apps<br/>Next.js Frontend"]
+        API["Container Apps<br/>FastAPI 1-10"]
+        WK["Container Apps<br/>Celery Workers 1-10"]
+    end
+
+    subgraph data["Data & State"]
+        PG["PostgreSQL Flexible<br/>Users, Tasks, Config"]
+        RD["Redis Standard<br/>Task Queue"]
+        MG["Container Apps<br/>Memgraph"]
+    end
+
+    subgraph obs["Observability"]
+        LF["Langfuse<br/>LLM Tracing"]
+        AM["Azure Monitor<br/>Metrics & Logs"]
+    end
+
+    FD --> SWA
+    FD --> API
+    FD --> WK
+
+    API --> PG
+    API --> RD
+    WK --> RD
+    WK --> PG
+    WK --> MG
+
+    API --> LF
+    WK --> LF
+    API --> AM
+    WK --> AM
+
+    style FD fill:#1976d2
+    style SWA fill:#90caf9
+    style API fill:#ffb74d
+    style WK fill:#a5d6a7
+    style PG fill:#81c784
+    style RD fill:#64b5f6
+    style MG fill:#ba68c8
+    style LF fill:#ef5350
+    style AM fill:#ffb74d
 ```
-┌─────────────────────────────────────────────────┐
-│        Azure Front Door + CDN                   │
-│  (DDoS protection, global routing, caching)     │
-└────────────────┬────────────────────────────────┘
-                 │
-        ┌────────┼────────┐
-        │        │        │
-┌───────▼────┐ ┌─▼─────┐ ┌──▼──────────────┐
-│Static Web  │ │FastAPI│ │Celery Workers  │
-│Apps (Next) │ │ 3x    │ │(auto-scale 1-10)
-└───────┬────┘ └─┬─────┘ └────┬───────────┘
-        │        │            │
-        │        └────────────┤
-        │                     │
-        └─────────────┬───────┘
-                      │
-        ┌─────────────┼──────────────┐
-        │             │              │
-┌───────▼────┐ ┌─────▼────┐ ┌──────▼────┐
-│ PostgreSQL │ │ Redis    │ │ Memgraph  │
-│ Flexible   │ │ Cache    │ │ Container │
-│ (B2ms)     │ │ Standard │ │ Apps      │
-└────────────┘ └──────────┘ └───────────┘
-        │             │              │
-        └─────────────┼──────────────┘
-                      │
-        ┌─────────────┴──────────────┐
-        │                            │
-    ┌───▼────┐                 ┌─────▼──┐
-    │Langfuse│                 │Azure   │
-    │(Docker)│                 │Monitor │
-    └────────┘                 └────────┘
-```
+
+**Infrastructure Breakdown:**
+- **Azure Front Door:** Global routing, DDoS protection, request rate limiting
+- **Static Web Apps:** Next.js frontend (auto-scaling, free tier eligible)
+- **Container Apps:** FastAPI + Celery (scale based on CPU/memory + queue depth)
+- **PostgreSQL Flexible:** Pay-per-use, auto-pause when idle, backups
+- **Redis:** Standard tier (1GB sufficient for MVP queue)
+- **Memgraph:** Single instance in Container Apps (evaluate Phase 2)
 
 **Scaling:**
 - FastAPI: Container Apps (1-10 instances based on CPU/memory)

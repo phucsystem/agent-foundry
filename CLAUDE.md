@@ -35,26 +35,157 @@ Project-level instructions for Claude Code when working in agent-foundry.
 
 ```
 agent-foundry/
-├── backend/           # Python — FastAPI + CrewAI + LangGraph
-│   ├── api/           # FastAPI app + routers
-│   ├── agents/        # Agent implementations (base, coder, researcher, etc.)
-│   ├── memory/        # pgai.py (semantic), memgraph.py (relational)
-│   ├── workers/       # Celery workers
-│   ├── pyproject.toml
-│   └── Dockerfile
-├── frontend/          # Next.js + TypeScript
-│   ├── app/           # App Router pages
-│   ├── components/    # React components
+├── backend/                      # Python — FastAPI + CrewAI
+│   ├── agents/                   # Agent framework
+│   │   ├── configs/              # YAML agent definitions
+│   │   │   ├── base.yaml         # Base config (inherited by others)
+│   │   │   ├── coder.yaml        # Coder agent config
+│   │   │   └── researcher.yaml   # Researcher agent config
+│   │   ├── config.py             # Pydantic models (AgentConfig, LLMConfig, TaskInput, TaskResult)
+│   │   ├── base.py               # BaseAgent ABC + initialization
+│   │   ├── coder.py              # CoderAgent implementation
+│   │   ├── researcher.py         # ResearcherAgent implementation
+│   │   ├── loader.py             # YAML config loader with inheritance
+│   │   ├── registry.py           # AgentRegistry singleton + GenericAgent fallback
+│   │   ├── exceptions.py         # Domain exceptions (AgentError, GuardrailViolation, etc.)
+│   │   └── __init__.py           # initialize_agents() function
+│   ├── tools/                    # Tool system
+│   │   ├── base.py               # BaseTool ABC + @tool decorator + SimpleTool
+│   │   ├── registry.py           # ToolRegistry singleton
+│   │   └── mcp_adapter.py        # MCPToolAdapter for MCP server tools
+│   ├── guardrails/               # Safety & cost control
+│   │   ├── base.py               # GuardrailBase ABC + GuardrailPipeline
+│   │   ├── input.py              # InputGuardrail (prompt injection detection)
+│   │   ├── cost.py               # CostGuardrail (budget enforcement)
+│   │   └── output.py             # OutputGuardrail (result schema validation)
+│   ├── api/                      # FastAPI application
+│   │   ├── main.py               # FastAPI app creation + lifespan
+│   │   └── routers/
+│   │       ├── health.py         # GET /health
+│   │       ├── agents.py         # GET /api/agents, GET /api/agents/{id}
+│   │       └── tasks.py          # POST /api/tasks, GET /api/tasks/{id}
+│   ├── memory/                   # Memory backends (stubs)
+│   │   ├── pgai.py               # pgvector semantic search
+│   │   └── memgraph.py           # Graph database queries
+│   ├── workers/                  # Celery task queue (stubs)
+│   │   └── celery_app.py         # Celery app configuration
+│   ├── pyproject.toml            # Dependencies + project metadata
+│   └── Dockerfile                # FastAPI container image
+│
+├── frontend/                     # Next.js 15 + TypeScript
+│   ├── app/                      # App Router pages
+│   │   ├── page.tsx              # Landing page
+│   │   ├── layout.tsx            # Root layout + providers
+│   │   ├── agents/
+│   │   │   ├── page.tsx          # Agent marketplace
+│   │   │   └── [id]/
+│   │   │       └── page.tsx      # Agent detail page
+│   │   └── tasks/
+│   │       ├── page.tsx          # Task board (kanban)
+│   │       ├── new/
+│   │       │   └── page.tsx      # Create task page
+│   │       └── [id]/
+│   │           └── page.tsx      # Task detail page
+│   ├── components/               # React components
+│   │   ├── layout/
+│   │   │   ├── sidebar.tsx       # Sidebar navigation
+│   │   │   ├── mobile-nav.tsx    # Mobile navigation
+│   │   │   ├── theme-toggle.tsx  # Dark mode toggle
+│   │   │   └── providers.tsx     # TanStack Query + Zustand context
+│   │   ├── ui/                   # 11 reusable UI primitives
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── avatar.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── search-bar.tsx
+│   │   │   ├── pagination.tsx
+│   │   │   ├── progress-bar.tsx
+│   │   │   ├── star-rating.tsx
+│   │   │   └── kpi-card.tsx
+│   │   ├── agents/               # Agent-specific components
+│   │   │   ├── agent-hero.tsx
+│   │   │   ├── agent-card.tsx
+│   │   │   ├── agent-stats-bar.tsx
+│   │   │   ├── agent-pricing.tsx
+│   │   │   ├── agent-reviews.tsx
+│   │   │   └── agent-filters.tsx
+│   │   └── tasks/                # Task-specific components
+│   │       ├── task-form.tsx
+│   │       ├── task-form-steps.tsx
+│   │       ├── kanban-board.tsx
+│   │       ├── kanban-card.tsx
+│   │       ├── task-timeline.tsx
+│   │       ├── task-metrics.tsx
+│   │       ├── task-output.tsx
+│   │       ├── task-rating.tsx
+│   │       └── cost-breakdown.tsx
+│   ├── lib/
+│   │   ├── types.ts              # Shared TypeScript interfaces (Agent, Task, etc.)
+│   │   ├── mock-data.ts          # Mock data (until API connected)
+│   │   ├── constants.ts          # Agent colors, nav items, defaults
+│   │   └── hooks/
+│   │       ├── useAgents.ts      # TanStack Query hook for agents
+│   │       ├── useTasks.ts       # TanStack Query hook for tasks
+│   │       └── useSSE.ts         # Server-sent events hook
+│   ├── app/globals.css           # Tailwind v4 @theme + dark mode
 │   └── package.json
-├── infra/             # Docker Compose + Traefik + LiteLLM config
-│   ├── docker-compose.yml
-│   ├── docker-compose.prod.yml
-│   ├── litellm_config.yaml
-│   ├── init.sql
+│
+├── infra/                        # Docker Compose + Infrastructure
+│   ├── docker-compose.yml        # Local dev stack
+│   ├── docker-compose.prod.yml   # Production overrides
+│   ├── litellm_config.yaml       # LiteLLM proxy configuration
+│   ├── init.sql                  # PostgreSQL schema initialization
 │   └── traefik/
-├── docs/              # Project documentation
-└── plans/             # Implementation plans
+│       └── traefik.yml           # Traefik reverse proxy config
+│
+├── docs/                         # Documentation
+│   ├── system-architecture.md    # This architecture document
+│   ├── code-standards.md         # Coding standards & conventions
+│   ├── project-overview-pdr.md   # Project overview & PDR
+│   └── ...
+│
+├── plans/                        # Implementation plans
+│   └── {date}-{slug}/            # Timestamped plan folders
+│       ├── plan.md
+│       └── phase-*.md
+│
+├── Makefile                      # Development commands
+├── CLAUDE.md                     # Project-level instructions
+└── README.md                     # Quick start guide
 ```
+
+**Backend Module Key Classes:**
+
+| Module | Key Classes | Responsibility |
+|--------|------------|-----------------|
+| `agents/config.py` | AgentConfig, LLMConfig, TaskInput, TaskResult | Pydantic contracts |
+| `agents/base.py` | BaseAgent ABC | Agent interface + guardrail pipeline |
+| `agents/registry.py` | AgentRegistry, GenericAgent | Registry pattern + fallback |
+| `agents/loader.py` | YAML loader functions | Config inheritance & validation |
+| `tools/base.py` | BaseTool ABC, SimpleTool, @tool | Tool interface & decorator |
+| `tools/registry.py` | ToolRegistry | Tool discovery & CrewAI conversion |
+| `guardrails/base.py` | GuardrailBase, GuardrailPipeline | Guardrail composition |
+| `guardrails/input.py` | InputGuardrail | Prompt injection detection |
+| `guardrails/cost.py` | CostGuardrail | Budget enforcement |
+| `guardrails/output.py` | OutputGuardrail | Result schema validation |
+| `api/main.py` | create_app(), lifespan | FastAPI initialization |
+| `api/routers/agents.py` | Router functions | Agent endpoints |
+| `api/routers/tasks.py` | Router functions | Task endpoints |
+
+**Frontend Key Files:**
+
+| File | Purpose |
+|------|---------|
+| `app/layout.tsx` | Root layout with TanStack Query + Zustand providers |
+| `components/layout/providers.tsx` | Context + state initialization |
+| `lib/types.ts` | TypeScript interfaces for Agent, Task, User |
+| `lib/mock-data.ts` | Seed data for development |
+| `lib/hooks/useAgents.ts` | TanStack Query wrapper for agents API |
+| `lib/hooks/useTasks.ts` | TanStack Query wrapper for tasks API |
+| `components/agents/agent-card.tsx` | Reusable agent card component |
+| `components/tasks/kanban-board.tsx` | Kanban layout for task board |
 
 ## Development Commands
 

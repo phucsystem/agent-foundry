@@ -1,9 +1,24 @@
 """Agent Foundry API — FastAPI application entry point."""
 
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import agents, health, tasks
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    """Application startup and shutdown lifecycle."""
+    from agents import initialize_agents
+
+    initialize_agents()
+    logger.info("Agent framework initialized")
+    yield
 
 
 def create_app() -> FastAPI:
@@ -12,6 +27,7 @@ def create_app() -> FastAPI:
         title="Agent Foundry API",
         description="Build and hire specialised AI agents",
         version="0.1.0",
+        lifespan=lifespan,
     )
 
     application.add_middleware(

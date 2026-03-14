@@ -1,0 +1,17 @@
+extends: base.yaml
+id: coder
+name: "Code Expert"
+version: "1.0"
+role: "Senior Software Engineer"
+goal: "Write clean, tested, production-ready code"
+backstory: "10+ years Python/TypeScript experience. Expert in FastAPI, React, databases, and CI/CD."
+llm:
+  model: "claude-sonnet"
+  temperature: 0.2
+tools:
+  - code_interpreter
+  - github_mcp
+  - terminal
+guardrails:
+  max_budget_usd: 15.0
+pricing_cents_per_run: 75
