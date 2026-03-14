@@ -44,19 +44,32 @@ graph TD
 **Purpose:** Route requests, validate auth, mediate between frontend and workers
 
 **Responsibilities:**
-- OAuth2/API key authentication
+- Logto Cloud OIDC authentication (JWT + PyJWKClient validation)
+- API key-based authentication (for service-to-service)
 - Request validation (Pydantic)
-- Rate limiting & quota enforcement
+- Rate limiting & quota enforcement (per API key)
 - Response marshalling
 - SSE connection for live task monitoring
 - Error handling & transformation
+- Optional MOCK_AUTH bypass for development
 
 **Key Routes:**
+- `GET /health` → Service health check
 - `GET /agents` → List agents with filters
 - `POST /tasks` → Create task, enqueue
 - `GET /tasks/{id}` → Task status & results
-- `GET /subscriptions` → User's current tier
-- `POST /billing/usage` → Track consumption
+- `GET /tasks/{id}/stream` → SSE live updates
+- `GET /users/me` → Authenticated user profile
+- `POST /auth/callback` → Logto OIDC callback
+- `GET /subscriptions` → User's current tier (future)
+
+**Auth Flow:**
+1. Frontend redirects user to Logto sign-in (`/auth/signin`)
+2. Logto returns user to callback endpoint (`/auth/callback`)
+3. Backend validates Logto token via JWKS endpoint
+4. JWT stored in secure HTTP-only cookie (NextAuth.js)
+5. Subsequent requests include JWT token
+6. Backend validates token signature + expiry via PyJWKClient
 
 **Infrastructure:** Uvicorn ASGI server, runs in Container Apps
 
@@ -338,16 +351,23 @@ AgentError (base)
 
 ---
 
-### 7. LLM Routing (LiteLLM + OpenRouter)
+### 7. LLM Routing (LiteLLM + OpenRouter + DeepSeek)
 
 **Purpose:** One API key, 200+ models, cost-based automatic routing
 
 **Strategy:**
 - **Primary (reasoning):** Claude Sonnet 4.6 for complex tasks
-- **Code:** Claude or GPT-4o for coding tasks
+- **Code:** DeepSeek-Coder or Claude for coding tasks
+- **Chat:** DeepSeek-Chat for conversational tasks
+- **Reasoning:** DeepSeek-Reasoner for multi-step problems
 - **Fast/cheap:** Claude Haiku or Gemini Flash for simple tasks
 - **Fallback:** If quota exceeded, downgrade to cheaper model
 - **On-device:** Ollama for low-latency, cost-free execution (local)
+
+**DeepSeek Models (Direct API):**
+- `deepseek-coder` — Code generation, debugging, refactoring
+- `deepseek-chat` — General conversation, summarization
+- `deepseek-reasoner` — Complex reasoning, multi-step problems
 
 **Configuration:**
 ```python
@@ -440,10 +460,11 @@ graph TD
 %%{init: {'theme': 'neutral'}}%%
 graph TB
     FD["Azure Front Door + CDN<br/>DDoS protection, caching"]
+    AUTH["Logto Cloud<br/>OIDC Provider<br/>https://pk5k15.logto.app"]
 
     subgraph compute["Compute Layer"]
-        SWA["Static Web Apps<br/>Next.js Frontend"]
-        API["Container Apps<br/>FastAPI 1-10"]
+        SWA["Static Web Apps<br/>Next.js Frontend<br/>@logto/next SDK"]
+        API["Container Apps<br/>FastAPI 1-10<br/>PyJWKClient validation"]
         WK["Container Apps<br/>Celery Workers 1-10"]
     end
 
@@ -458,9 +479,18 @@ graph TB
         AM["Azure Monitor<br/>Metrics & Logs"]
     end
 
+    subgraph llm["LLM Services"]
+        LLP["LiteLLM Proxy<br/>Model Routing"]
+        CLAUDE["Claude<br/>Anthropic"]
+        DS["DeepSeek<br/>API Direct"]
+    end
+
     FD --> SWA
     FD --> API
     FD --> WK
+
+    SWA --> AUTH
+    API --> AUTH
 
     API --> PG
     API --> RD
@@ -468,12 +498,19 @@ graph TB
     WK --> PG
     WK --> MG
 
+    API --> LLP
+    WK --> LLP
+
+    LLP --> CLAUDE
+    LLP --> DS
+
     API --> LF
     WK --> LF
     API --> AM
     WK --> AM
 
     style FD fill:#1565c0,stroke:#4a90d9,color:#fff
+    style AUTH fill:#9b5bb0,stroke:#b085c2,color:#fff
     style SWA fill:#4a90d9,stroke:#6ba3e0,color:#fff
     style API fill:#d4883e,stroke:#e0a060,color:#fff
     style WK fill:#4a9e5c,stroke:#6db87e,color:#fff
@@ -482,6 +519,9 @@ graph TB
     style MG fill:#8a4ab0,stroke:#a565ca,color:#fff
     style LF fill:#c04040,stroke:#d06060,color:#fff
     style AM fill:#d4883e,stroke:#e0a060,color:#fff
+    style LLP fill:#e8a000,stroke:#f0b820,color:#000
+    style CLAUDE fill:#6ba3e0,stroke:#8bc3ff,color:#fff
+    style DS fill:#ff9500,stroke:#ffb030,color:#fff
 ```
 
 **Infrastructure Breakdown:**
@@ -490,7 +530,9 @@ graph TB
 - **Container Apps:** FastAPI + Celery (scale based on CPU/memory + queue depth)
 - **PostgreSQL Flexible:** Pay-per-use, auto-pause when idle, backups
 - **Redis:** Standard tier (1GB sufficient for MVP queue)
-- **Memgraph:** Single instance in Container Apps (evaluate Phase 2)
+- **Memgraph:** Single instance in Container Apps (evaluate Phase 3)
+- **Logto Cloud:** Managed OIDC auth provider (no self-hosting required)
+- **LiteLLM Proxy:** Model routing + fallback logic (local Container Apps)
 
 **Scaling:**
 - FastAPI: Container Apps (1-10 instances based on CPU/memory)
@@ -529,12 +571,13 @@ graph TB
 - [x] API endpoint implementations (health, agents, tasks with SSE)
 - [ ] GitHub Actions CI/CD (pending Phase 2)
 
-**Phase 2 (Weeks 5–8):**
-- PM, QA, Copywriter agents added
-- Orchestrator (CrewAI manager) routing tasks
-- Frontend marketplace UI
-- Billing dashboard
-- Notion + GitHub MCP fully integrated
+**Phase 2 (Weeks 5–8) — COMPLETE:**
+- [x] PM, QA, Copywriter agents added (5 agents total)
+- [x] Orchestrator (CrewAI manager) keyword-based routing
+- [x] Frontend marketplace UI + auth (Logto Cloud)
+- [x] Billing dashboard UI
+- [x] Notion + GitHub MCP integrated
+- [x] Internal dogfood testing with agents
 
 **Phase 3 (Weeks 9–14):**
 - Image + Video agents
@@ -551,7 +594,7 @@ graph TB
 ---
 
 ## Document Metadata
-- **Version:** 1.2
+- **Version:** 1.3
 - **Last Updated:** 2026-03-14
 - **Owner:** Architecture Team
-- **Status:** Phase 1 Complete (All 9 backend modules + Phase 11 frontend UI implemented)
+- **Status:** Phase 1–2, 6–11 Complete (All 9 backend modules + auth + CI/CD + Phase 11 frontend UI implemented; Logto Cloud auth integrated)

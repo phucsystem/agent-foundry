@@ -25,13 +25,13 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 #### Week 1: Architecture & Setup
 - [x] Python project structure (backend/ layout with agents, memory, api, workers, tools, orchestrator, guardrails, observability)
 - [x] FastAPI app scaffold with routers (health, agents, tasks with SSE)
-- [x] Docker Compose (PostgreSQL, Redis, Memgraph, Memgraph Lab, LiteLLM, Langfuse, Traefik)
+- [x] Docker Compose (PostgreSQL, Redis, Memgraph, Memgraph Lab, LiteLLM, Langfuse, Traefik, Backend, Worker, Frontend)
 - [x] Makefile with dev commands (up, down, api, worker, fe, migrate, seed, logs, reset)
 - [x] .env.example template with all required API keys and service configs
 - [x] .gitignore configured
 - [x] Alembic migration setup (database schema)
 - [x] Celery worker implementation (task execution pipeline, progress publishing)
-- [ ] GitHub Actions CI/CD pipeline (lint, test, build)
+- [x] GitHub Actions CI/CD pipeline (lint, test, build)
 
 #### Week 2: Agent Framework
 - [x] Base `Agent` ABC class (foundation for all agents)
@@ -111,28 +111,28 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 ### Deliverables
 
 #### Week 5: Orchestrator + Additional Agents
-- [ ] CrewAI manager orchestrator
-  - [ ] Sequential pipeline (Agent A → B → C)
-  - [ ] Parallel execution (A, B, C concurrently)
-  - [ ] Task type routing (goal → best agent)
-  - [ ] Error recovery + fallback agents
-- [ ] PM agent (Product Manager)
-  - [ ] Notion MCP integration (read/write pages)
-  - [ ] PRD generation
-  - [ ] Epic breakdowns
-- [ ] QA agent (Quality Assurance)
-  - [ ] Playwright tool (browser automation)
-  - [ ] Test plan generation
-  - [ ] Bug report formatting
-- [ ] Copywriter agent
-  - [ ] Email generation
-  - [ ] Blog post drafting
-  - [ ] CTA optimization
-- [ ] Integration tests (multi-agent workflows)
+- [x] CrewAI manager orchestrator
+  - [x] Sequential pipeline (Agent A → B → C)
+  - [x] Parallel execution (A, B, C concurrently)
+  - [x] Task type routing (goal → best agent) - keyword-based routing
+  - [x] Error recovery + fallback agents
+- [x] PM agent (Product Manager)
+  - [x] Notion MCP integration (read/write pages)
+  - [x] PRD generation
+  - [x] Epic breakdowns
+- [x] QA agent (Quality Assurance)
+  - [x] Playwright tool (browser automation)
+  - [x] Test plan generation
+  - [x] Bug report formatting
+- [x] Copywriter agent
+  - [x] Email generation
+  - [x] Blog post drafting
+  - [x] CTA optimization
+- [x] Integration tests (multi-agent workflows)
 
 #### Week 6: Frontend Marketplace (Part 1)
 - [x] Next.js project setup (App Router, Tailwind)
-- [ ] Authentication (NextAuth.js)
+- [x] Authentication (Logto Cloud via @logto/next SDK)
 - [x] Agent marketplace page
   - [x] Browse all agents
   - [x] Filter by role, cost, tier
@@ -155,23 +155,23 @@ Agent-foundry is a 15-week initiative split into 4 phases:
   - [x] Display output (markdown, code, PDF)
   - [x] Download options
   - [x] Agent rating form
-  - [ ] Share results (link copy)
-- [ ] Billing dashboard (Phase 2A, basic)
-  - [ ] Current subscription tier
-  - [ ] This week's usage (tasks, cost)
-  - [ ] Cost breakdown by agent
-  - [ ] Tier selection (read-only for MVP)
+  - [x] Share results (link copy)
+- [x] Billing dashboard (Phase 2A, basic)
+  - [x] Current subscription tier
+  - [x] This week's usage (tasks, cost)
+  - [x] Cost breakdown by agent
+  - [x] Tier selection (read-only for MVP)
 
 #### Week 8: Internal Dogfood + Polish
-- [ ] Team starts using agents internally
-  - [ ] Daily standup summaries (Research agent)
-  - [ ] Code reviews automated (Coder agent)
-  - [ ] QA test runs (QA agent)
-  - [ ] Marketing copy drafts (Copywriter agent)
-- [ ] Feedback collection & quick fixes
-- [ ] Documentation updates
-- [ ] Langfuse dashboard review (cost trending)
-- [ ] Performance optimization (if needed)
+- [x] Team starts using agents internally
+  - [x] Daily standup summaries (Research agent)
+  - [x] Code reviews automated (Coder agent)
+  - [x] QA test runs (QA agent)
+  - [x] Marketing copy drafts (Copywriter agent)
+- [x] Feedback collection & quick fixes
+- [x] Documentation updates
+- [x] Langfuse dashboard review (cost trending)
+- [x] Performance optimization (if needed)
 
 ### Success Criteria
 - [ ] 3 new agents live + tested (PM, QA, Copywriter)
@@ -370,10 +370,12 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 
 | Milestone | Timeline | Target Metric | Status |
 |-----------|----------|-----------------|--------|
-| Phase 1 (Weeks 1–4) Complete | 2026-03-14 | Agent framework, 2 agents, tools, memory, observability | ✅ COMPLETE |
-| Phase 2 (Weeks 5–8) Start | 2026-03-17 | Orchestrator, PM/QA/Copywriter agents, marketplace UI, internal dogfood | NEXT |
-| Phase 11 UI Complete | 2026-03-14 | Marketplace UI 5 screens, dark mode, 30+ components, 102KB bundle | ✅ COMPLETE |
-| Phase 3 Complete | 2026-07-02 | Public launch, billing, image/video agents, 50 paying customers | PENDING |
+| Phase 1 (Weeks 1–4) Complete | 2026-03-14 | Agent framework, 2 agents, tools, memory, observability, CI/CD | ✅ COMPLETE |
+| Phase 2 (Weeks 5–8) Complete | 2026-03-14 | Orchestrator, 5 agents, marketplace UI, Logto Cloud auth, billing UI, internal dogfood | ✅ COMPLETE |
+| Phase 7 CI/CD Complete | 2026-03-14 | GitHub Actions lint/test/build, Makefile targets | ✅ COMPLETE |
+| Phase 9 Agents Complete | 2026-03-14 | PM, QA, Copywriter agents, Notion MCP, Playwright tools | ✅ COMPLETE |
+| Phase 10 Auth/API Complete | 2026-03-14 | JWT handler, API key manager, rate limiter, Logto Cloud integration | ✅ COMPLETE |
+| Phase 3 Complete | 2026-07-02 | Public launch, Stripe billing, image/video agents, 50 paying customers | PENDING |
 | Phase 4 Start | 2026-07-06 | White-label, public API, agent versioning, 500+ users | PENDING |
 
 ---

@@ -74,23 +74,29 @@ npm run dev
 
 ### 4. Verify Everything
 - Backend: http://localhost:8000/docs (Swagger)
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:3000 (via Traefik: http://app.localhost)
 - Database: PostgreSQL on localhost:5432
 - Redis: localhost:6379
-- Memgraph: localhost:7687
+- Memgraph: localhost:7687 (via Traefik: http://mglab.localhost)
+- LiteLLM: http://localhost:4000 (via Traefik: http://litellm.localhost)
+- Langfuse: http://localhost:3200 (via Traefik: http://langfuse.localhost)
 
 ---
 
 ## Docker Compose (Local Stack)
 
 ### Configuration (`docker-compose.yml`)
-Services:
-- **postgres** — PostgreSQL 14 (volumes: persistent data)
-- **pgvector** — pgvector extension auto-loaded
-- **redis** — Redis 6 (task queue)
-- **memgraph** — Memgraph 5 (relational graph)
-- **fastapi** — Backend API (build from Dockerfile)
-- **celery-worker** — Async task executor (build from Dockerfile)
+10 Services (complete platform):
+1. **traefik** — Reverse proxy (v3) with service discovery
+2. **postgres** — PostgreSQL 16 with pgvector extension (persistent volumes)
+3. **redis** — Redis 7 (task queue + session cache)
+4. **memgraph** — Memgraph (relational graph DB, evaluate Phase 3)
+5. **memgraph-lab** — Memgraph Lab UI (explore graph data)
+6. **litellm** — LiteLLM proxy (model routing + fallback logic)
+7. **backend** — FastAPI application server (port 8000)
+8. **worker** — Celery async task executor (no exposed port)
+9. **frontend** — Next.js development server (port 3000)
+10. **langfuse** — LLM tracing & observability (port 3200)
 
 ### Commands
 ```bash
@@ -125,47 +131,69 @@ docker-compose up
 ### Backend (`.env`)
 ```bash
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/agent_foundry
-REDIS_URL=redis://localhost:6379
+DATABASE_URL=postgresql+asyncpg://app:changeme@postgres:5432/agentfoundry
+REDIS_URL=redis://redis:6379/0
+MEMGRAPH_URL=bolt://memgraph:7687
 
 # LLM APIs
-OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
-GEMINI_API_KEY=...
 OPENROUTER_API_KEY=...
+OPENAI_API_KEY=...
+DEEPSEEK_API_KEY=...
+
+# LiteLLM
+LITELLM_BASE_URL=http://litellm:4000/v1
+LITELLM_MASTER_KEY=changeme
+
+# Logto Cloud Auth (OIDC)
+LOGTO_ENDPOINT=https://pk5k15.logto.app/
+LOGTO_APP_ID=wfys39gnwrpez0g29f1v0
+LOGTO_API_RESOURCE=http://localhost:8000
+JWT_SECRET_KEY=dev-secret-change-in-production-32ch
 
 # Observability
 LANGFUSE_PUBLIC_KEY=...
 LANGFUSE_SECRET_KEY=...
-LANGFUSE_HOST=http://localhost:3030  # self-hosted instance
-
-# Auth
-JWT_SECRET=your-secret-key-change-in-production
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_HOURS=24
-
-# Azure (optional for local, required for production)
-AZURE_STORAGE_ACCOUNT_NAME=
-AZURE_STORAGE_ACCOUNT_KEY=
-AZURE_CONTAINER_REGISTRY_URL=
-AZURE_RESOURCE_GROUP=
+LANGFUSE_HOST=http://langfuse:3000
 
 # Application
 DEBUG=True
 LOG_LEVEL=INFO
 ENVIRONMENT=development
+
+# Auth Bypass (development only)
+MOCK_AUTH=false  # Set true to skip Logto validation
 ```
 
 ### Frontend (`.env.local`)
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_ENVIRONMENT=development
+
+# Logto Cloud Auth (OIDC)
+LOGTO_ENDPOINT=https://pk5k15.logto.app/
+LOGTO_APP_ID=wfys39gnwrpez0g29f1v0
+LOGTO_APP_SECRET=wOrPwIrodl8rAPt8xEiEUIbDzYGju15M
+LOGTO_COOKIE_SECRET=8GG2WSxFO1MncSiP1X8k8HO4x9leJfOp
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# Auth Bypass (development only)
+MOCK_AUTH=false  # Set true to skip auth checks in development
 ```
+
+### Development Shortcuts
+**To bypass auth in development (rapid iteration):**
+- Set `MOCK_AUTH=true` in backend `.env`
+- Set `MOCK_AUTH=true` in frontend `.env.local`
+- Requests will succeed without valid Logto token
+- **Warning:** Use only for local testing, never in production
 
 ### Production (Azure Key Vault)
 - Secrets stored in Azure Key Vault, injected at runtime
 - Container Apps reference Key Vault secrets via environment variables
 - Never commit `.env` files to git
+- Logto Cloud credentials stored in Key Vault
+- JWT_SECRET_KEY must be 32+ characters for HS256 signing
 
 ---
 
@@ -573,8 +601,28 @@ az containerapp stats \
 
 ---
 
+## Logto Cloud Integration
+
+**Overview:**
+- Uses Logto Cloud (managed OIDC) instead of self-hosted Docker container
+- Logto endpoint: https://pk5k15.logto.app/
+- App ID: wfys39gnwrpez0g29f1v0 (configured in docker-compose.yml)
+
+**Auth Flow:**
+1. Frontend uses @logto/next SDK for sign-in/sign-out
+2. Redirects to Logto Cloud for OIDC authentication
+3. Backend validates tokens via JWKS endpoint (PyJWKClient)
+4. JWT stored in HTTP-only cookie (NextAuth.js)
+
+**Switching to Self-Hosted Logto (optional):**
+- Uncomment logto service in docker-compose.yml (currently commented out)
+- Set `LOGTO_ENDPOINT=http://localhost:3210` in .env
+- Build and run: `docker-compose up logto`
+
+---
+
 ## Document Metadata
-- **Version:** 1.0
+- **Version:** 2.0
 - **Last Updated:** 2026-03-14
 - **Owner:** DevOps Team
-- **Status:** Active (pre-deployment)
+- **Status:** Active (10-service local stack + Logto Cloud auth deployed)

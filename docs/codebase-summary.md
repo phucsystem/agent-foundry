@@ -4,7 +4,7 @@
 
 Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backend), Next.js/React (frontend), and PostgreSQL/Redis/Memgraph infrastructure. As of 2026-03-14, the codebase spans 92K lines (backend Python) + 41K lines (frontend TypeScript) across 9 backend modules and 5 frontend screens with 30+ React components.
 
-**Completion Status:** Phases 1, 2, 6, 8, 11 implemented. Foundation (Phases 3–7, 9–10, 12–20) in progress.
+**Completion Status:** Phases 1, 2, 6, 7, 8, 9, 10, 11 implemented. Foundation (Phases 3–5, 12–20) in progress.
 
 ---
 
@@ -227,9 +227,9 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 
 ---
 
-### 9. API Module (231 lines, 6 files)
+### 9. API Module (340 lines, 10 files)
 
-**Purpose:** FastAPI app factory, routers, middleware, error handling.
+**Purpose:** FastAPI app factory, routers, middleware, auth, error handling.
 
 **Key Routes:**
 - `GET /health` — Readiness probe (service + dependency checks)
@@ -238,20 +238,28 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 - `POST /tasks` — Create + enqueue task (validates TaskInput, returns task_id)
 - `GET /tasks/{id}` — Get task status + results (stored in PostgreSQL)
 - `GET /tasks/{id}/stream` — SSE stream for live task progress (via Redis pub/sub)
+- `GET /users/me` — Get authenticated user profile (requires Logto token)
+- `POST /auth/callback` — Logto OIDC callback handler
+- `GET /auth/signin` — Logto sign-in redirect
 
 **Files:**
 - `main.py` (95 lines) — FastAPI app factory, middleware setup, route registration
 - `routers/health.py` (35 lines) — GET /health endpoint
 - `routers/agents.py` (65 lines) — GET /agents, GET /agents/{id}
 - `routers/tasks.py` (85 lines) — POST /tasks, GET /tasks/{id}, SSE stream
-- `__init__.py` (10 lines) — Exports
-- `routers/__init__.py` (5 lines) — Exports
+- `routers/auth.py` (50 lines) — POST /auth/callback, GET /auth/signin
+- `routers/users.py` (40 lines) — GET /users/me (profile)
+- `auth/logto.py` (60 lines) — Logto Cloud OIDC client
+- `auth/jwt_handler.py` (50 lines) — JWT token verification via PyJWKClient
+- `auth/api_key.py` (40 lines) — API key manager + validation
+- `auth/dependencies.py` (35 lines) — FastAPI dependency injection for auth
 
 **Middleware:**
 - CORS (whitelist frontend origin)
 - RequestID injection (for tracing)
 - Error handling (500 errors logged to Langfuse)
-- Rate limiting (per API key, future Phase 2)
+- Rate limiting (per API key, via RateLimiter)
+- Auth middleware (JWT + optional MOCK_AUTH bypass)
 
 ---
 
@@ -423,7 +431,7 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 ### Infrastructure
 | Component | Technology | Notes |
 |-----------|-----------|-------|
-| **Local Dev** | Docker Compose | 7 services |
+| **Local Dev** | Docker Compose | 10 services: Traefik, Postgres, Redis, Memgraph, Memgraph Lab, LiteLLM, Backend, Worker, Frontend, Langfuse |
 | **Reverse Proxy** | Traefik | v3 |
 | **Production** | Azure Container Apps | Scale to 10 instances |
 | **Storage** | Azure PostgreSQL Flexible | Auto-pause when idle |
@@ -431,7 +439,8 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 | **CDN** | Azure Front Door | DDoS protection |
 | **Static Frontend** | Azure Static Web Apps | Free tier |
 | **IaC** | Azure Bicep | (Phase 2) |
-| **CI/CD** | GitHub Actions | (Pending Phase 2) |
+| **CI/CD** | GitHub Actions | Lint, test, build (Phase 7 complete) |
+| **Auth** | Logto Cloud | OIDC provider at https://pk5k15.logto.app |
 
 ---
 
@@ -532,19 +541,19 @@ frontend/
 
 ## Implementation Status
 
-### Complete (Phase 1 + Phase 11)
-- [x] Backend: agents, tools, guardrails, orchestrator, observability, database, memory, workers, api
+### Complete (Phases 1, 2, 6, 7, 8, 9, 10, 11)
+- [x] Backend: agents (5 total), tools, guardrails, orchestrator, observability, database, memory, workers, api
 - [x] Frontend: 5 pages, 30+ components, dark mode, Tailwind v4 styling
-- [x] Infrastructure: Docker Compose (7 services), Traefik routing, .env template
+- [x] Infrastructure: Docker Compose (10 services), Traefik routing, .env template
 - [x] Documentation: architecture, code standards, this codebase summary, roadmap
+- [x] Auth: Logto Cloud OIDC, JWT handler, API key manager, rate limiter
+- [x] CI/CD: GitHub Actions (lint, test, build), Makefile targets
+- [x] Agents: Coder, Research, PM, QA, Copywriter with keyword-based routing
+- [x] Database: PostgreSQL schema, pgvector semantic memory, Memgraph relational graph
+- [x] Observability: Langfuse LLM tracing, OpenTelemetry metrics, structured logging
+- [x] LLM Routing: LiteLLM proxy with DeepSeek support (3 models: coder, chat, reasoner)
 
-### In Progress (Phase 2)
-- [ ] GitHub Actions CI/CD (lint, test, build)
-- [ ] Expanded agent roster (PM, QA, Copywriter)
-- [ ] Billing dashboard + Stripe integration
-- [ ] Internal dogfood testing (50+ internal users)
-
-### Pending (Phase 3+)
+### In Progress / Pending (Phase 3+)
 - [ ] Public signup + Stripe billing engine
 - [ ] Image designer agent (Stable Diffusion / DALL-E)
 - [ ] Video editor agent (RunwayML / Kling)
@@ -556,8 +565,8 @@ frontend/
 
 ## Document Metadata
 
-- **Version:** 3.0 (Phases 1, 2, 6, 8, 11 implementation summary)
+- **Version:** 4.0 (Phases 1, 2, 6, 7, 8, 9, 10, 11 implementation summary)
 - **Last Updated:** 2026-03-14
 - **Owner:** Engineering Team
-- **Status:** Phase 1 Complete, Phase 2 In Progress
-- **Next Update:** After Phase 2 completion (estimated 2026-05-17)
+- **Status:** Phases 1–2, 7–11 Complete; Phases 3–5, 12+ Pending
+- **Next Update:** After Phase 3 completion (estimated 2026-07-02)
