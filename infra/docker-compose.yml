@@ -1,3 +1,5 @@
+name: agent-foundry
+
 networks:
   agent-foundry:
     driver: bridge
@@ -120,6 +122,27 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - agent-foundry
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: af-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     networks:
       - agent-foundry
 
