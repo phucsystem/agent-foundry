@@ -9,21 +9,23 @@ Project-level instructions for Claude Code when working in agent-foundry.
 ## Tech Stack
 
 ### Backend (Python)
-- **Framework:** FastAPI + Uvicorn
-- **Agents:** CrewAI + LangGraph
-- **Task queue:** Celery + Redis
+- **Framework:** FastAPI 0.135+ + Uvicorn 0.41+
+- **Python:** 3.12+
+- **Agents:** CrewAI 0.80+ + LangGraph 1.1+
+- **Task queue:** Celery 5.6+ + Redis
 - **Database:** PostgreSQL + pgvector (semantic memory), Memgraph (relational graph)
-- **LLM routing:** LiteLLM proxy (Anthropic, OpenRouter, OpenAI)
-- **Observability:** Langfuse (LLM tracing), OpenTelemetry
-- **Schema validation:** Pydantic v2
+- **LLM routing:** LiteLLM 1.80+ proxy (Anthropic, OpenRouter, OpenAI)
+- **Observability:** Langfuse 2.50+ (LLM tracing), OpenTelemetry
+- **Schema validation:** Pydantic 2.12+
 
 ### Frontend (TypeScript)
-- **Framework:** Next.js 15 (App Router) + React 19
-- **Styling:** Tailwind CSS v4
+- **Framework:** Next.js 16+ (App Router) + React 19
+- **Styling:** Tailwind CSS 4+
 - **Cross-platform:** Tamagui
-- **Data:** TanStack Query, Table, Router, Form, Virtual
-- **Auth:** NextAuth.js v5
-- **State:** Zustand
+- **Data:** TanStack Query 5+, Table 8+, Form 1+, Virtual 3+
+- **Auth:** NextAuth.js 5.0.0-beta.30+
+- **State:** Zustand 5+
+- **Build:** Turbopack enabled
 
 ### Infrastructure
 - **Local:** Docker Compose (Traefik, Postgres, Redis, Memgraph, LiteLLM, Langfuse)
@@ -216,18 +218,21 @@ make reset     # Wipe volumes and restart
 ## Code Standards
 
 ### Python
-- Type hints mandatory on all functions
-- Pydantic models for all I/O contracts
+- Type hints mandatory on all functions (Python 3.12+)
+- Pydantic 2.12+ models for all I/O contracts
 - `async def` for I/O-bound operations
 - Custom exceptions for domain errors (never bare `except:`)
 - Logging via `logging.getLogger(__name__)`, not `print()`
 - File size < 200 lines; split if larger
+- Lint: `ruff check` (target py312)
+- Type check: `mypy --strict`
 
 ### TypeScript
 - Strict mode always enabled
 - No `any` types — use `unknown` with type guards
 - `interface` for prop contracts
-- TanStack Query for server state, Zustand for global client state
+- TanStack Query 5+ for server state, Zustand 5+ for global client state
+- Type check: `npm run lint` runs `tsc --noEmit`
 
 ### General
 - File naming: kebab-case

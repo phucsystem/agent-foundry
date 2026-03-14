@@ -11,7 +11,7 @@ Agent-foundry is a distributed system separating **deterministic flow** (routing
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 graph TD
-    FE["Frontend - Next.js 15 + React 19"]
+    FE["Frontend - Next.js 16 + React 19"]
     FE -->|HTTP + SSE| API["FastAPI Gateway"]
     API --> AReg["Agent Registry"]
     API --> TQ["Task Queue - Celery/Redis"]
@@ -573,7 +573,7 @@ graph TB
 - Docker Compose stack: Traefik, PostgreSQL, Redis, Memgraph, LiteLLM, Langfuse
 - Makefile with development commands
 - .env.example template
-- Next.js 15 frontend skeleton (layout + landing page)
+- Next.js 16 frontend skeleton (layout + landing page)
 
 **Weeks 2–4 (COMPLETE)**
 - [x] Agent framework: tools, guardrails, config loader, exception hierarchy

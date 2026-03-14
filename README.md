@@ -9,7 +9,7 @@ Deploy a suite of domain-expert AI agents (Image Designer, Video Editor, Coder, 
 ## Quick Start
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.12+
 - Node.js 18+
 - Docker, Docker Compose
 - Azure CLI (production)
@@ -45,9 +45,9 @@ make fe
 ## Tech Stack
 
 **Backend:**
-- Python 3.11+, CrewAI + LangGraph
-- FastAPI + Uvicorn
-- Celery + Redis (async jobs)
+- Python 3.12+, CrewAI 0.80+ + LangGraph 1.1+
+- FastAPI 0.135+ + Uvicorn 0.41+
+- Celery 5.6+ + Redis (async jobs)
 - PostgreSQL + pgai (semantic memory, RAG)
 - Memgraph (relational graph — Phase 1 MVP)
 
@@ -57,9 +57,9 @@ make fe
 - Memgraph — agent/task/project relationships, reputation
 
 **Frontend:**
-- Next.js 14 (App Router) + TypeScript
-- Tailwind CSS + Tamagui
-- TanStack Query, Router, Form, Virtual
+- Next.js 16+ (App Router) + TypeScript + Turbopack
+- Tailwind CSS 4+ + Tamagui
+- TanStack Query 5+, Router, Form 1+, Virtual
 - FastAPI SSE integration
 
 **LLM Backends:**
