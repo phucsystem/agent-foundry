@@ -21,13 +21,24 @@ model_list:
       api_key: os.environ/OPENROUTER_API_KEY
   - model_name: deepseek-coder
     litellm_params:
-      model: openrouter/deepseek/deepseek-coder
-      api_key: os.environ/OPENROUTER_API_KEY
+      model: deepseek/deepseek-coder
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com/v1
+  - model_name: deepseek-chat
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com/v1
+  - model_name: deepseek-reasoner
+    litellm_params:
+      model: deepseek/deepseek-reasoner
+      api_key: os.environ/DEEPSEEK_API_KEY
+      api_base: https://api.deepseek.com/v1
 
 router_settings:
   routing_strategy: cost-based-routing
   fallbacks:
-    - {claude-sonnet: [openrouter-auto]}
+    - {claude-sonnet: [deepseek-chat, openrouter-auto]}
   context_window_fallbacks:
     - {claude-sonnet: [gpt-4o]}
 
