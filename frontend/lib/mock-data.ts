@@ -11,6 +11,9 @@ import type {
   AgentCapability,
   PerformanceMetric,
   ReviewSummary,
+  AgentUsage,
+  BillingTransaction,
+  CreditPackage,
 } from "./types";
 
 export const MOCK_AGENTS: Agent[] = [
@@ -557,4 +560,33 @@ export const MOCK_KPIS: KpiData[] = [
   { label: "Success Rate", value: "91.7%", change: "+2.3%", changeType: "positive" },
   { label: "Avg Duration", value: "1m 42s", change: "-12s faster", changeType: "positive" },
   { label: "Total Cost", value: "$58.40", change: "+$12.30", changeType: "negative" },
+];
+
+// Billing mock data
+
+export const MOCK_BILLING_BALANCE = 54.80;
+export const MOCK_BILLING_AVG_COST = 2.40;
+
+export const MOCK_AGENT_USAGE: AgentUsage[] = [
+  { agentId: "coder", agentName: "Coder", color: "#3B82F6", amountUsd: 22.50, percentage: 50 },
+  { agentId: "research", agentName: "Research", color: "#10B981", amountUsd: 9.60, percentage: 21 },
+  { agentId: "qa", agentName: "QA", color: "#EF4444", amountUsd: 8.70, percentage: 19 },
+  { agentId: "pm", agentName: "PM", color: "#F59E0B", amountUsd: 4.20, percentage: 9 },
+];
+
+export const MOCK_TRANSACTIONS: BillingTransaction[] = [
+  { id: "tx-1", type: "usage", description: "Fix auth token refresh — Coder", date: "Mar 15, 2026", amountUsd: -2.10, balanceUsd: 54.80 },
+  { id: "tx-2", type: "usage", description: "Research rate limiting — Research", date: "Mar 15, 2026", amountUsd: -1.80, balanceUsd: 56.90 },
+  { id: "tx-3", type: "usage", description: "Unit tests login flow — Coder", date: "Mar 14, 2026", amountUsd: -3.20, balanceUsd: 58.70 },
+  { id: "tx-4", type: "usage", description: "QA regression suite — QA", date: "Mar 14, 2026", amountUsd: -2.50, balanceUsd: 61.90 },
+  { id: "tx-5", type: "topup", description: "Credit top-up via Stripe", date: "Mar 10, 2026", amountUsd: 100.00, balanceUsd: 64.40 },
+  { id: "tx-6", type: "usage", description: "OAuth middleware refactor — Coder", date: "Mar 9, 2026", amountUsd: -4.10, balanceUsd: -35.60 },
+  { id: "tx-7", type: "usage", description: "Competitor analysis — Research", date: "Mar 8, 2026", amountUsd: -1.50, balanceUsd: -31.50 },
+];
+
+export const MOCK_CREDIT_PACKAGES: CreditPackage[] = [
+  { amount: 10, credits: 10, bonus: 0 },
+  { amount: 25, credits: 25, bonus: 0 },
+  { amount: 50, credits: 50, bonus: 5 },
+  { amount: 100, credits: 100, bonus: 15 },
 ];

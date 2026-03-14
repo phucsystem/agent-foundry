@@ -16,6 +16,11 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/tasks",
     icon: "lucide:activity",
   },
+  {
+    label: "Billing",
+    href: "/billing",
+    icon: "lucide:credit-card",
+  },
 ];
 
 export const AGENT_COLORS: Record<string, { from: string; to: string }> = {

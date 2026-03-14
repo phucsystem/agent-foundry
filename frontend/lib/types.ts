@@ -124,6 +124,31 @@ export interface ReviewSummary {
   distribution: number[];
 }
 
+// Billing types
+
+export interface AgentUsage {
+  agentId: string;
+  agentName: string;
+  color: string;
+  amountUsd: number;
+  percentage: number;
+}
+
+export interface BillingTransaction {
+  id: string;
+  type: "usage" | "topup";
+  description: string;
+  date: string;
+  amountUsd: number;
+  balanceUsd: number;
+}
+
+export interface CreditPackage {
+  amount: number;
+  credits: number;
+  bonus: number;
+}
+
 // Hired agent types
 
 export interface AgentStatsSummary {
