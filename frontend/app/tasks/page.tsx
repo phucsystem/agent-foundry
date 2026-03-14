@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTasks } from "@/lib/hooks/use-tasks";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
-import { SearchBar, FilterButton } from "@/components/ui/search-bar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
@@ -15,12 +14,19 @@ type ViewMode = "board" | "list";
 export default function TaskBoardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("board");
+  const [agentFilter, setAgentFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
 
   const { data: tasks = [], isLoading, error } = useTasks();
 
-  const filteredTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const uniqueAgents = [...new Set(tasks.map((task) => task.agentId))];
+
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAgent = !agentFilter || task.agentId === agentFilter;
+    const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+    return matchesSearch && matchesAgent && matchesPriority;
+  });
 
   return (
     <>
@@ -52,14 +58,37 @@ export default function TaskBoardPage() {
         </div>
       </div>
 
-      <SearchBar
-        placeholder="Search tasks..."
-        value={searchQuery}
-        onChange={setSearchQuery}
-      >
-        <FilterButton label="Agent" />
-        <FilterButton label="Priority" />
-      </SearchBar>
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <input
+          type="text"
+          className="flex-1 min-w-[200px] border border-border rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-3 focus:ring-primary/15 dark:bg-slate-800 dark:text-white"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+        <select
+          value={agentFilter}
+          onChange={(event) => setAgentFilter(event.target.value)}
+          className="border border-border rounded-md px-3 py-2.5 text-sm bg-white dark:bg-slate-800 dark:text-white cursor-pointer"
+        >
+          <option value="">All Agents</option>
+          {uniqueAgents.map((agentId) => (
+            <option key={agentId} value={agentId}>
+              {agentId.charAt(0).toUpperCase() + agentId.slice(1)}
+            </option>
+          ))}
+        </select>
+        <select
+          value={priorityFilter}
+          onChange={(event) => setPriorityFilter(event.target.value)}
+          className="border border-border rounded-md px-3 py-2.5 text-sm bg-white dark:bg-slate-800 dark:text-white cursor-pointer"
+        >
+          <option value="">All Priorities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
 
       {isLoading && (
         <div className="text-center py-12 text-text-secondary">Loading tasks...</div>
