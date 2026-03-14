@@ -154,15 +154,47 @@ agent-foundry/
 
 Revenue: Weekly subscriptions, usage-based add-ons, outcome-based pricing, white-label, marketplace.
 
-## Documentation
+## Documentation — Engineer Onboarding Guide
 
-See `/docs` for detailed guides:
-- **[project-overview-pdr.md](./docs/project-overview-pdr.md)** — Functional & non-functional requirements
-- **[system-architecture.md](./docs/system-architecture.md)** — System design, data flow, API contracts
-- **[code-standards.md](./docs/code-standards.md)** — Code style, conventions, patterns
-- **[project-roadmap.md](./docs/project-roadmap.md)** — 4 phases, timeline, milestones
-- **[deployment-guide.md](./docs/deployment-guide.md)** — Azure setup, CI/CD, scaling
-- **[design-guidelines.md](./docs/design-guidelines.md)** — UI/UX, components, patterns
+All project documentation lives in [`/docs`](./docs/). Read in the order below to onboard effectively.
+
+### Start Here
+
+| # | Document | What You'll Learn |
+|---|----------|-------------------|
+| 1 | **[Project Overview (PDR)](./docs/project-overview-pdr.md)** | Business context, functional & non-functional requirements, target users |
+| 2 | **[System Architecture](./docs/system-architecture.md)** | System design, data flow, API contracts, service boundaries |
+| 3 | **[Codebase Summary](./docs/codebase-summary.md)** | Module inventory, line counts, completion status across all phases |
+
+### Architecture & Design
+
+| Document | What You'll Learn |
+|----------|-------------------|
+| **[SRD — Super Admin](./docs/SRD.md)** | System requirement definition for admin panel (metrics, user mgmt, health) |
+| **[API Specification](./docs/API_SPEC.md)** | Endpoint matrix for agent marketplace, hiring, and team management |
+| **[DB Design](./docs/DB_DESIGN.md)** | ER diagrams, schema extensions for agent hiring, settings, knowledge files |
+| **[UI Specification](./docs/UI_SPEC.md)** | Design system (Vercel-inspired dark mode), component specs, admin layouts |
+
+### Standards & Guidelines
+
+| Document | What You'll Learn |
+|----------|-------------------|
+| **[Code Standards](./docs/code-standards.md)** | Python/TypeScript conventions, naming, error handling, file size limits |
+| **[Design Guidelines](./docs/design-guidelines.md)** | UI/UX patterns, component library, responsive breakpoints |
+
+### Operations
+
+| Document | What You'll Learn |
+|----------|-------------------|
+| **[Deployment Guide](./docs/deployment-guide.md)** | Docker Compose (10 containers), Azure Bicep IaC, CI/CD, env vars, scaling |
+| **[Project Roadmap](./docs/project-roadmap.md)** | 4 phases, timeline, milestones, current progress |
+
+### Progress Reports
+
+| Document | What You'll Learn |
+|----------|-------------------|
+| **[Phase 1 Completion Summary](./docs/PHASE-1-COMPLETION-SUMMARY.md)** | Full Phase 1 delivery — 92K backend lines, 41K frontend lines, 9 modules |
+| **[Phase 1 Week 1 Summary](./docs/PHASE-1-WEEK-1-COMPLETION-SUMMARY.md)** | Week 1 foundation deliverables and verification results |
 
 ## Development
 
