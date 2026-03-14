@@ -199,6 +199,13 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
       NEXT_PUBLIC_MOCK_AUTH: ${MOCK_AUTH:-false}
+      NEXT_PUBLIC_LOGTO_ENDPOINT: ${LOGTO_ENDPOINT:-https://pk5k15.logto.app}
+      AUTH_LOGTO_ID: ${LOGTO_APP_ID:-wfys39gnwrpez0g29f1v0}
+      AUTH_LOGTO_SECRET: ${LOGTO_APP_SECRET:-}
+      AUTH_LOGTO_ISSUER: ${LOGTO_ENDPOINT:-https://pk5k15.logto.app}/oidc
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-nextauth-secret-change-in-production-32ch}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-in-production-32ch}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"
