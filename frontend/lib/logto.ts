@@ -8,5 +8,4 @@ export const logtoConfig: LogtoNextConfig = {
   cookieSecret: process.env.LOGTO_COOKIE_SECRET ?? "8GG2WSxFO1MncSiP1X8k8HO4x9leJfOp",
   cookieSecure: process.env.NODE_ENV === "production",
   scopes: ["openid", "profile", "email"],
-  resources: [process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"],
 };
