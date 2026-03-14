@@ -42,7 +42,7 @@ services:
     networks:
       - agent-foundry
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-agentfoundry}"]
       interval: 5s
       timeout: 5s
       retries: 5
