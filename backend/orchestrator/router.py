@@ -6,12 +6,24 @@ logger = logging.getLogger(__name__)
 
 ROUTE_KEYWORDS: dict[str, list[str]] = {
     "coder": [
-        "code", "bug", "fix", "test", "pr", "pull request", "refactor",
+        "code", "bug", "fix", "pr", "pull request", "refactor",
         "implement", "function", "api", "endpoint", "debug",
     ],
     "researcher": [
         "research", "analyze", "report", "find", "investigate", "compare",
         "summarize", "study", "review literature",
+    ],
+    "pm": [
+        "product", "requirements", "prd", "user story", "stories", "roadmap",
+        "backlog", "sprint", "epic", "feature spec",
+    ],
+    "qa": [
+        "qa", "quality", "regression", "playwright", "selenium",
+        "automation", "coverage", "test case", "test plan", "test report",
+    ],
+    "copywriter": [
+        "copy", "email", "blog", "marketing", "seo", "headline", "cta",
+        "newsletter", "content", "landing page",
     ],
 }
 

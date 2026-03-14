@@ -1,4 +1,4 @@
-.PHONY: up down api worker fe migrate seed logs reset sync-prod deploy
+.PHONY: up down api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check
 
 # Infrastructure
 up:
@@ -30,6 +30,20 @@ seed:
 # Frontend
 fe:
 	cd frontend && pnpm run dev
+
+# Quality
+lint:
+	cd backend && ruff check . && ruff format --check .
+	cd frontend && pnpm exec tsc --noEmit
+
+typecheck:
+	cd backend && mypy --ignore-missing-imports agents/ tools/ guardrails/
+
+test:
+	cd backend && python -m pytest tests/ -v --tb=short
+
+check: lint test
+	@echo "All checks passed"
 
 # Production
 sync-prod:
