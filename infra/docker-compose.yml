@@ -142,8 +142,8 @@ services:
       REDIS_URL: redis://redis:6379/0
       MEMGRAPH_URL: bolt://memgraph:7687
       LITELLM_BASE_URL: http://litellm:4000/v1
-      LOGTO_ENDPOINT: http://logto:3001
-      LOGTO_APP_ID: ${LOGTO_APP_ID:-}
+      LOGTO_ENDPOINT: ${LOGTO_ENDPOINT:-https://pk5k15.logto.app/}
+      LOGTO_APP_ID: ${LOGTO_APP_ID:-wfys39gnwrpez0g29f1v0}
       LOGTO_API_RESOURCE: http://localhost:8000
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-change-in-production-32ch}
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
@@ -197,44 +197,22 @@ services:
       - /app/.next
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-      LOGTO_ENDPOINT: http://logto:3001
-      LOGTO_PUBLIC_ENDPOINT: http://localhost:3001
-      LOGTO_APP_ID: ${LOGTO_APP_ID:-}
-      LOGTO_APP_SECRET: ${LOGTO_APP_SECRET:-}
-      LOGTO_COOKIE_SECRET: ${LOGTO_COOKIE_SECRET:-complex_password_at_least_32_characters_long}
+      LOGTO_ENDPOINT: ${LOGTO_ENDPOINT:-https://pk5k15.logto.app/}
+      LOGTO_APP_ID: ${LOGTO_APP_ID:-wfys39gnwrpez0g29f1v0}
+      LOGTO_APP_SECRET: ${LOGTO_APP_SECRET:-wOrPwIrodl8rAPt8xEiEUIbDzYGju15M}
+      LOGTO_COOKIE_SECRET: ${LOGTO_COOKIE_SECRET:-8GG2WSxFO1MncSiP1X8k8HO4x9leJfOp}
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
     depends_on:
-      - logto
       - backend
     networks:
       - agent-foundry
 
-  logto:
-    image: svhd/logto:latest
-    container_name: af-logto
-    restart: unless-stopped
-    ports:
-      - "3001:3001"
-      - "3002:3002"
-    environment:
-      TRUST_PROXY_HEADER: "1"
-      DB_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/logto
-      ENDPOINT: http://localhost:3001
-      ADMIN_ENDPOINT: http://localhost:3002
-    entrypoint: ["sh", "-c", "npm run cli db seed -- --swe && npm start"]
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.logto.rule=Host(`auth.localhost`)"
-      - "traefik.http.services.logto.loadbalancer.server.port=3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - agent-foundry
+  # Logto auth: using Logto Cloud (https://cloud.logto.io) instead of self-hosted
+  # To self-host, uncomment the logto service below and set LOGTO_ENDPOINT accordingly
 
   langfuse:
     image: langfuse/langfuse:2
