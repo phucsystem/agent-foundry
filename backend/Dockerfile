@@ -8,7 +8,7 @@ COPY pyproject.toml .
 
 RUN pip install --no-cache-dir \
     fastapi uvicorn[standard] pydantic pydantic-settings pyyaml \
-    celery[redis] asyncpg redis PyJWT litellm
+    celery[redis] asyncpg redis PyJWT litellm python-multipart
 
 COPY . .
 
