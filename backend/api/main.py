@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import agents, health, tasks
+from api.routers import agents, health, hired_agents, hired_agents_detail, tasks
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +52,8 @@ def create_app() -> FastAPI:
     application.include_router(health.router)
     application.include_router(agents.router, prefix="/api/agents", tags=["agents"])
     application.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
+    application.include_router(hired_agents.router, prefix="/api/agents/hired", tags=["hired-agents"])
+    application.include_router(hired_agents_detail.router, prefix="/api/agents/hired", tags=["hired-agents"])
 
     return application
 

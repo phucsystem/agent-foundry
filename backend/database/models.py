@@ -40,6 +40,31 @@ class AgentMemoryRecord(BaseModel):
     created_at: datetime | None = None
 
 
+class HiredAgentRecord(BaseModel):
+    id: str
+    user_id: str
+    agent_id: str
+    status: str = "active"
+    plan: str = "solo"
+    custom_instructions: str | None = None
+    weekly_budget_usd: float = 100.00
+    hired_at: datetime | None = None
+    renews_at: datetime | None = None
+    cancelled_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class KnowledgeFileRecord(BaseModel):
+    id: str
+    hire_id: str
+    file_name: str
+    size_bytes: int
+    content_text: str
+    storage_path: str | None = None
+    uploaded_at: datetime | None = None
+
+
 # ---------------------------------------------------------------------------
 # Reference SQL schema — applied once via infra/init.sql or a migration tool.
 # ---------------------------------------------------------------------------

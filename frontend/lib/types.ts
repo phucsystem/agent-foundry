@@ -103,3 +103,62 @@ export interface NavItem {
   href: string;
   iconPath: string;
 }
+
+// Hired agent types
+
+export interface AgentStatsSummary {
+  totalTasks: number;
+  successRate: number;
+  avgCostUsd: number;
+}
+
+export interface HiredAgent {
+  hireId: string;
+  agentId: string;
+  agentName: string;
+  agentRole: string;
+  agentColor: string;
+  status: "active" | "renewing_soon" | "cancelled" | "expired";
+  plan: string;
+  weeklyBudgetUsd: number;
+  hiredAt: string;
+  renewsAt: string | null;
+  stats: AgentStatsSummary;
+  hasCustomInstructions: boolean;
+  knowledgeFileCount: number;
+}
+
+export interface KnowledgeFile {
+  id: string;
+  name: string;
+  sizeBytes: number;
+  uploadedAt: string;
+}
+
+export interface AgentStatsDetail extends AgentStatsSummary {
+  completed: number;
+  failed: number;
+  active: number;
+  avgRuntimeSeconds: number;
+  totalSpentUsd: number;
+  dailyTasks: number[];
+}
+
+export interface AgentCostOverview {
+  spentUsd: number;
+  budgetUsd: number;
+  breakdown: CostSegment[];
+  lastWeekSpentUsd: number;
+  thisWeekSpentUsd: number;
+}
+
+export interface HiredAgentDetail extends HiredAgent {
+  agentTools: string[];
+  agentLlm: string;
+  settings: {
+    customInstructions: string;
+    knowledgeFiles: KnowledgeFile[];
+  };
+  stats: AgentStatsDetail;
+  cost: AgentCostOverview;
+}

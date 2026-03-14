@@ -227,15 +227,24 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 
 ---
 
-### 9. API Module (340 lines, 10 files)
+### 9. API Module (465 lines, 13 files)
 
-**Purpose:** FastAPI app factory, routers, middleware, auth, error handling.
+**Purpose:** FastAPI app factory, routers (agents, hired agents, tasks), middleware, auth, error handling.
 
 **Key Routes:**
 - `GET /health` — Readiness probe (service + dependency checks)
 - `GET /agents` — List all agents with filters (role, cost range, success rate)
 - `GET /agents/{id}` — Get single agent details
-- `POST /tasks` — Create + enqueue task (validates TaskInput, returns task_id)
+- `POST /agents/{agent_id}/hire` — Hire an agent (create weekly subscription)
+- `GET /agents/hired` — List user's hired agents (My Team)
+- `GET /agents/hired/{hire_id}` — Hired agent detail + stats
+- `PUT /agents/hired/{hire_id}/settings` — Update custom instructions
+- `POST /agents/hired/{hire_id}/knowledge` — Upload knowledge file
+- `DELETE /agents/hired/{hire_id}/knowledge/{file_id}` — Delete knowledge file
+- `DELETE /agents/hired/{hire_id}` — Cancel hire
+- `POST /agents/hired/{hire_id}/rehire` — Reactivate cancelled hire
+- `GET /agents/hired/{hire_id}/tasks` — Recent tasks for hired agent
+- `POST /tasks` — Create + enqueue task (validates TaskInput, returns task_id, with optional hire_id)
 - `GET /tasks/{id}` — Get task status + results (stored in PostgreSQL)
 - `GET /tasks/{id}/stream` — SSE stream for live task progress (via Redis pub/sub)
 - `GET /users/me` — Get authenticated user profile (requires Logto token)
@@ -246,7 +255,10 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 - `main.py` (95 lines) — FastAPI app factory, middleware setup, route registration
 - `routers/health.py` (35 lines) — GET /health endpoint
 - `routers/agents.py` (65 lines) — GET /agents, GET /agents/{id}
-- `routers/tasks.py` (85 lines) — POST /tasks, GET /tasks/{id}, SSE stream
+- `routers/hired_agents.py` (180 lines) — POST /hire, GET /hired, DELETE, POST /rehire endpoints
+- `routers/hired_agents_detail.py` (120 lines) — GET /{hire_id}, PUT /settings, knowledge upload/delete, tasks
+- `routers/hired_agents_helpers.py` (65 lines) — Shared models, validators, UUID parsing
+- `routers/tasks.py` (95 lines) — POST /tasks (with hire_id support), GET /tasks/{id}, SSE stream
 - `routers/auth.py` (50 lines) — POST /auth/callback, GET /auth/signin
 - `routers/users.py` (40 lines) — GET /users/me (profile)
 - `auth/logto.py` (60 lines) — Logto Cloud OIDC client
@@ -263,11 +275,11 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 
 ---
 
-## Frontend Architecture (41K lines, 30+ components, 5 pages)
+## Frontend Architecture (52K lines, 40+ components, 7 pages)
 
 ### Page Structure (App Router)
 
-**5 Pages (Server Components by default, Client Islands for interactivity):**
+**7 Pages (Server Components by default, Client Islands for interactivity):**
 
 1. **`app/agents/page.tsx`** (Phase 11)
    - Marketplace listing all agents
@@ -313,6 +325,24 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
    - Rating form (5-star interactive)
    - Bottom actions (Hire Again, Back to Board, Browse Agents)
 
+6. **`app/agents/hired/page.tsx`** (Phase 2)
+   - My Team page (list of hired agents)
+   - Agent subscription table: agent name, status, plan, budget, renewal date, tasks, costs
+   - Inline settings modal for custom instructions
+   - Knowledge file upload area
+   - Cancel hire + Rehire buttons per row
+   - Agent statistics: success rate, avg cost, avg runtime
+   - Active/Cancelled filter tabs
+
+7. **`app/agents/hired/[hireId]/page.tsx`** (Phase 2)
+   - Hired agent detail page
+   - Agent header: name, role, tools, LLM model, hire status
+   - Custom instructions section + edit modal
+   - Knowledge files list (uploaded_at, size, delete button)
+   - Cost overview: budget, spent, remaining, weekly/all-time toggle
+   - Tasks chart: bar chart showing daily task counts (7 days)
+   - Recent tasks table: goal, status, cost, runtime, date (paginated)
+
 ### Component Breakdown (30+ components)
 
 **Layout Components (4):**
@@ -334,13 +364,19 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 - `components/ui/star-rating.tsx` — Star rating display + interactive mode
 - `components/ui/tabs.tsx` — Tab group with active indicator
 
-**Agent Components (6):**
+**Agent Components (12):**
 - `components/agents/agent-card.tsx` — Marketplace card (Server Component)
 - `components/agents/agent-filters.tsx` — Search + filter bar (Client Island)
 - `components/agents/agent-hero.tsx` — Detail page hero section
 - `components/agents/agent-stats-bar.tsx` — 4-metric stats grid
 - `components/agents/agent-reviews.tsx` — Reviews list with avatars
 - `components/agents/agent-pricing.tsx` — 3-tier pricing grid
+- `components/agents/hired-agent-row.tsx` — Table row for My Team list
+- `components/agents/agent-settings-modal.tsx` — Edit instructions + knowledge upload modal
+- `components/agents/knowledge-summary.tsx` — Knowledge file list display
+- `components/agents/agent-cost-overview.tsx` — Cost breakdown card
+- `components/agents/agent-task-chart.tsx` — Daily task count bar chart
+- `components/agents/agent-recent-tasks.tsx` — Paginated tasks table
 
 **Task Components (9):**
 - `components/tasks/task-form.tsx` — 5-step task creation form (Client Island)
@@ -357,7 +393,9 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 
 **Types & Constants (`lib/types.ts`):**
 - `Agent` interface (id, name, role, weeklyPrice, successRate, tools, specialisation)
-- `Task` interface (id, agentId, status, goal, cost, duration, createdAt)
+- `Task` interface (id, agentId, status, goal, cost, duration, createdAt, hireId)
+- `HiredAgent` interface (hireId, agentId, agentName, status, plan, weeklyBudgetUsd, renewsAt, stats)
+- `KnowledgeFile` interface (id, fileName, sizeBytes, uploadedAt)
 - `Review` interface (author, rating, comment, date)
 - `TaskOutput` interface (report, code, trace, toolCalls)
 
@@ -370,11 +408,19 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 **API Client (`lib/api-client.ts`):**
 - Fetch wrapper with base URL, auth headers, error handling
 - `fetchAgents()`, `fetchAgent(id)`, `fetchTasks()`, `fetchTask(id)`, `createTask(input)`, `streamTask(id)`
+- `fetchHiredAgents()`, `fetchHiredAgent(hireId)`, `hireAgent(agentId, plan)`, `cancelHire(hireId)`, `rehireAgent(hireId)`
+- `uploadKnowledge(hireId, file)`, `deleteKnowledge(hireId, fileId)`, `updateSettings(hireId, instructions)`
 
 **Custom Hooks (`lib/hooks/`):**
 - `useAgents()` + `useAgent(id)` — TanStack Query hooks
 - `useTasks()` + `useTask(id)` + `useCreateTask()` — Task hooks
 - `useTaskStream(id)` — SSE simulation hook (polls every 2s)
+- `useHiredAgents()` + `useHiredAgent(hireId)` — Hired agents hooks
+- `useHiredAgentTasks(hireId)` — Paginated tasks for a hired agent
+
+**Mappers (`lib/mappers/hired-agent-mappers.ts`):**
+- `mapBackendHiredAgent()` — Transform API response to frontend HiredAgent interface
+- `mapBackendTask()` — Normalize task fields (user_id → userId, etc.)
 
 ### Styling & Design System
 
@@ -565,8 +611,8 @@ frontend/
 
 ## Document Metadata
 
-- **Version:** 4.0 (Phases 1, 2, 6, 7, 8, 9, 10, 11 implementation summary)
-- **Last Updated:** 2026-03-14
+- **Version:** 4.1 (Phases 1, 2, 6, 7, 8, 9, 10, 11 implementation summary with hired agents)
+- **Last Updated:** 2026-03-15
 - **Owner:** Engineering Team
-- **Status:** Phases 1–2, 7–11 Complete; Phases 3–5, 12+ Pending
+- **Status:** Phases 1–2, 7–11 Complete (including hired agents feature); Phases 3–5, 12+ Pending
 - **Next Update:** After Phase 3 completion (estimated 2026-07-02)

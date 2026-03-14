@@ -10,7 +10,7 @@
 
 **Revenue Model:** Tier-based weekly subscriptions ($49–$1,500+/week), usage overages, white-label licensing, SaaS marketplace.
 
-**Current Status:** Phase 1 Complete (all core requirements implemented), Phase 11 Complete (marketplace UI implemented), Phase 2 In Progress
+**Current Status:** Phase 1 Complete (all core requirements implemented), Phase 11 Complete (marketplace UI + hired agents feature implemented), Phase 2 In Progress
 
 ---
 
@@ -28,12 +28,13 @@
 | REQ-3.1: Coder Agent | ✅ | 1 | CodeInterpreter, Terminal, RAG tools ready |
 | REQ-3.2: Research Agent | ✅ | 1 | WebSearch, PDFReader, RAG tools ready |
 | REQ-3.3: PM/QA/Copywriter Agents | 🔄 | 2 | Architecture ready, implementation pending |
-| REQ-4.1: Agent Marketplace | ✅ | 11 | 5 pages, 30+ components, dark mode |
-| REQ-4.2: Weekly Hiring UI | ✅ | 11 | Task creation form + kanban board |
-| REQ-4.3: Task Management | ✅ | 11 | Task detail page + SSE streaming |
-| REQ-4.4: Billing Dashboard | 🔄 | 2 | Scaffold ready, Stripe integration pending |
-| REQ-4.5: Team Collaboration | ⏳ | 3 | Pending Phase 3 |
-| REQ-5.1: REST API | ✅ | 1 | /agents, /tasks, /health endpoints live |
+| REQ-4.1: Agent Marketplace | ✅ | 11 | Marketplace + Agent Detail pages, 30+ components, dark mode |
+| REQ-4.2: Weekly Hiring UI | ✅ | 11 | Hire agent + My Team page + Agent Detail view |
+| REQ-4.3: Task Management | ✅ | 11 | Task creation form + kanban board + detail page + SSE streaming |
+| REQ-4.4: Hired Agents Management | ✅ | 2 | Custom instructions, knowledge files, cost breakdown, task history |
+| REQ-4.5: Billing Dashboard | 🔄 | 2 | Scaffold ready, Stripe integration pending |
+| REQ-4.6: Team Collaboration | ⏳ | 3 | Pending Phase 3 |
+| REQ-5.1: REST API | ✅ | 1, 2 | /agents, /agents/hired, /tasks, /health endpoints live |
 | REQ-6.1: Langfuse Tracing | ✅ | 1 | LLM tracing + cost tracking |
 
 **Legend:** ✅ = Complete | 🔄 = In Progress | ⏳ = Planned
@@ -145,24 +146,34 @@
 - View agent details (bio, tools, past outputs)
 
 **REQ-4.2:** Weekly Hiring UI
-- Select agents for upcoming week
-- Define weekly tasks (PRD, upload context docs)
-- Schedule delivery (daily, end-of-week, custom)
-- Dashboard: task history, results, cost tracking
+- Hire agents with plan selection (Solo, Small Team, Full Squad)
+- Set weekly budget per hired agent
+- My Team page: list all hired agents with status, stats, renewal dates
+- Inline settings: update custom instructions, upload/manage knowledge files
+- Cancel or rehire agents as needed
 
 **REQ-4.3:** Task Management
 - Create task with goal, context, constraints, expected format
 - Monitor in-progress task (real-time logs via SSE)
 - Download results (PDFs, code, reports)
 - Rate & review agent performance
+- Assign tasks to specific hired agents (with hire_id)
 
-**REQ-4.4:** Billing Dashboard
+**REQ-4.4:** Hired Agents Management
+- Custom instructions: Add domain-specific prompts per hired agent
+- Knowledge files: Upload .md files for context injection (max 5 MB)
+- Agent detail view: Full stats, cost breakdown, daily task chart, recent tasks
+- Cost overview: Track weekly vs all-time spending against budget
+- Task history: View paginated list of tasks for each hired agent
+- Agent performance: Success rate, avg cost, avg runtime per hire
+
+**REQ-4.5:** Billing Dashboard
 - Weekly cost breakdown by agent
 - Usage overage tracking & pricing
 - Subscription management (upgrade, downgrade, pause)
 - Invoice history & exports
 
-**REQ-4.5:** Team Collaboration
+**REQ-4.6:** Team Collaboration
 - Share agents within team
 - Shared task history & knowledge base
 - Approval workflow for high-cost tasks
@@ -171,7 +182,13 @@
 
 **REQ-5.1:** REST API
 - `/agents` — List, filter, get details
-- `/tasks` — Create, status, results
+- `/agents/{id}/hire` — Hire an agent with plan + budget
+- `/agents/hired` — List user's hired agents (My Team)
+- `/agents/hired/{hire_id}` — Get hired agent detail + stats
+- `/agents/hired/{hire_id}/settings` — Update custom instructions
+- `/agents/hired/{hire_id}/knowledge` — Upload/delete knowledge files
+- `/agents/hired/{hire_id}/tasks` — Get paginated tasks for hired agent
+- `/tasks` — Create (with optional hire_id), status, results
 - `/subscriptions` — Current tier, usage, billing
 - `/teams` — Create, invite, manage members
 - Auth: Bearer token + API key options
@@ -371,7 +388,7 @@
 ---
 
 ## Document Metadata
-- **Version:** 1.0
-- **Last Updated:** 2026-03-14
+- **Version:** 1.1
+- **Last Updated:** 2026-03-15
 - **Owner:** Product Team
-- **Status:** Draft (awaiting approval)
+- **Status:** Active (Phases 1, 2, 11 implemented; hired agents feature complete)

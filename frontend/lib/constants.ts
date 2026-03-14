@@ -7,6 +7,11 @@ export const NAV_ITEMS: NavItem[] = [
     iconPath: "M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 0h7v7h-7v-7Z",
   },
   {
+    label: "My Team",
+    href: "/agents/hired",
+    iconPath: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75",
+  },
+  {
     label: "Tasks",
     href: "/tasks",
     iconPath: "M22 12h-4l-3 9-6-18-3 9H2",

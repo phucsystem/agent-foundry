@@ -73,21 +73,43 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
         raise HTTPException(status_code=404, detail=f"Agent '{request.agent_id}' not found")
 
     task_id = str(uuid.uuid4())
-    input_data = {
-        "goal": request.goal,
-        "context": request.context,
-        "budget_usd": request.budget_usd,
-    }
 
     # TODO: Get real user_id from auth when Logto is wired
     mock_user_id = "00000000-0000-0000-0000-000000000001"
 
+    enriched_context = request.context or ""
+    hire_id = None
+
+    if database.is_connected:
+        hire_row = await database.fetchrow(
+            """SELECT id, custom_instructions FROM hired_agents
+               WHERE user_id = $1::uuid AND agent_id = $2 AND status = 'active'""",
+            mock_user_id, request.agent_id,
+        )
+        if hire_row:
+            hire_id = str(hire_row["id"])
+            if hire_row["custom_instructions"]:
+                enriched_context = f"[INSTRUCTIONS]\n{hire_row['custom_instructions']}\n\n{enriched_context}"
+            knowledge_rows = await database.fetch(
+                "SELECT content_text FROM knowledge_files WHERE hire_id = $1::uuid ORDER BY uploaded_at",
+                hire_id,
+            )
+            if knowledge_rows:
+                knowledge_text = "\n---\n".join(row["content_text"] for row in knowledge_rows)
+                enriched_context = f"[KNOWLEDGE]\n{knowledge_text}\n\n{enriched_context}"
+
+    input_data = {
+        "goal": request.goal,
+        "context": enriched_context or request.context,
+        "budget_usd": request.budget_usd,
+    }
+
     if database.is_connected:
         await database.execute(
-            """INSERT INTO tasks (id, user_id, agent_id, goal, context, status, input_data)
-               VALUES ($1::uuid, $2::uuid, $3, $4, $5, 'queued', $6::jsonb)""",
+            """INSERT INTO tasks (id, user_id, agent_id, goal, context, status, input_data, hire_id)
+               VALUES ($1::uuid, $2::uuid, $3, $4, $5, 'queued', $6::jsonb, $7::uuid)""",
             task_id, mock_user_id, request.agent_id, request.goal,
-            request.context, json.dumps(input_data),
+            enriched_context or request.context, json.dumps(input_data), hire_id,
         )
 
     execute_agent_task.apply_async(

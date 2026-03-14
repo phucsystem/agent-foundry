@@ -56,7 +56,17 @@ graph TD
 **Key Routes:**
 - `GET /health` → Service health check
 - `GET /agents` → List agents with filters
-- `POST /tasks` → Create task, enqueue
+- `GET /agents/{agent_id}` → Agent public profile
+- `POST /agents/{agent_id}/hire` → Hire an agent (weekly subscription)
+- `GET /agents/hired` → List user's hired agents (My Team)
+- `GET /agents/hired/{hire_id}` → Hired agent detail + stats
+- `PUT /agents/hired/{hire_id}/settings` → Update custom instructions
+- `DELETE /agents/hired/{hire_id}` → Cancel hire
+- `POST /agents/hired/{hire_id}/rehire` → Reactivate cancelled hire
+- `POST /agents/hired/{hire_id}/knowledge` → Upload knowledge file
+- `DELETE /agents/hired/{hire_id}/knowledge/{file_id}` → Delete knowledge file
+- `GET /agents/hired/{hire_id}/tasks` → Recent tasks for hired agent
+- `POST /tasks` → Create task, enqueue (with optional hire_id for context injection)
 - `GET /tasks/{id}` → Task status & results
 - `GET /tasks/{id}/stream` → SSE live updates
 - `GET /users/me` → Authenticated user profile
@@ -245,9 +255,11 @@ sequenceDiagram
 **Tables:**
 - `users` — Account, tier, API key
 - `subscriptions` — Current tier, renewal date, price
-- `tasks` — User id, agent, goal, input, output, cost, timestamps
+- `tasks` — User id, agent, goal, input, output, cost, timestamps, hire_id (for hired agents context)
 - `tasks_history` — Archive of completed tasks
 - `agents_config` — YAML agent definitions (versioned)
+- `hired_agents` — User-agent subscription (status, plan, custom_instructions, weekly_budget_usd, renewal dates)
+- `knowledge_files` — Markdown files uploaded for hired agents (content_text for context injection)
 - `tools` — Available tools, pricing
 - `invoices` — Billing records
 - `audit_log` — API calls, agent runs, sensitive actions
@@ -578,6 +590,7 @@ graph TB
 - [x] Billing dashboard UI
 - [x] Notion + GitHub MCP integrated
 - [x] Internal dogfood testing with agents
+- [x] Hired agents feature (weekly subscriptions, My Team page, agent detail view, knowledge upload, custom instructions)
 
 **Phase 3 (Weeks 9–14):**
 - Image + Video agents
@@ -594,7 +607,7 @@ graph TB
 ---
 
 ## Document Metadata
-- **Version:** 1.3
-- **Last Updated:** 2026-03-14
+- **Version:** 1.4
+- **Last Updated:** 2026-03-15
 - **Owner:** Architecture Team
-- **Status:** Phase 1–2, 6–11 Complete (All 9 backend modules + auth + CI/CD + Phase 11 frontend UI implemented; Logto Cloud auth integrated)
+- **Status:** Phase 1–2, 6–11 Complete (All 9 backend modules + hired agents routers + auth + CI/CD + Phase 11 frontend UI + hired agents pages implemented; Logto Cloud auth integrated; Knowledge injection into tasks implemented)
