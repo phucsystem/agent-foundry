@@ -25,6 +25,29 @@ class CurrentUser:
         self.auth_method = auth_method
 
 
+async def _resolve_user_id(external_id: str) -> str:
+    """Map an external auth ID (Logto sub) to a DB user UUID. Auto-provisions on first login."""
+    from database.connection import database
+
+    if not database.is_connected:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    row = await database.fetchrow(
+        "SELECT id FROM users WHERE api_key = $1", external_id
+    )
+    if row:
+        return str(row["id"])
+
+    new_row = await database.fetchrow(
+        """INSERT INTO users (email, name, api_key)
+           VALUES ($1, $2, $3)
+           RETURNING id""",
+        f"{external_id}@logto", external_id, external_id,
+    )
+    logger.info("Auto-provisioned user %s for external ID %s", new_row["id"], external_id)
+    return str(new_row["id"])
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     x_api_key: str | None = Header(None, alias="X-API-Key"),
@@ -37,32 +60,35 @@ async def get_current_user(
         return CurrentUser(user_id=MOCK_USER_ID, role="admin", auth_method="mock")
 
     if credentials and credentials.credentials:
+        external_id: str | None = None
+        role = "viewer"
+        auth_method = "logto"
+
         try:
             from api.auth.logto import logto_verifier
-
             claims = logto_verifier.verify_access_token(credentials.credentials)
-            return CurrentUser(
-                user_id=claims.get("sub", ""),
-                role=claims.get("role", "viewer"),
-                auth_method="logto",
-            )
+            external_id = claims.get("sub", "")
+            role = claims.get("role", "viewer")
         except Exception as logto_error:
             logger.debug(f"Logto token failed: {logto_error}, trying local JWT")
             try:
                 from api.auth.jwt_handler import jwt_handler
-
                 payload = jwt_handler.verify_token(credentials.credentials)
                 if payload.get("type") != "access":
                     raise HTTPException(status_code=401, detail="Invalid token type")
-                return CurrentUser(
-                    user_id=payload["sub"],
-                    role=payload.get("role", "viewer"),
-                    auth_method="jwt",
-                )
+                external_id = payload["sub"]
+                role = payload.get("role", "viewer")
+                auth_method = "jwt"
             except HTTPException:
                 raise
             except Exception:
                 raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+        if not external_id:
+            raise HTTPException(status_code=401, detail="No user identifier in token")
+
+        user_id = await _resolve_user_id(external_id)
+        return CurrentUser(user_id=user_id, role=role, auth_method=auth_method)
 
     if x_api_key:
         if x_api_key.startswith("af_"):

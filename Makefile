@@ -1,4 +1,4 @@
-.PHONY: up down build rebuild api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check
+.PHONY: up down build rebuild api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check check-auth
 
 # Infrastructure
 up:
@@ -29,7 +29,11 @@ worker:
 	cd backend && celery -A workers.celery_app worker --loglevel=info
 
 migrate:
-	@echo "TODO: alembic upgrade head"
+	@echo "Applying init.sql to running Postgres..."
+	docker compose -f infra/docker-compose.yml exec -T postgres \
+		psql -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-agentfoundry} \
+		< infra/init.sql
+	@echo "Schema applied successfully."
 
 seed:
 	@echo "TODO: python scripts/seed.py"
