@@ -11,6 +11,8 @@ llm:
   max_tokens: 8192
 tools:
   - web_search
+  - pdf_reader
+  - rag_search
   - notion_mcp
 guardrails:
   max_budget_usd: 8.0

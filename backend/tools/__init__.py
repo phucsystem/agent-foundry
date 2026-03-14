@@ -8,3 +8,6 @@ __all__ = ["BaseTool", "tool", "ToolRegistry", "tool_registry"]
 import tools.github_mcp  # noqa: E402, F401
 import tools.code_interpreter  # noqa: E402, F401
 import tools.terminal  # noqa: E402, F401
+import tools.web_search  # noqa: E402, F401
+import tools.pdf_reader  # noqa: E402, F401
+import tools.rag_search  # noqa: E402, F401
