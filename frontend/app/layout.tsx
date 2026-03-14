@@ -1,23 +1,7 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Providers } from "@/components/layout/providers";
-
-export const metadata: Metadata = {
-  title: "Agent Foundry",
-  description: "Build and hire specialised AI agents",
-};
-
-const THEME_SCRIPT = `
-(function() {
-  var stored = localStorage.getItem('theme');
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (stored === 'dark' || (!stored && prefersDark)) {
-    document.documentElement.classList.add('dark');
-  }
-})();
-`;
 
 export default function RootLayout({
   children,
@@ -27,7 +11,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <title>Agent Foundry</title>
+        <meta name="description" content="Build and hire specialised AI agents" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var s=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme:dark)').matches;if(s==='dark'||(!s&&d)){document.documentElement.classList.add('dark')}})()`,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-surface text-slate-900 dark:bg-[#0F172A] dark:text-slate-100">
         <Providers>

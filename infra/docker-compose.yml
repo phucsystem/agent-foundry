@@ -197,12 +197,7 @@ services:
       - /app/.next
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-      MOCK_AUTH: ${MOCK_AUTH:-false}
-      LOGTO_ENDPOINT: ${LOGTO_ENDPOINT:-https://pk5k15.logto.app/}
-      LOGTO_APP_ID: ${LOGTO_APP_ID:-wfys39gnwrpez0g29f1v0}
-      LOGTO_APP_SECRET: ${LOGTO_APP_SECRET:-wOrPwIrodl8rAPt8xEiEUIbDzYGju15M}
-      LOGTO_COOKIE_SECRET: ${LOGTO_COOKIE_SECRET:-8GG2WSxFO1MncSiP1X8k8HO4x9leJfOp}
-      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_MOCK_AUTH: ${MOCK_AUTH:-true}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"
