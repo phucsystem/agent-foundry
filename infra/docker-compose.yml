@@ -198,6 +198,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
       LOGTO_ENDPOINT: http://logto:3001
+      LOGTO_PUBLIC_ENDPOINT: http://localhost:3001
       LOGTO_APP_ID: ${LOGTO_APP_ID:-}
       LOGTO_APP_SECRET: ${LOGTO_APP_SECRET:-}
       LOGTO_COOKIE_SECRET: ${LOGTO_COOKIE_SECRET:-complex_password_at_least_32_characters_long}
