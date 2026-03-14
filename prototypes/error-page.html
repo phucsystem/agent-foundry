@@ -1,0 +1,385 @@
+<!--
+  Screen: Error Page (404, 500, Task Failed)
+  CJX Stage: usage
+  FR Mapping: N/A (supplementary UX screen)
+  Route: /error, /404, /500
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error - Agent Foundry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: var(--space-xl) var(--space-lg);
+    }
+
+    .error-icon {
+      margin-bottom: var(--space-lg);
+    }
+
+    .error-icon svg {
+      width: 96px;
+      height: 96px;
+    }
+
+    .error-icon-404 svg { color: var(--color-warning); }
+    .error-icon-500 svg { color: var(--color-error); }
+    .error-icon-task svg { color: var(--color-error); }
+
+    [data-theme="dark"] .error-icon-404 svg { color: #FBBF24; }
+    [data-theme="dark"] .error-icon-500 svg { color: #F87171; }
+    [data-theme="dark"] .error-icon-task svg { color: #F87171; }
+
+    .error-code {
+      font-size: 64px;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1;
+      margin-bottom: var(--space-xs);
+      letter-spacing: -2px;
+    }
+
+    .error-title {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-sm);
+    }
+
+    .error-description {
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      max-width: 460px;
+      line-height: 1.6;
+      margin-bottom: var(--space-lg);
+    }
+
+    .error-details {
+      max-width: 520px;
+      width: 100%;
+      margin-bottom: var(--space-lg);
+    }
+
+    .error-details-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: var(--space-sm);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-error);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .error-details-header svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .error-details-content {
+      background: rgba(239, 68, 68, 0.06);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-left: 3px solid var(--color-error);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      text-align: left;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    [data-theme="dark"] .error-details-content {
+      background: rgba(248, 113, 113, 0.08);
+      border-color: rgba(248, 113, 113, 0.2);
+      border-left-color: var(--color-error);
+    }
+
+    .error-detail-line {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .error-detail-key {
+      color: var(--color-text-muted);
+      min-width: 90px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .error-detail-value {
+      color: var(--color-error);
+      word-break: break-all;
+    }
+
+    .error-detail-value.muted {
+      color: var(--color-text-secondary);
+    }
+
+    .error-actions {
+      display: flex;
+      gap: var(--space-md);
+      align-items: center;
+    }
+
+    .error-tip {
+      max-width: 460px;
+      width: 100%;
+      margin-top: var(--space-lg);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px solid rgba(59, 130, 246, 0.15);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    [data-theme="dark"] .error-tip {
+      background: rgba(96, 165, 250, 0.08);
+      border-color: rgba(96, 165, 250, 0.15);
+    }
+
+    .error-tip svg {
+      width: 16px;
+      height: 16px;
+      color: var(--color-primary);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Demo switcher */
+    .error-type-switcher {
+      position: fixed;
+      bottom: var(--space-lg);
+      right: var(--space-lg);
+      display: flex;
+      gap: var(--space-xs);
+      z-index: 100;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 4px;
+    }
+
+    .error-type-btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .error-type-btn.active {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .error-type-btn:hover:not(.active) {
+      color: var(--color-text);
+    }
+
+    .error-type-btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 767px) {
+      .error-code { font-size: 48px; }
+      .error-icon svg { width: 72px; height: 72px; }
+      .error-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+      .error-actions .btn { width: 100%; }
+      .error-detail-line { flex-direction: column; gap: 0; }
+      .error-detail-key { min-width: unset; }
+      .error-type-switcher {
+        bottom: var(--space-md);
+        right: var(--space-md);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="cjx-usage">
+  <div class="app-layout">
+    <nav class="sidebar hide-mobile">
+      <a href="s01-agent-marketplace.html" class="sidebar-logo">Agent Foundry</a>
+      <ul class="sidebar-nav">
+        <li><a href="s01-agent-marketplace.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Marketplace
+        </a></li>
+        <li><a href="s03-create-task.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Create Task
+        </a></li>
+        <li><a href="s04-task-monitor.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Tasks
+        </a></li>
+        <li><a href="s06-billing-dashboard.html" class="sidebar-nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing
+        </a></li>
+      </ul>
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-icon"></span>
+        <span class="theme-toggle-label">Dark Mode</span>
+      </button>
+    </nav>
+
+    <main class="main-content" data-cjx-entrance>
+
+      <!-- 404 Error (default) -->
+      <div class="error-container" id="error-404">
+        <div class="error-icon error-icon-404">
+          <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="48" cy="48" r="40" stroke-dasharray="6 4" opacity="0.3"/>
+            <circle cx="48" cy="48" r="28" opacity="0.1" fill="currentColor"/>
+            <path d="M35 38 L41 44 M41 38 L35 44" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M55 38 L61 44 M61 38 L55 44" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M34 64 Q48 54 62 64" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <div class="error-details">
+          <div class="error-details-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Error Details
+          </div>
+          <div class="error-details-content">
+            <div class="error-detail-line"><span class="error-detail-key">Request</span><span class="error-detail-value muted">GET /api/agents/xyz-123</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Status</span><span class="error-detail-value">404 Not Found</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Route</span><span class="error-detail-value muted">/agents/xyz-123</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Message</span><span class="error-detail-value">No agent found with ID "xyz-123"</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Timestamp</span><span class="error-detail-value muted">2026-03-15T10:15:32Z</span></div>
+          </div>
+        </div>
+        <div class="error-actions">
+          <button class="btn btn-primary" onclick="history.back()">Go Back</button>
+          <button class="btn btn-secondary">Report Error</button>
+        </div>
+      </div>
+
+      <!-- 500 Error -->
+      <div class="error-container" id="error-500" style="display: none;">
+        <div class="error-icon error-icon-500">
+          <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="48" cy="48" r="40" stroke-dasharray="6 4" opacity="0.3"/>
+            <circle cx="48" cy="48" r="28" opacity="0.1" fill="currentColor"/>
+            <path d="M48 30 L48 54" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="48" cy="64" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="error-code">500</div>
+        <h1 class="error-title">Internal Server Error</h1>
+        <p class="error-description">Something went wrong on our end. Our team has been notified and is working on a fix. Please try again in a few moments.</p>
+        <div class="error-details">
+          <div class="error-details-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Error Details
+          </div>
+          <div class="error-details-content">
+            <div class="error-detail-line"><span class="error-detail-key">Request ID</span><span class="error-detail-value muted">req_7f8a2b3c-4d5e-6f7a</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Timestamp</span><span class="error-detail-value muted">2026-03-15T10:23:45Z</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Service</span><span class="error-detail-value muted">api-gateway / task-router</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Error</span><span class="error-detail-value">INTERNAL_SERVER_ERROR (HTTP 500)</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Message</span><span class="error-detail-value">Upstream service timeout after 30000ms</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Stack</span><span class="error-detail-value">TimeoutError at LiteLLMProxy.forward (/app/llm/proxy.ts:142)</span></div>
+          </div>
+        </div>
+        <div class="error-actions">
+          <button class="btn btn-primary" onclick="history.back()">Go Back</button>
+          <button class="btn btn-secondary">Report Error</button>
+        </div>
+      </div>
+
+      <!-- Task Failed Error -->
+      <div class="error-container" id="error-task" style="display: none;">
+        <div class="error-icon error-icon-task">
+          <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="48" cy="48" r="40" stroke-dasharray="6 4" opacity="0.3"/>
+            <circle cx="48" cy="48" r="28" opacity="0.1" fill="currentColor"/>
+            <path d="M48 32 L48 50" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M38 42 L48 52 L58 42" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <line x1="36" y1="62" x2="60" y2="62" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="error-code" style="font-size: 42px; letter-spacing: -1px;">Task Failed</div>
+        <h1 class="error-title">Agent Could Not Complete the Task</h1>
+        <p class="error-description">The Coder agent encountered an error while processing task #892. The task has been marked as failed and no additional credits were charged.</p>
+        <div class="error-details">
+          <div class="error-details-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Error Log
+          </div>
+          <div class="error-details-content">
+            <div class="error-detail-line"><span class="error-detail-key">Task ID</span><span class="error-detail-value muted">#892</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Agent</span><span class="error-detail-value muted">Coder (claude-sonnet-4-20250514)</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Started</span><span class="error-detail-value muted">2026-03-15T10:20:12Z</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Failed</span><span class="error-detail-value">2026-03-15T10:21:45Z</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Duration</span><span class="error-detail-value muted">93s</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Error</span><span class="error-detail-value">LLM rate limit exceeded — retry after 60s</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Cost</span><span class="error-detail-value muted">$0.00 (rolled back)</span></div>
+            <div class="error-detail-line"><span class="error-detail-key">Refunded</span><span class="error-detail-value muted">2.5 credits</span></div>
+          </div>
+        </div>
+        <div class="error-actions">
+          <button class="btn btn-primary" onclick="history.back()">Go Back</button>
+          <button class="btn btn-secondary">Report Error</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Demo switcher -->
+  <div class="error-type-switcher">
+    <button class="error-type-btn active" onclick="showError('404', this)">404</button>
+    <button class="error-type-btn" onclick="showError('500', this)">500</button>
+    <button class="error-type-btn" onclick="showError('task', this)">Task Failed</button>
+  </div>
+
+  <script src="interactions.js"></script>
+  <script>
+    function showError(errorType, buttonElement) {
+      document.getElementById('error-404').style.display = 'none';
+      document.getElementById('error-500').style.display = 'none';
+      document.getElementById('error-task').style.display = 'none';
+      document.getElementById('error-' + errorType).style.display = 'flex';
+      document.querySelectorAll('.error-type-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+      buttonElement.classList.add('active');
+    }
+  </script>
+</body>
+</html>
