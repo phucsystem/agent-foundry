@@ -15,10 +15,21 @@ logger = logging.getLogger(__name__)
 async def lifespan(application: FastAPI):
     """Application startup and shutdown lifecycle."""
     from agents import initialize_agents
+    from database.connection import database
 
     initialize_agents()
     logger.info("Agent framework initialized")
+
+    try:
+        await database.connect()
+        logger.info("Database connected")
+    except Exception as error:
+        logger.warning(f"Database connection failed (non-fatal): {error}")
+
     yield
+
+    from database.connection import database as db_shutdown
+    await db_shutdown.disconnect()
 
 
 def create_app() -> FastAPI:

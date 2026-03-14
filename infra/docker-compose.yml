@@ -138,7 +138,7 @@ services:
     volumes:
       - ../backend:/app
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agentfoundry}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agentfoundry}
       REDIS_URL: redis://redis:6379/0
       MEMGRAPH_URL: bolt://memgraph:7687
       LITELLM_BASE_URL: http://litellm:4000/v1
@@ -171,7 +171,7 @@ services:
     volumes:
       - ../backend:/app
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agentfoundry}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-agentfoundry}
       REDIS_URL: redis://redis:6379/0
       MEMGRAPH_URL: bolt://memgraph:7687
       LITELLM_BASE_URL: http://litellm:4000/v1

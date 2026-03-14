@@ -18,8 +18,6 @@ router = APIRouter()
 
 
 class CreateTaskRequest(BaseModel):
-    """Request body for creating a new agent task."""
-
     agent_id: str
     goal: str
     context: str | None = None
@@ -27,23 +25,47 @@ class CreateTaskRequest(BaseModel):
 
 
 class TaskResponse(BaseModel):
-    """Response payload returned after task creation."""
-
     task_id: str
     status: str
 
 
 @router.get("/")
 async def list_tasks() -> dict:
-    """List recent tasks. DB integration in next phase."""
-    return {"tasks": []}
+    """List tasks from PostgreSQL."""
+    from database.connection import database
+
+    if not database.is_connected:
+        return {"tasks": []}
+
+    rows = await database.fetch(
+        """SELECT id, agent_id, goal, status, cost_usd, tokens_used,
+                  runtime_seconds, created_at, completed_at
+           FROM tasks ORDER BY created_at DESC LIMIT 50"""
+    )
+
+    tasks_list = []
+    for row in rows:
+        tasks_list.append({
+            "task_id": str(row["id"]),
+            "agent_id": row["agent_id"],
+            "goal": row["goal"],
+            "status": row["status"],
+            "cost_usd": float(row["cost_usd"]) if row["cost_usd"] else None,
+            "tokens_used": row["tokens_used"],
+            "runtime_seconds": float(row["runtime_seconds"]) if row["runtime_seconds"] else None,
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+            "completed_at": row["completed_at"].isoformat() if row["completed_at"] else None,
+        })
+
+    return {"tasks": tasks_list}
 
 
 @router.post("/", response_model=TaskResponse, status_code=202)
 async def create_task(request: CreateTaskRequest) -> TaskResponse:
-    """Create and enqueue a new agent task."""
+    """Create task, store in DB, and enqueue for execution."""
     from agents import agent_registry
     from agents.exceptions import AgentNotFoundError
+    from database.connection import database
 
     try:
         agent_registry.get_config(request.agent_id)
@@ -57,6 +79,14 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
         "budget_usd": request.budget_usd,
     }
 
+    if database.is_connected:
+        await database.execute(
+            """INSERT INTO tasks (id, agent_id, goal, context, status, input_data)
+               VALUES ($1::uuid, $2, $3, $4, 'queued', $5::jsonb)""",
+            task_id, request.agent_id, request.goal,
+            request.context, json.dumps(input_data),
+        )
+
     execute_agent_task.apply_async(
         kwargs={"task_id": task_id, "agent_id": request.agent_id, "input_data": input_data},
         task_id=task_id,
@@ -68,14 +98,29 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
 
 @router.get("/{task_id}")
 async def get_task(task_id: str) -> dict:
-    """Get task status and result by Celery task ID."""
-    async_result = celery_app.AsyncResult(task_id)
+    """Get task from DB first, fall back to Celery result."""
+    from database.connection import database
 
+    if database.is_connected:
+        row = await database.fetchrow(
+            "SELECT * FROM tasks WHERE id = $1::uuid", task_id
+        )
+        if row:
+            return {
+                "task_id": str(row["id"]),
+                "agent_id": row["agent_id"],
+                "goal": row["goal"],
+                "status": row["status"],
+                "output": row["output_data"],
+                "cost_usd": float(row["cost_usd"]) if row["cost_usd"] else None,
+                "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+            }
+
+    async_result = celery_app.AsyncResult(task_id)
     response: dict = {
         "task_id": task_id,
         "status": (async_result.status or "unknown").lower(),
     }
-
     if async_result.ready():
         if async_result.successful():
             response["result"] = async_result.result
@@ -89,14 +134,11 @@ async def get_task(task_id: str) -> dict:
 
 @router.get("/{task_id}/stream")
 async def stream_task_progress(task_id: str) -> StreamingResponse:
-    """SSE endpoint for real-time task progress via Redis pub/sub."""
-
-    max_duration_seconds = 1800
-    heartbeat_count = 0
-    max_heartbeats = max_duration_seconds * 2
+    """SSE endpoint for real-time task progress."""
+    max_heartbeats = 3600
 
     async def event_generator():
-        nonlocal heartbeat_count
+        heartbeat_count = 0
         from workers.progress import progress_publisher
 
         pubsub = progress_publisher.subscribe(task_id)
@@ -112,8 +154,7 @@ async def stream_task_progress(task_id: str) -> StreamingResponse:
                     if parsed.get("type") in ("complete", "error"):
                         break
                 else:
-                    heartbeat = json.dumps({"type": "heartbeat"})
-                    yield f"data: {heartbeat}\n\n"
+                    yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
                     heartbeat_count += 1
                 await asyncio.sleep(0.5)
         finally:
@@ -122,8 +163,5 @@ async def stream_task_progress(task_id: str) -> StreamingResponse:
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",
-        },
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
