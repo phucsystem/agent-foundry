@@ -5,10 +5,11 @@ import json
 import logging
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from api.auth.dependencies import CurrentUser, get_current_user
 from workers.celery_app import celery_app
 from workers.tasks import execute_agent_task
 
@@ -30,7 +31,7 @@ class TaskResponse(BaseModel):
 
 
 @router.get("/")
-async def list_tasks() -> dict:
+async def list_tasks(user: CurrentUser = Depends(get_current_user)) -> dict:
     """List tasks from PostgreSQL."""
     from database.connection import database
 
@@ -40,7 +41,8 @@ async def list_tasks() -> dict:
     rows = await database.fetch(
         """SELECT id, agent_id, goal, status, cost_usd, tokens_used,
                   runtime_seconds, created_at, completed_at
-           FROM tasks ORDER BY created_at DESC LIMIT 50"""
+           FROM tasks WHERE user_id = $1::uuid ORDER BY created_at DESC LIMIT 50""",
+        user.user_id,
     )
 
     tasks_list = []
@@ -61,7 +63,10 @@ async def list_tasks() -> dict:
 
 
 @router.post("/", response_model=TaskResponse, status_code=202)
-async def create_task(request: CreateTaskRequest) -> TaskResponse:
+async def create_task(
+    request: CreateTaskRequest,
+    user: CurrentUser = Depends(get_current_user),
+) -> TaskResponse:
     """Create task, store in DB, and enqueue for execution."""
     from agents import agent_registry
     from agents.exceptions import AgentNotFoundError
@@ -73,10 +78,6 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
         raise HTTPException(status_code=404, detail=f"Agent '{request.agent_id}' not found")
 
     task_id = str(uuid.uuid4())
-
-    # TODO: Get real user_id from auth when Logto is wired
-    mock_user_id = "00000000-0000-0000-0000-000000000001"
-
     enriched_context = request.context or ""
     hire_id = None
 
@@ -84,7 +85,7 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
         hire_row = await database.fetchrow(
             """SELECT id, custom_instructions FROM hired_agents
                WHERE user_id = $1::uuid AND agent_id = $2 AND status = 'active'""",
-            mock_user_id, request.agent_id,
+            user.user_id, request.agent_id,
         )
         if hire_row:
             hire_id = str(hire_row["id"])
@@ -108,7 +109,7 @@ async def create_task(request: CreateTaskRequest) -> TaskResponse:
         await database.execute(
             """INSERT INTO tasks (id, user_id, agent_id, goal, context, status, input_data, hire_id)
                VALUES ($1::uuid, $2::uuid, $3, $4, $5, 'queued', $6::jsonb, $7::uuid)""",
-            task_id, mock_user_id, request.agent_id, request.goal,
+            task_id, user.user_id, request.agent_id, request.goal,
             enriched_context or request.context, json.dumps(input_data), hire_id,
         )
 

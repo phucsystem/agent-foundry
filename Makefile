@@ -1,4 +1,4 @@
-.PHONY: up down api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check
+.PHONY: up down build rebuild api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check
 
 # Infrastructure
 up:
@@ -9,6 +9,13 @@ down:
 
 logs:
 	docker compose -f infra/docker-compose.yml logs -f
+
+build:
+	docker compose -f infra/docker-compose.yml --env-file .env build
+
+rebuild:
+	docker compose -f infra/docker-compose.yml --env-file .env build --no-cache
+	docker compose -f infra/docker-compose.yml --env-file .env up -d
 
 reset:
 	docker compose -f infra/docker-compose.yml down -v

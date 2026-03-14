@@ -1,6 +1,7 @@
 """FastAPI dependencies for authentication (Logto OIDC + API key)."""
 
 import logging
+import os
 
 from fastapi import Depends, HTTPException, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -11,6 +12,8 @@ logger = logging.getLogger(__name__)
 bearer_scheme = HTTPBearer(auto_error=False)
 
 ROLE_HIERARCHY: dict[str, int] = {"admin": 3, "manager": 2, "viewer": 1}
+MOCK_AUTH = os.getenv("MOCK_AUTH", "true").lower() == "true"
+MOCK_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 
 class CurrentUser:
@@ -28,8 +31,11 @@ async def get_current_user(
 ) -> CurrentUser:
     """Extract user from Logto JWT or API key.
 
-    Priority: Bearer token (Logto OIDC) > API key
+    Priority: MOCK_AUTH bypass > Bearer token (Logto OIDC) > API key
     """
+    if MOCK_AUTH:
+        return CurrentUser(user_id=MOCK_USER_ID, role="admin", auth_method="mock")
+
     if credentials and credentials.credentials:
         try:
             from api.auth.logto import logto_verifier

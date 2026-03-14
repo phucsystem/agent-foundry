@@ -1,17 +1,40 @@
 "use client";
 
-import { useAuth } from "./auth-guard";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export function AuthButton() {
-  const { isAuthenticated, email } = useAuth();
+  const { data: session, status } = useSession();
 
-  if (isAuthenticated) {
+  if (status === "loading") {
     return (
-      <div className="px-6 py-2 text-sm">
-        <div className="text-text-secondary truncate">{email ?? "User"}</div>
+      <div className="px-6 py-2 text-sm text-text-secondary">Loading...</div>
+    );
+  }
+
+  if (session?.user) {
+    return (
+      <div className="px-6 py-2">
+        <div className="text-sm text-text-secondary truncate mb-1">
+          {session.user.email ?? session.user.name ?? "User"}
+        </div>
+        <button
+          onClick={() => signOut()}
+          className="text-xs text-text-muted hover:text-primary transition-colors"
+        >
+          Sign out
+        </button>
       </div>
     );
   }
 
-  return null;
+  return (
+    <div className="px-6 py-2">
+      <button
+        onClick={() => signIn("logto")}
+        className="text-sm text-primary hover:underline"
+      >
+        Sign in
+      </button>
+    </div>
+  );
 }

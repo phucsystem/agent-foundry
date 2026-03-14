@@ -3,10 +3,11 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.auth.dependencies import CurrentUser, get_current_user
 from api.routers.hired_agents_helpers import (
-    MOCK_USER_ID, HireAgentRequest, HiredAgentSummary,
+    HireAgentRequest, HiredAgentSummary,
     agent_color, get_hire_or_404,
 )
 
@@ -16,7 +17,11 @@ router = APIRouter()
 
 
 @router.post("/{agent_id}/hire", status_code=201)
-async def hire_agent(agent_id: str, request: HireAgentRequest) -> dict:
+async def hire_agent(
+    agent_id: str,
+    request: HireAgentRequest,
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
     """Hire an agent on a weekly subscription."""
     from agents import agent_registry
     from agents.exceptions import AgentNotFoundError
@@ -30,7 +35,7 @@ async def hire_agent(agent_id: str, request: HireAgentRequest) -> dict:
     existing = await database.fetchrow(
         """SELECT id FROM hired_agents
            WHERE user_id = $1::uuid AND agent_id = $2 AND status IN ('active', 'renewing_soon')""",
-        MOCK_USER_ID, agent_id,
+        user.user_id, agent_id,
     )
     if existing:
         raise HTTPException(status_code=409, detail=f"Agent '{agent_id}' already hired")
@@ -41,7 +46,7 @@ async def hire_agent(agent_id: str, request: HireAgentRequest) -> dict:
             """INSERT INTO hired_agents (user_id, agent_id, status, plan, weekly_budget_usd, hired_at, renews_at)
                VALUES ($1::uuid, $2, 'active', $3, $4, now(), $5)
                RETURNING id, hired_at""",
-            MOCK_USER_ID, agent_id, request.plan, request.weekly_budget_usd, renews_at,
+            user.user_id, agent_id, request.plan, request.weekly_budget_usd, renews_at,
         )
     except Exception as exc:
         if "unique" in str(exc).lower():
@@ -60,7 +65,7 @@ async def hire_agent(agent_id: str, request: HireAgentRequest) -> dict:
 
 
 @router.get("/")
-async def list_hired_agents() -> dict:
+async def list_hired_agents(user: CurrentUser = Depends(get_current_user)) -> dict:
     """List all hired agents for current user with summary stats."""
     from database.connection import database
 
@@ -85,7 +90,7 @@ async def list_hired_agents() -> dict:
            ) ts ON true
            WHERE ha.user_id = $1::uuid
            ORDER BY ha.hired_at DESC""",
-        MOCK_USER_ID,
+        user.user_id,
     )
 
     hired_list = []
@@ -114,11 +119,11 @@ async def list_hired_agents() -> dict:
 
 
 @router.delete("/{hire_id}", status_code=200)
-async def cancel_hire(hire_id: str) -> dict:
+async def cancel_hire(hire_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
     """Cancel a hired agent subscription."""
     from database.connection import database
 
-    row = await get_hire_or_404(database, hire_id)
+    row = await get_hire_or_404(database, hire_id, user.user_id)
     if row["status"] == "cancelled":
         raise HTTPException(status_code=400, detail="Already cancelled")
 
@@ -131,11 +136,11 @@ async def cancel_hire(hire_id: str) -> dict:
 
 
 @router.post("/{hire_id}/rehire", status_code=200)
-async def rehire_agent(hire_id: str) -> dict:
+async def rehire_agent(hire_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
     """Rehire a cancelled agent."""
     from database.connection import database
 
-    row = await get_hire_or_404(database, hire_id)
+    row = await get_hire_or_404(database, hire_id, user.user_id)
     if row["status"] in ("active", "renewing_soon"):
         raise HTTPException(status_code=400, detail="Agent is already active")
 
@@ -154,11 +159,12 @@ async def get_hired_agent_tasks(
     hire_id: str,
     limit: int = Query(default=10, le=50),
     offset: int = Query(default=0, ge=0),
+    user: CurrentUser = Depends(get_current_user),
 ) -> dict:
     """Get paginated tasks for a hired agent."""
     from database.connection import database
 
-    await get_hire_or_404(database, hire_id)
+    await get_hire_or_404(database, hire_id, user.user_id)
 
     total = await database.fetchval(
         "SELECT COUNT(*) FROM tasks WHERE hire_id = $1::uuid", hire_id

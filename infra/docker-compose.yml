@@ -197,7 +197,7 @@ services:
       - /app/.next
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_MOCK_AUTH: ${MOCK_AUTH:-true}
+      NEXT_PUBLIC_MOCK_AUTH: ${MOCK_AUTH:-false}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`app.localhost`)"

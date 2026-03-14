@@ -7,8 +7,6 @@ from pydantic import BaseModel, Field
 
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE)
 
-MOCK_USER_ID = "00000000-0000-0000-0000-000000000001"
-
 
 class HireAgentRequest(BaseModel):
     plan: str = "solo"
@@ -50,11 +48,11 @@ def validate_uuid(value: str, label: str = "ID") -> str:
     return value
 
 
-async def get_hire_or_404(database, hire_id: str):
+async def get_hire_or_404(database, hire_id: str, user_id: str):
     validate_uuid(hire_id, "hire_id")
     row = await database.fetchrow(
         "SELECT * FROM hired_agents WHERE id = $1::uuid AND user_id = $2::uuid",
-        hire_id, MOCK_USER_ID,
+        hire_id, user_id,
     )
     if not row:
         raise HTTPException(status_code=404, detail="Hired agent not found")

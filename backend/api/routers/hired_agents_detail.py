@@ -3,8 +3,9 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 
+from api.auth.dependencies import CurrentUser, get_current_user
 from api.routers.hired_agents_helpers import (
     UpdateSettingsRequest, agent_color, get_hire_or_404, task_stats, validate_uuid,
 )
@@ -15,13 +16,16 @@ router = APIRouter()
 
 
 @router.get("/{hire_id}")
-async def get_hired_agent_detail(hire_id: str) -> dict:
+async def get_hired_agent_detail(
+    hire_id: str,
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
     """Get full detail for a hired agent including settings, stats, and cost."""
     from database.connection import database
     from agents import agent_registry
     from agents.exceptions import AgentNotFoundError
 
-    row = await get_hire_or_404(database, hire_id)
+    row = await get_hire_or_404(database, hire_id, user.user_id)
 
     agent_name = row["agent_id"].title()
     agent_role = row["agent_id"]
@@ -103,11 +107,15 @@ async def get_hired_agent_detail(hire_id: str) -> dict:
 
 
 @router.put("/{hire_id}/settings")
-async def update_settings(hire_id: str, request: UpdateSettingsRequest) -> dict:
+async def update_settings(
+    hire_id: str,
+    request: UpdateSettingsRequest,
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
     """Update custom instructions for a hired agent."""
     from database.connection import database
 
-    await get_hire_or_404(database, hire_id)
+    await get_hire_or_404(database, hire_id, user.user_id)
     await database.execute(
         """UPDATE hired_agents SET custom_instructions = $1, updated_at = now()
            WHERE id = $2::uuid""",
@@ -117,11 +125,15 @@ async def update_settings(hire_id: str, request: UpdateSettingsRequest) -> dict:
 
 
 @router.post("/{hire_id}/knowledge", status_code=201)
-async def upload_knowledge(hire_id: str, file: UploadFile = File(...)) -> dict:
+async def upload_knowledge(
+    hire_id: str,
+    file: UploadFile = File(...),
+    user: CurrentUser = Depends(get_current_user),
+) -> dict:
     """Upload a knowledge file (.md, max 5MB) for a hired agent."""
     from database.connection import database
 
-    await get_hire_or_404(database, hire_id)
+    await get_hire_or_404(database, hire_id, user.user_id)
 
     if not file.filename or not file.filename.endswith(".md"):
         raise HTTPException(status_code=400, detail="Only .md files are allowed")
@@ -149,11 +161,15 @@ async def upload_knowledge(hire_id: str, file: UploadFile = File(...)) -> dict:
 
 
 @router.delete("/{hire_id}/knowledge/{file_id}", status_code=204)
-async def delete_knowledge(hire_id: str, file_id: str) -> None:
+async def delete_knowledge(
+    hire_id: str,
+    file_id: str,
+    user: CurrentUser = Depends(get_current_user),
+) -> None:
     """Delete a knowledge file."""
     from database.connection import database
 
-    await get_hire_or_404(database, hire_id)
+    await get_hire_or_404(database, hire_id, user.user_id)
     validate_uuid(file_id, "file_id")
     result = await database.execute(
         "DELETE FROM knowledge_files WHERE id = $1::uuid AND hire_id = $2::uuid",
