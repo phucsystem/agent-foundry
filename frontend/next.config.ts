@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     AUTH_LOGTO_ISSUER: process.env.LOGTO_ENDPOINT
       ? `${process.env.LOGTO_ENDPOINT.replace(/\/$/, "")}/oidc`
       : undefined,
+    JWT_SECRET_KEY: process.env.JWT_SECRET_KEY,
   },
 };
 
