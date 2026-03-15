@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Providers } from "@/components/layout/providers";
 import { AuthGuard } from "@/components/layout/auth-guard";
+import { Snackbar } from "@/components/ui/snackbar";
 
 export default function RootLayout({
   children,
@@ -20,7 +21,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-surface text-slate-900 dark:bg-[#0F172A] dark:text-slate-100">
+      <body suppressHydrationWarning className="min-h-screen bg-surface text-slate-900 dark:bg-[#0F172A] dark:text-slate-100">
         <Providers>
           <AuthGuard>
             <MobileNav />
@@ -31,6 +32,7 @@ export default function RootLayout({
               </main>
             </div>
           </AuthGuard>
+          <Snackbar />
         </Providers>
       </body>
     </html>

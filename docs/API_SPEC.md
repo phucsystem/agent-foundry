@@ -20,6 +20,10 @@ Scoped to **Agent Marketplace**, **Hired Agents (My Team)**, and **Hired Agent D
 | DELETE | /api/agents/hired/{hire_id}/knowledge/{file_id} | FR-05 | S-07, S-08 | Remove knowledge file |
 | GET | /api/agents/hired/{hire_id}/tasks | FR-04 | S-08 | Recent tasks for hired agent |
 | GET | /api/agents/hired/{hire_id}/stats | FR-04 | S-07, S-08 | Agent performance stats |
+| GET | /api/billing/balance | FR-40 | S-09 | Current credit balance |
+| POST | /api/billing/topup | FR-41 | S-09 | Create Stripe Checkout session |
+| POST | /api/billing/webhook | FR-42 | — | Stripe payment webhook |
+| GET | /api/billing/transactions | FR-44 | S-09 | Paginated transaction history |
 
 ---
 
@@ -82,14 +86,11 @@ Agent public profile for marketplace detail page. Already implemented.
 ---
 
 ### POST /api/agents/{agent_id}/hire
-Hire an agent. Creates a `hired_agents` record linking user to agent.
+Hire an agent — adds to user's team. No plan or budget needed; billing is per-task.
 
 **Request**:
 ```json
-{
-  "plan": "solo",
-  "weekly_budget_usd": 100.00
-}
+{}
 ```
 
 **Response** `201`:
@@ -98,10 +99,7 @@ Hire an agent. Creates a `hired_agents` record linking user to agent.
   "hire_id": "uuid",
   "agent_id": "coder",
   "status": "active",
-  "plan": "solo",
-  "weekly_budget_usd": 100.00,
-  "hired_at": "2026-03-01T00:00:00Z",
-  "renews_at": "2026-03-08T00:00:00Z"
+  "hired_at": "2026-03-01T00:00:00Z"
 }
 ```
 
@@ -323,12 +321,109 @@ Aggregated performance stats. Used by both S-07 (summary) and S-08 (full detail)
 
 ---
 
-## 3. Authentication
+## 3. Billing Endpoints
 
-All `/api/agents/hired/*` endpoints require authentication (JWT via Logto).
-`user_id` extracted from token claims. Each hire is scoped to the authenticated user.
+### GET /api/billing/balance
+Current credit balance for authenticated user.
 
-## 4. Traceability
+**Response** `200`:
+```json
+{
+  "balance_cents": 2450,
+  "balance_usd": "24.50",
+  "low_balance": false
+}
+```
+
+---
+
+### POST /api/billing/topup
+Create a Stripe Checkout session for one-time credit purchase.
+
+**Request**:
+```json
+{
+  "amount_cents": 2500
+}
+```
+
+**Validation:** `amount_cents >= 500` (min $5.00)
+
+**Response** `200`:
+```json
+{
+  "checkout_url": "https://checkout.stripe.com/c/pay/cs_...",
+  "session_id": "cs_..."
+}
+```
+
+**Error** `400`: `{"detail": "Minimum topup is $5.00"}`
+
+---
+
+### POST /api/billing/webhook
+Stripe webhook handler. Verifies signature, credits user balance.
+
+**Headers:** `Stripe-Signature: ...`
+
+**Events handled:**
+- `checkout.session.completed` → credit user balance, insert transaction
+
+**Response** `200`: `{"received": true}`
+
+---
+
+### GET /api/billing/transactions
+Paginated credit transaction history for authenticated user.
+
+**Query params**: `?limit=20&offset=0&type=all`
+- `type`: `all`, `topup`, `deduction`, `refund`
+
+**Response** `200`:
+```json
+{
+  "transactions": [
+    {
+      "id": "uuid",
+      "type": "deduction",
+      "amount_cents": -47,
+      "balance_after_cents": 2403,
+      "description": "Task: Fix auth bug — Sonnet 4.6",
+      "reference_type": "task",
+      "reference_id": "task-uuid",
+      "created_at": "2026-03-15T14:30:00Z"
+    },
+    {
+      "id": "uuid",
+      "type": "topup",
+      "amount_cents": 2500,
+      "balance_after_cents": 2450,
+      "description": "Topup $25.00",
+      "reference_type": "stripe_checkout",
+      "reference_id": "cs_...",
+      "created_at": "2026-03-15T10:00:00Z"
+    }
+  ],
+  "total": 42
+}
+```
+
+---
+
+## 4. Authentication
+
+All `/api/agents/hired/*` and `/api/billing/*` endpoints require authentication (JWT via Logto).
+`user_id` extracted from token claims. Each hire and balance is scoped to the authenticated user.
+
+## 5. Task Pre-flight Balance Check
+
+Before enqueuing any task, the API estimates cost and verifies `user.balance_cents >= estimated_cost_cents`. Returns HTTP 402 if insufficient.
+
+**Optional request field:** `"max_cost_usd": 1.50` — abort task if cost exceeds this cap.
+
+**Error** `402`: `{"detail": "Insufficient credits", "balance_usd": "2.30", "estimated_cost_usd": "3.50"}`
+
+## 6. Traceability
 
 | Endpoint | Feature | Screens |
 |----------|---------|---------|
@@ -343,3 +438,7 @@ All `/api/agents/hired/*` endpoints require authentication (JWT via Logto).
 | POST /api/agents/hired/{id}/rehire | FR-07 Re-hire | S-07 |
 | GET /api/agents/hired/{id}/tasks | FR-04 Recent Tasks | S-08 |
 | GET /api/agents/hired/{id}/stats | FR-04 Performance | S-07, S-08 |
+| GET /api/billing/balance | FR-40 Balance | S-09 |
+| POST /api/billing/topup | FR-41 Topup | S-09 |
+| POST /api/billing/webhook | FR-42 Stripe | — |
+| GET /api/billing/transactions | FR-44 History | S-09 |

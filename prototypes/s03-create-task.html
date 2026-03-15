@@ -43,148 +43,114 @@
 
     <main class="main-content" data-cjx-entrance>
       <div class="page-header">
-        <h1 class="page-title">Define Your Task</h1>
-        <p class="page-subtitle">Tell us what you need and we'll match you with the right agent.</p>
+        <h1 class="page-title">Create Task</h1>
       </div>
 
-      <!-- Step Indicators -->
-      <div class="task-steps">
-        <div class="task-step active">
-          <span class="step-number">1</span>
-          <span>Goal</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="task-step">
-          <span class="step-number">2</span>
-          <span>Context</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="task-step">
-          <span class="step-number">3</span>
-          <span>Agent</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="task-step">
-          <span class="step-number">4</span>
-          <span>Budget</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="task-step">
-          <span class="step-number">5</span>
-          <span>Review</span>
-        </div>
-      </div>
-
-      <!-- Step 1: Goal -->
-      <div class="card mb-xl">
-        <h2 class="section-title">1. What do you need?</h2>
-        <div class="form-field">
-          <label class="form-label" for="task-goal">Task Goal</label>
-          <textarea class="form-textarea" id="task-goal" placeholder="e.g., Write unit tests for login flow"></textarea>
-          <span class="form-helper">Describe what you need the agent to do. Be specific about the expected output.</span>
-        </div>
-      </div>
-
-      <!-- Step 2: Context Upload -->
-      <div class="card mb-xl">
-        <h2 class="section-title">2. Upload Context Documents</h2>
-        <div class="drop-zone">
-          <div class="drop-zone-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
+      <div style="display: grid; grid-template-columns: 1fr 320px; gap: var(--space-lg); align-items: start;">
+        <!-- Left: Form -->
+        <div>
+          <!-- Name & Goal -->
+          <div class="card mb-lg">
+            <div class="form-field">
+              <label class="form-label" for="task-name">Task Name</label>
+              <input class="form-input" id="task-name" type="text" placeholder="e.g., Login flow unit tests">
+            </div>
+            <div class="form-field" style="margin-bottom: 0;">
+              <label class="form-label" for="task-goal">Description</label>
+              <textarea class="form-textarea" id="task-goal" placeholder="What should the agent do? Be specific about the expected output." style="min-height: 80px;"></textarea>
+            </div>
           </div>
-          <p class="font-semibold mb-xs">Drag & drop files here</p>
-          <p class="text-sm text-muted">Supports PDF, Markdown, and text files. Max 10MB per file.</p>
-        </div>
-      </div>
 
-      <!-- Step 3: Agent Selection -->
-      <div class="card mb-xl">
-        <h2 class="section-title">3. Select Agent</h2>
-        <div class="alert alert-info mb-md">
-          Based on your goal, we recommend <strong>Coder</strong> for this task.
-        </div>
-        <div class="grid-3">
-          <label class="card" style="cursor: pointer; border: 2px solid var(--color-primary); padding: var(--space-md);">
-            <input type="radio" name="agent" checked style="display: none;">
-            <div class="flex items-center gap-sm mb-sm">
-              <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
-              <strong class="text-sm">Coder</strong>
+          <!-- Context -->
+          <div class="card mb-lg">
+            <label class="form-label mb-sm" style="display: block;">Context Files</label>
+            <div class="drop-zone" style="padding: var(--space-lg);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0 auto var(--space-xs);">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p class="text-sm text-muted">Drop files here — PDF, MD, TXT (max 10MB)</p>
             </div>
-            <p class="text-xs text-muted">Code, bugs, PRs</p>
-          </label>
-          <label class="card" style="cursor: pointer; padding: var(--space-md);">
-            <input type="radio" name="agent" style="display: none;">
-            <div class="flex items-center gap-sm mb-sm">
-              <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #10B981, #059669);">R</div>
-              <strong class="text-sm">Research</strong>
-            </div>
-            <p class="text-xs text-muted">Topics, reports</p>
-          </label>
-          <label class="card" style="cursor: pointer; padding: var(--space-md);">
-            <input type="radio" name="agent" style="display: none;">
-            <div class="flex items-center gap-sm mb-sm">
-              <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #F59E0B, #D97706);">PM</div>
-              <strong class="text-sm">PM</strong>
-            </div>
-            <p class="text-xs text-muted">PRDs, backlog</p>
-          </label>
-        </div>
-      </div>
-
-      <!-- Step 4: Budget -->
-      <div class="card mb-xl">
-        <h2 class="section-title">4. Set Budget</h2>
-        <div class="budget-slider-container">
-          <input type="range" class="budget-slider" id="budget-slider" min="10" max="500" value="50">
-          <div class="budget-range">
-            <span>$10</span>
-            <span>$500</span>
           </div>
-          <div class="budget-preview" id="budget-preview">This task will likely cost ~$50 based on similar tasks</div>
-        </div>
-      </div>
 
-      <!-- Step 5: Review & Submit -->
-      <div class="card mb-xl">
-        <h2 class="section-title">5. Review &amp; Submit</h2>
-        <div class="table-container">
-          <table class="data-table">
-            <tbody>
-              <tr>
-                <td class="font-semibold" style="width: 150px;">Goal</td>
-                <td class="text-muted">Write unit tests for login flow</td>
-              </tr>
-              <tr>
-                <td class="font-semibold">Context Files</td>
-                <td class="text-muted">auth-module.md (24KB)</td>
-              </tr>
-              <tr>
-                <td class="font-semibold">Agent</td>
-                <td>
-                  <div class="flex items-center gap-sm">
-                    <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">C</div>
-                    Coder
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="font-semibold">Estimated Cost</td>
-                <td class="text-muted">~$3.50</td>
-              </tr>
-              <tr>
-                <td class="font-semibold">Budget Cap</td>
-                <td class="text-muted">$50.00</td>
-              </tr>
-            </tbody>
-          </table>
+          <!-- Agent Selection -->
+          <div class="card mb-lg">
+            <label class="form-label mb-sm" style="display: block;">Agent</label>
+            <div style="display: flex; gap: var(--space-sm);">
+              <label style="flex: 1; cursor: pointer; display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border: 2px solid var(--color-primary); border-radius: var(--radius-md); background: rgba(59, 130, 246, 0.04);">
+                <input type="radio" name="agent" checked style="display: none;">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB); width: 28px; height: 28px; font-size: 11px;">C</div>
+                <div>
+                  <strong class="text-sm">Coder</strong>
+                  <p class="text-xs text-muted" style="margin: 0;">Code, bugs, PRs</p>
+                </div>
+              </label>
+              <label style="flex: 1; cursor: pointer; display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <input type="radio" name="agent" style="display: none;">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #10B981, #059669); width: 28px; height: 28px; font-size: 11px;">R</div>
+                <div>
+                  <strong class="text-sm">Research</strong>
+                  <p class="text-xs text-muted" style="margin: 0;">Topics, reports</p>
+                </div>
+              </label>
+              <label style="flex: 1; cursor: pointer; display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                <input type="radio" name="agent" style="display: none;">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #F59E0B, #D97706); width: 28px; height: 28px; font-size: 11px;">PM</div>
+                <div>
+                  <strong class="text-sm">PM</strong>
+                  <p class="text-xs text-muted" style="margin: 0;">PRDs, backlog</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Budget -->
+          <div class="card">
+            <label class="form-label mb-sm" style="display: block;">Budget Cap</label>
+            <div style="display: flex; align-items: center; gap: var(--space-md);">
+              <input type="range" class="budget-slider" id="budget-slider" min="10" max="500" value="50" style="flex: 1;">
+              <span style="font-size: var(--text-lg); font-weight: 700; color: var(--color-primary); min-width: 60px; text-align: right;">$50</span>
+            </div>
+            <div class="budget-range" style="margin-top: var(--space-xs);">
+              <span>$10</span>
+              <span>$500</span>
+            </div>
+          </div>
         </div>
-        <div class="flex gap-sm mt-lg" style="justify-content: flex-end;">
-          <button class="btn btn-secondary">Save Draft</button>
-          <button class="btn btn-primary" onclick="window.location='s04-task-monitor.html'">Submit Task</button>
+
+        <!-- Right: Summary -->
+        <div class="card" style="position: sticky; top: var(--space-lg);">
+          <h3 style="font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-md);">Summary</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-md); font-size: var(--text-sm);">
+            <div>
+              <span class="text-muted">Goal</span>
+              <p style="margin-top: 2px;">Write unit tests for login flow</p>
+            </div>
+            <div>
+              <span class="text-muted">Context</span>
+              <p style="margin-top: 2px;">auth-module.md (24KB)</p>
+            </div>
+            <div>
+              <span class="text-muted">Agent</span>
+              <div class="flex items-center gap-sm" style="margin-top: 4px;">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #3B82F6, #2563EB); width: 24px; height: 24px; font-size: 10px;">C</div>
+                <span>Coder</span>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span class="text-muted">Est. Cost</span>
+              <span class="font-semibold">~$3.50</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span class="text-muted">Budget Cap</span>
+              <span class="font-semibold">$50.00</span>
+            </div>
+          </div>
+          <div style="border-top: 1px solid var(--color-border); margin-top: var(--space-md); padding-top: var(--space-md); display: flex; flex-direction: column; gap: var(--space-sm);">
+            <button class="btn btn-primary" style="width: 100%;" onclick="window.location='s04-task-monitor.html'">Submit Task</button>
+            <button class="btn btn-secondary" style="width: 100%;">Save Draft</button>
+          </div>
         </div>
       </div>
     </main>
