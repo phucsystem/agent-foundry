@@ -49,6 +49,9 @@ htmlcov/
 .pytest_cache/
 .mypy_cache/
 
+# Worktrees
+.worktrees/
+
 # Misc
 *.log
 *.tmp

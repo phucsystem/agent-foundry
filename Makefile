@@ -1,4 +1,4 @@
-.PHONY: up down build rebuild api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check check-auth
+.PHONY: up down build rebuild api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check check-auth wt wt-rm wt-ls
 
 # Infrastructure
 up:
@@ -59,6 +59,21 @@ check: lint test
 
 check-auth:
 	@bash scripts/check-auth.sh
+
+# Worktrees — usage: make wt BRANCH=feature/foo NAME=foo
+wt:
+	@test -n "$(BRANCH)" || { echo "Usage: make wt BRANCH=feature/foo NAME=foo"; exit 1; }
+	$(eval WT_NAME := $(or $(NAME),$(lastword $(subst /, ,$(BRANCH)))))
+	git worktree add .worktrees/$(WT_NAME) $(BRANCH)
+	ln -sf $(CURDIR)/.env .worktrees/$(WT_NAME)/.env
+	@echo "Worktree ready: .worktrees/$(WT_NAME)"
+
+wt-rm:
+	@test -n "$(NAME)" || { echo "Usage: make wt-rm NAME=foo"; exit 1; }
+	git worktree remove .worktrees/$(NAME)
+
+wt-ls:
+	@git worktree list
 
 # Production
 sync-prod:
