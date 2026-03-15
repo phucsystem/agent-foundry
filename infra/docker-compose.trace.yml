@@ -1,0 +1,21 @@
+services:
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: af-langfuse
+    restart: unless-stopped
+    ports:
+      - "3200:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3200
+      NEXTAUTH_SECRET: ${LANGFUSE_SECRET:-changeme}
+      SALT: ${LANGFUSE_SECRET:-changeme}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.langfuse.rule=Host(`langfuse.localhost`)"
+      - "traefik.http.services.langfuse.loadbalancer.server.port=3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - agent-foundry

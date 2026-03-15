@@ -16,7 +16,7 @@ This document defines code style, patterns, and conventions for the agent-foundr
 
 ### Type Hints
 - **Mandatory:** All function signatures must include type hints
-- Use `from typing import` (Python 3.10+) or `from collections.abc import` for generic types
+- Use `from typing import` (Python 3.12+) or `from collections.abc import` for generic types
 - Return types for all functions (no implicit `None`)
 - Use `Pydantic BaseModel` for data validation, not bare dicts
 

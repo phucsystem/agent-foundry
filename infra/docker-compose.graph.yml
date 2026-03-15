@@ -1,0 +1,39 @@
+volumes:
+  memgraph_data:
+
+services:
+  memgraph:
+    image: memgraph/memgraph:latest
+    container_name: af-memgraph
+    restart: unless-stopped
+    ports:
+      - "7687:7687"
+      - "7444:7444"
+    volumes:
+      - memgraph_data:/var/lib/memgraph
+    networks:
+      - agent-foundry
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'RETURN 1;' | mgconsole || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  memgraph-lab:
+    image: memgraph/lab:latest
+    container_name: af-memgraph-lab
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      QUICK_CONNECT_MG_HOST: memgraph
+      QUICK_CONNECT_MG_PORT: 7687
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mglab.rule=Host(`mglab.localhost`)"
+      - "traefik.http.services.mglab.loadbalancer.server.port=3000"
+    depends_on:
+      - memgraph
+    networks:
+      - agent-foundry

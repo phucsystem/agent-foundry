@@ -1,27 +1,55 @@
-.PHONY: up down build rebuild api worker fe migrate seed logs reset sync-prod deploy lint typecheck test check check-auth
+.PHONY: up down up-agents up-graph up-trace up-all down-all build rebuild api worker fe migrate seed logs reset lint typecheck test check check-auth sync-prod deploy
 
-# Infrastructure
+# ── Compose helpers ──────────────────────────────────────────────────────
+DC       = docker compose --env-file .env
+CORE     = -f infra/docker-compose.yml
+AGENTS   = -f infra/docker-compose.agents.yml
+GRAPH    = -f infra/docker-compose.graph.yml
+TRACE    = -f infra/docker-compose.trace.yml
+ALL      = $(CORE) $(AGENTS) $(GRAPH) $(TRACE)
+
+# ── Infrastructure ───────────────────────────────────────────────────────
+# Core only: traefik + postgres + redis + backend + frontend
 up:
-	docker compose -f infra/docker-compose.yml --env-file .env up -d
+	$(DC) $(CORE) up -d
+
+# Core + agent worker + LiteLLM
+up-agents:
+	$(DC) $(CORE) $(AGENTS) up -d
+
+# Core + Memgraph + Memgraph Lab
+up-graph:
+	$(DC) $(CORE) $(GRAPH) up -d
+
+# Core + Langfuse tracing
+up-trace:
+	$(DC) $(CORE) $(TRACE) up -d
+
+# Everything
+up-all:
+	$(DC) $(ALL) up -d
 
 down:
-	docker compose -f infra/docker-compose.yml down
+	$(DC) $(CORE) down
+
+down-all:
+	$(DC) $(ALL) down
 
 logs:
-	docker compose -f infra/docker-compose.yml logs -f
+	$(DC) $(CORE) logs -f
 
 build:
-	docker compose -f infra/docker-compose.yml --env-file .env build
+	$(DC) $(CORE) build
 
 rebuild:
-	docker compose -f infra/docker-compose.yml --env-file .env build --no-cache
-	docker compose -f infra/docker-compose.yml --env-file .env up -d
+	$(DC) $(CORE) build --no-cache
+	$(DC) $(CORE) up -d
 
 reset:
-	docker compose -f infra/docker-compose.yml down -v
-	docker compose -f infra/docker-compose.yml --env-file .env up -d
+	$(DC) $(ALL) down -v
+	$(DC) $(CORE) up -d
 
-# Backend
+# ── Backend ──────────────────────────────────────────────────────────────
 api:
 	cd backend && uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
@@ -30,7 +58,7 @@ worker:
 
 migrate:
 	@echo "Applying init.sql to running Postgres..."
-	docker compose -f infra/docker-compose.yml exec -T postgres \
+	$(DC) $(CORE) exec -T postgres \
 		psql -U $${POSTGRES_USER:-app} -d $${POSTGRES_DB:-agentfoundry} \
 		< infra/init.sql
 	@echo "Schema applied successfully."
@@ -38,12 +66,12 @@ migrate:
 seed:
 	@echo "TODO: python scripts/seed.py"
 
-# Frontend (loads root .env via symlink)
+# ── Frontend ─────────────────────────────────────────────────────────────
 fe:
 	@test -L frontend/.env || ln -sf ../.env frontend/.env
 	cd frontend && pnpm run dev
 
-# Quality
+# ── Quality ──────────────────────────────────────────────────────────────
 lint:
 	cd backend && ruff check . && ruff format --check .
 	cd frontend && pnpm exec tsc --noEmit
@@ -60,7 +88,7 @@ check: lint test
 check-auth:
 	@bash scripts/check-auth.sh
 
-# Production
+# ── Production ───────────────────────────────────────────────────────────
 sync-prod:
 	@echo "TODO: sync prod config"
 

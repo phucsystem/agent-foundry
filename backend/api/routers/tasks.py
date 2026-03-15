@@ -40,13 +40,21 @@ async def list_tasks(user: CurrentUser = Depends(get_current_user)) -> dict:
 
     rows = await database.fetch(
         """SELECT id, agent_id, goal, status, cost_usd, tokens_used,
-                  runtime_seconds, created_at, completed_at
+                  runtime_seconds, created_at, completed_at, output_data, input_data
            FROM tasks WHERE user_id = $1::uuid ORDER BY created_at DESC LIMIT 50""",
         user.user_id,
     )
 
     tasks_list = []
     for row in rows:
+        output = row.get("output_data") or {}
+        input_d = row.get("input_data") or {}
+        if isinstance(output, str):
+            import json as _json
+            output = _json.loads(output)
+        if isinstance(input_d, str):
+            import json as _json
+            input_d = _json.loads(input_d)
         tasks_list.append({
             "task_id": str(row["id"]),
             "agent_id": row["agent_id"],
@@ -57,6 +65,8 @@ async def list_tasks(user: CurrentUser = Depends(get_current_user)) -> dict:
             "runtime_seconds": float(row["runtime_seconds"]) if row["runtime_seconds"] else None,
             "created_at": row["created_at"].isoformat() if row["created_at"] else None,
             "completed_at": row["completed_at"].isoformat() if row["completed_at"] else None,
+            "output_data": output,
+            "input_data": input_d,
         })
 
     return {"tasks": tasks_list}
@@ -132,14 +142,26 @@ async def get_task(task_id: str) -> dict:
             "SELECT * FROM tasks WHERE id = $1::uuid", task_id
         )
         if row:
+            output = row.get("output_data") or {}
+            input_d = row.get("input_data") or {}
+            if isinstance(output, str):
+                import json as _json
+                output = _json.loads(output)
+            if isinstance(input_d, str):
+                import json as _json
+                input_d = _json.loads(input_d)
             return {
                 "task_id": str(row["id"]),
                 "agent_id": row["agent_id"],
                 "goal": row["goal"],
                 "status": row["status"],
-                "output": row["output_data"],
                 "cost_usd": float(row["cost_usd"]) if row["cost_usd"] else None,
+                "tokens_used": row["tokens_used"],
+                "runtime_seconds": float(row["runtime_seconds"]) if row["runtime_seconds"] else None,
                 "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                "completed_at": row["completed_at"].isoformat() if row["completed_at"] else None,
+                "output_data": output,
+                "input_data": input_d,
             }
 
     async_result = celery_app.AsyncResult(task_id)

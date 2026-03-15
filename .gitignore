@@ -21,6 +21,7 @@ node_modules/
 out/
 .turbo/
 .pnpm-store/
+.cache/
 
 # Environment
 .env

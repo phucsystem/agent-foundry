@@ -17,7 +17,7 @@ export interface Agent {
   available: boolean;
 }
 
-export type TaskStatus = "queued" | "running" | "completed" | "failed";
+export type TaskStatus = "queued" | "on_hold" | "running" | "completed" | "failed";
 export type TaskPriority = "high" | "medium" | "low";
 
 export interface Task {

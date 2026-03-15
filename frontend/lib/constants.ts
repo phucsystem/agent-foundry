@@ -38,6 +38,7 @@ export const TASK_STATUS_CONFIG: Record<
   { label: string; variant: string }
 > = {
   queued: { label: "Queued", variant: "neutral" },
+  on_hold: { label: "On Hold", variant: "warning" },
   running: { label: "Running", variant: "info" },
   completed: { label: "Completed", variant: "success" },
   failed: { label: "Failed", variant: "error" },
