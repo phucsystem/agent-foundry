@@ -20,8 +20,8 @@ node_modules/
 .next/
 out/
 .turbo/
+.pnpm-store/
 .cache/
-frontend/.pnpm-store/
 
 # Environment
 .env
