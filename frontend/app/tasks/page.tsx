@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTasks } from "@/lib/hooks/use-tasks";
+import { formatRelativeTime } from "@/lib/utils/format-date";
 import { KanbanBoard } from "@/components/tasks/kanban-board";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -176,7 +177,7 @@ function TaskListView({ tasks }: { tasks: ReturnType<typeof useTasks>["data"] & 
                   {task.cost != null ? `$${task.cost.toFixed(2)}` : "—"}
                 </td>
                 <td className="py-3 px-4 text-right text-text-muted">
-                  {task.createdAt}
+                  {formatRelativeTime(task.createdAt)}
                 </td>
               </tr>
             );
