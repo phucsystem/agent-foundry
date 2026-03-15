@@ -471,7 +471,14 @@ Agent Foundry is a full-stack AI agent platform built with Python/FastAPI (backe
 | **State (Server)** | TanStack Query | v5 |
 | **State (Global)** | Zustand | Latest |
 | **Cross-platform** | Tamagui | 1.10+ (Phase 2) |
-| **Testing** | Vitest | Latest |
+| **Unit Testing** | Vitest | 4.1+ |
+| **Component Testing** | React Testing Library | 16.3+ |
+| **Test Utilities** | Testing Library DOM | 10.4+ |
+| **Test Utilities** | Testing Library Jest-DOM | 6.9+ |
+| **API Mocking** | Mock Service Worker (MSW) | 2.12+ |
+| **DOM Environment** | jsdom | 28.1+ |
+| **Vite Integration** | @vitejs/plugin-react | 6.0+ |
+| **TypeScript Config** | vite-tsconfig-paths | 6.1+ |
 | **E2E Tests** | Playwright | Latest |
 
 ### Infrastructure
@@ -576,6 +583,17 @@ frontend/
 │   ├── api-client.ts    # Fetch wrapper
 │   ├── hooks/           # 5 custom hooks
 │   └── utils.ts         # Utility functions
+├── tests/               # 20 test files, 122 unit tests
+│   ├── setup.ts         # Vitest global setup
+│   ├── test-utils.tsx   # RTL + MSW helpers
+│   ├── components/      # 13 component tests
+│   │   ├── ui/          # 11 UI primitive tests
+│   │   ├── agents/      # 1 agent component test
+│   │   └── tasks/       # 1 task component test
+│   ├── hooks/           # 3 custom hook tests
+│   ├── lib/             # 4 utility tests (api-client, utils, constants, mappers)
+│   └── mocks/           # MSW handlers + setup
+├── vitest.config.ts     # Vitest configuration
 ├── package.json
 ├── tsconfig.json
 ├── tailwind.config.ts
@@ -590,6 +608,7 @@ frontend/
 ### Complete (Phases 1, 2, 6, 7, 8, 9, 10, 11)
 - [x] Backend: agents (5 total), tools, guardrails, orchestrator, observability, database, memory, workers, api
 - [x] Frontend: 5 pages, 30+ components, dark mode, Tailwind v4 styling
+- [x] Frontend Testing: 20 test files, 122 unit tests, Vitest + RTL + MSW (100% passing)
 - [x] Infrastructure: Docker Compose (10 services), Traefik routing, .env template
 - [x] Documentation: architecture, code standards, this codebase summary, roadmap
 - [x] Auth: Logto Cloud OIDC, JWT handler, API key manager, rate limiter
@@ -598,6 +617,7 @@ frontend/
 - [x] Database: PostgreSQL schema, pgvector semantic memory, Memgraph relational graph
 - [x] Observability: Langfuse LLM tracing, OpenTelemetry metrics, structured logging
 - [x] LLM Routing: LiteLLM proxy with DeepSeek support (3 models: coder, chat, reasoner)
+- [x] Testing Infrastructure: Vitest config, RTL setup, MSW mocks, test utilities
 
 ### In Progress / Pending (Phase 3+)
 - [ ] Public signup + Stripe billing engine
@@ -611,7 +631,7 @@ frontend/
 
 ## Document Metadata
 
-- **Version:** 4.1 (Phases 1, 2, 6, 7, 8, 9, 10, 11 implementation summary with hired agents)
+- **Version:** 4.2 (Phases 1, 2, 6, 7, 8, 9, 10, 11 + frontend testing infrastructure)
 - **Last Updated:** 2026-03-15
 - **Owner:** Engineering Team
 - **Status:** Phases 1–2, 7–11 Complete (including hired agents feature); Phases 3–5, 12+ Pending

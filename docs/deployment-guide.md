@@ -68,6 +68,15 @@ npm install
 # Copy environment
 cp .env.example .env.local
 
+# Type check
+npm run lint
+
+# Run unit tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
 # Start dev server
 npm run dev
 ```
@@ -622,7 +631,7 @@ az containerapp stats \
 ---
 
 ## Document Metadata
-- **Version:** 2.0
-- **Last Updated:** 2026-03-14
+- **Version:** 2.1
+- **Last Updated:** 2026-03-15
 - **Owner:** DevOps Team
-- **Status:** Active (10-service local stack + Logto Cloud auth deployed)
+- **Status:** Active (10-service local stack + Logto Cloud auth deployed; frontend testing commands integrated)

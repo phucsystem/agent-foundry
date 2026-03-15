@@ -581,7 +581,8 @@ graph TB
 - [x] PostgreSQL migrations + pgai semantic setup
 - [x] Celery worker implementation (task execution, retries, progress publishing)
 - [x] API endpoint implementations (health, agents, tasks with SSE)
-- [ ] GitHub Actions CI/CD (pending Phase 2)
+- [x] GitHub Actions CI/CD (lint, test, build)
+- [x] Frontend unit testing infrastructure (Vitest, RTL, MSW; 20 test files, 122 tests passing)
 
 **Phase 2 (Weeks 5–8) — COMPLETE:**
 - [x] PM, QA, Copywriter agents added (5 agents total)
@@ -607,7 +608,7 @@ graph TB
 ---
 
 ## Document Metadata
-- **Version:** 1.4
+- **Version:** 1.5
 - **Last Updated:** 2026-03-15
 - **Owner:** Architecture Team
-- **Status:** Phase 1–2, 6–11 Complete (All 9 backend modules + hired agents routers + auth + CI/CD + Phase 11 frontend UI + hired agents pages implemented; Logto Cloud auth integrated; Knowledge injection into tasks implemented)
+- **Status:** Phase 1–2, 6–11 Complete (All 9 backend modules + hired agents routers + auth + CI/CD + Phase 11 frontend UI + hired agents pages implemented; Logto Cloud auth integrated; Knowledge injection into tasks implemented; Frontend unit testing infrastructure complete with 100% passing tests)
