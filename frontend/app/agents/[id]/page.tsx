@@ -1,8 +1,10 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAgent } from "@/lib/hooks/use-agents";
+import { useHiredAgents } from "@/lib/hooks/use-hired-agents";
 import {
   MOCK_REVIEWS,
   MOCK_CAPABILITIES,
@@ -16,6 +18,7 @@ import { AgentCapabilities } from "@/components/agents/agent-capabilities";
 import { AgentUseCases } from "@/components/agents/agent-use-cases";
 import { AgentPerformance } from "@/components/agents/agent-performance";
 import { AgentReviews } from "@/components/agents/agent-reviews";
+import { HireConfirmModal } from "@/components/agents/hire-confirm-modal";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -25,12 +28,25 @@ interface AgentDetailPageProps {
 
 export default function AgentDetailPage({ params }: AgentDetailPageProps) {
   const { id } = use(params);
+  const router = useRouter();
   const { data: agent, isLoading, error } = useAgent(id);
+  const { data: hiredAgents = [] } = useHiredAgents();
+
+  const [showHireModal, setShowHireModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const isAlreadyHired = hiredAgents.some(
+    (hired) => hired.agentId === id && (hired.status === "active" || hired.status === "renewing_soon"),
+  );
+
+  const handleHireSuccess = useCallback(() => {
+    setShowHireModal(false);
+    setToastMessage(`Successfully hired ${agent?.name}!`);
+    setTimeout(() => router.push("/agents/hired"), 1500);
+  }, [agent?.name, router]);
 
   if (isLoading) {
-    return (
-      <div className="text-center py-12 text-text-secondary">Loading agent...</div>
-    );
+    return <div className="text-center py-12 text-text-secondary">Loading agent...</div>;
   }
 
   if (error || !agent) {
@@ -63,7 +79,15 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Button variant="primary" className="px-8 py-3">Hire This Agent</Button>
+          {isAlreadyHired ? (
+            <Button variant="secondary" disabled className="px-8 py-3 opacity-60">
+              Already Hired
+            </Button>
+          ) : (
+            <Button variant="primary" className="px-8 py-3" onClick={() => setShowHireModal(true)}>
+              Hire This Agent
+            </Button>
+          )}
           <Button variant="secondary">Compare Plans</Button>
         </div>
       </div>
@@ -94,6 +118,19 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
       </section>
 
       <AgentReviews reviews={MOCK_REVIEWS} summary={MOCK_REVIEW_SUMMARY} />
+
+      <HireConfirmModal
+        agent={agent}
+        isOpen={showHireModal}
+        onClose={() => setShowHireModal(false)}
+        onSuccess={handleHireSuccess}
+      />
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 bg-success text-white px-5 py-3 rounded-lg text-sm font-medium z-[60] shadow-lg animate-[fadeIn_0.2s_ease]">
+          {toastMessage}
+        </div>
+      )}
     </>
   );
 }

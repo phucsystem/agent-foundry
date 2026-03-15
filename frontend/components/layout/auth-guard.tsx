@@ -3,8 +3,21 @@
 import { useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 
+const MOCK_AUTH = process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+
 export function useAuth() {
   const { data: session, status } = useSession();
+
+  if (MOCK_AUTH) {
+    return {
+      isAuthenticated: true,
+      isLoading: false,
+      email: "dev@agent-foundry.local",
+      name: "Dev User",
+      accessToken: null,
+    };
+  }
+
   return {
     isAuthenticated: !!session?.user,
     isLoading: status === "loading",

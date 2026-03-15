@@ -61,3 +61,21 @@ export async function apiPost<T>(endpoint: string, body: unknown): Promise<T> {
   }
   return response.json() as Promise<T>;
 }
+
+export async function apiUpload<T>(endpoint: string, formData: FormData): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const headers: Record<string, string> = {};
+  if (_accessToken) {
+    headers["Authorization"] = `Bearer ${_accessToken}`;
+  }
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`API error ${response.status}: ${errorBody}`);
+  }
+  return response.json() as Promise<T>;
+}

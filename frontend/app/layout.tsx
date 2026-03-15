@@ -20,7 +20,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-surface text-slate-900 dark:bg-[#0F172A] dark:text-slate-100">
+      <body suppressHydrationWarning className="min-h-screen bg-surface text-slate-900 dark:bg-[#0F172A] dark:text-slate-100">
         <Providers>
           <AuthGuard>
             <MobileNav />
