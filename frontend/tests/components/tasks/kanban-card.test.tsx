@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { KanbanCard } from "@/components/tasks/kanban-card";
 import type { Task } from "@/lib/types";
+import { useRouter } from "next/navigation";
 
 const baseTask: Task = {
   id: "task-1",
@@ -14,7 +15,7 @@ const baseTask: Task = {
   agentInitials: "CO",
   agentGradientFrom: "#3B82F6",
   agentGradientTo: "#2563EB",
-  createdAt: "2 hours ago",
+  createdAt: new Date().toISOString(),
   duration: null,
   cost: null,
   budgetCap: 50,
@@ -43,15 +44,23 @@ describe("KanbanCard", () => {
     expect(screen.getByText("Coder")).toBeInTheDocument();
   });
 
-  it("renders created at timestamp", () => {
+  it("renders relative time for createdAt", () => {
     render(<KanbanCard task={baseTask} />);
-    expect(screen.getByText("2 hours ago")).toBeInTheDocument();
+    expect(screen.getByText("just now")).toBeInTheDocument();
   });
 
-  it("links to task detail page", () => {
+  it("navigates on click via useRouter", () => {
+    const mockPush = vi.fn();
+    vi.mocked(useRouter).mockReturnValue({
+      push: mockPush,
+      replace: vi.fn(),
+      back: vi.fn(),
+      prefetch: vi.fn(),
+    } as ReturnType<typeof useRouter>);
+
     render(<KanbanCard task={baseTask} />);
-    const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/tasks/task-1");
+    fireEvent.click(screen.getByRole("link"));
+    expect(mockPush).toHaveBeenCalledWith("/tasks/task-1");
   });
 
   it("shows progress bar for running tasks", () => {
@@ -75,7 +84,7 @@ describe("KanbanCard", () => {
     render(<KanbanCard task={completedTask} />);
     expect(screen.getByText("2m 30s")).toBeInTheDocument();
     expect(screen.getByText("$1.50")).toBeInTheDocument();
-    expect(screen.getByText("5.0K")).toBeInTheDocument();
+    expect(screen.getByText("5.0K tok")).toBeInTheDocument();
   });
 
   it("shows error message for failed tasks", () => {
