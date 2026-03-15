@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAgent } from "@/lib/hooks/use-agents";
 import { useHiredAgents } from "@/lib/hooks/use-hired-agents";
+import { useToastStore } from "@/lib/stores/toast-store";
 import {
   MOCK_REVIEWS,
   MOCK_CAPABILITIES,
@@ -32,8 +33,8 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
   const { data: agent, isLoading, error } = useAgent(id);
   const { data: hiredAgents = [] } = useHiredAgents();
 
+  const addToast = useToastStore((state) => state.addToast);
   const [showHireModal, setShowHireModal] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const isAlreadyHired = hiredAgents.some(
     (hired) => hired.agentId === id && (hired.status === "active" || hired.status === "renewing_soon"),
@@ -41,9 +42,9 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
 
   const handleHireSuccess = useCallback(() => {
     setShowHireModal(false);
-    setToastMessage(`Successfully hired ${agent?.name}!`);
+    addToast(`Successfully hired ${agent?.name}!`, "success");
     setTimeout(() => router.push("/agents/hired"), 1500);
-  }, [agent?.name, router]);
+  }, [agent?.name, router, addToast]);
 
   if (isLoading) {
     return <div className="text-center py-12 text-text-secondary">Loading agent...</div>;
@@ -125,12 +126,6 @@ export default function AgentDetailPage({ params }: AgentDetailPageProps) {
         onClose={() => setShowHireModal(false)}
         onSuccess={handleHireSuccess}
       />
-
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 bg-success text-white px-5 py-3 rounded-lg text-sm font-medium z-[60] shadow-lg animate-[fadeIn_0.2s_ease]">
-          {toastMessage}
-        </div>
-      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Agent, PricingTier } from "@/lib/types";
 import { MOCK_PRICING_TIERS } from "@/lib/mock-data";
 import { useHireAgent } from "@/lib/hooks/use-hired-agents";
+import { useToastStore } from "@/lib/stores/toast-store";
 import { Avatar } from "@/components/ui/avatar";
 
 interface HireConfirmModalProps {
@@ -21,19 +22,21 @@ const PLAN_MAP: Record<string, { plan: string; budget: number }> = {
 
 export function HireConfirmModal({ agent, isOpen, onClose, onSuccess }: HireConfirmModalProps) {
   const [selectedTier, setSelectedTier] = useState<PricingTier>(MOCK_PRICING_TIERS[0]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const hireAgent = useHireAgent();
+  const addToast = useToastStore((state) => state.addToast);
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    setErrorMessage(null);
     const config = PLAN_MAP[selectedTier.name] ?? { plan: "solo", budget: 100 };
     hireAgent.mutate(
       { agentId: agent.id, plan: config.plan, weeklyBudgetUsd: config.budget },
       {
         onSuccess: () => onSuccess(),
-        onError: (err) => setErrorMessage(err instanceof Error ? err.message : "Failed to hire agent"),
+        onError: (err) => {
+          const message = err instanceof Error ? err.message : "Failed to hire agent";
+          addToast(message, "error");
+        },
       },
     );
   };
@@ -93,9 +96,6 @@ export function HireConfirmModal({ agent, isOpen, onClose, onSuccess }: HireConf
             ))}
           </div>
 
-          {errorMessage && (
-            <div className="text-sm text-error bg-error/10 rounded-lg p-3">{errorMessage}</div>
-          )}
         </div>
 
         <div className="flex justify-end gap-2 px-6 py-4 border-t border-border">
