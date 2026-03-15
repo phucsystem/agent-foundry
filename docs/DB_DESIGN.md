@@ -15,12 +15,28 @@ erDiagram
     users ||--o{ tasks : creates
     tasks }o--|| hired_agents : assigned_via
 
+    users ||--o{ credit_transactions : has
+    tasks ||--o| credit_transactions : generates
+
     users {
         uuid id PK
         text email UK
         text name
         text tier
         text api_key UK
+        integer balance_cents
+        timestamptz created_at
+    }
+
+    credit_transactions {
+        uuid id PK
+        uuid user_id FK
+        text type
+        integer amount_cents
+        integer balance_after_cents
+        uuid reference_id
+        text reference_type
+        text description
         timestamptz created_at
     }
 
@@ -131,7 +147,52 @@ Markdown files uploaded as agent memory/context. Linked to a specific hire (user
 
 ---
 
+### E-03: Credit Transactions (`credit_transactions`)
+
+Audit log for all credit movements. Every balance change creates a transaction record for traceability.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | UUID | PK, DEFAULT gen_random_uuid() | Unique transaction ID |
+| user_id | UUID | FK → users(id) ON DELETE CASCADE, NOT NULL | Account owner |
+| type | TEXT | NOT NULL | topup, deduction, refund, signup_bonus |
+| amount_cents | INTEGER | NOT NULL | Positive for topup/refund/bonus, negative for deduction |
+| balance_after_cents | INTEGER | NOT NULL | Running balance after this transaction |
+| reference_id | UUID | | task_id for deductions, stripe_session_id for topups |
+| reference_type | TEXT | | task, stripe_checkout, system |
+| description | TEXT | NOT NULL | Human-readable: "Task: Fix auth bug — Sonnet 4.6", "Topup $25.00" |
+| created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Transaction timestamp |
+
+**Indexes:**
+- `idx_credit_transactions_user` on `(user_id, created_at DESC)` — transaction history
+- `idx_credit_transactions_ref` on `(reference_id)` WHERE reference_id IS NOT NULL — lookup by task/payment
+
+**Constraints:**
+- `CHECK (type IN ('topup', 'deduction', 'refund', 'signup_bonus'))`
+- `CHECK ((type = 'deduction' AND amount_cents < 0) OR (type != 'deduction' AND amount_cents > 0))`
+
+---
+
 ## 3. Modified Tables
+
+### users (add balance_cents)
+
+Add credit balance column. Stored as integer cents to avoid floating-point issues.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| balance_cents | INTEGER | NOT NULL, DEFAULT 0 | Credit balance in cents ($1.00 = 100) |
+
+---
+
+### hired_agents (deprecate subscription fields)
+
+The `plan` and `weekly_budget_usd` columns are no longer used in the credit-based billing model. Hiring is now free — agents are added to the user's team at no cost. Cost is per-task.
+
+- `plan` — deprecated, retained for backward compatibility
+- `weekly_budget_usd` — deprecated, retained for backward compatibility
+
+---
 
 ### tasks (add hire_id reference)
 
@@ -186,6 +247,26 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_files_hire ON knowledge_files(hire_id);
 -- tasks: add hire_id
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS hire_id UUID REFERENCES hired_agents(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_tasks_hire ON tasks(hire_id, created_at DESC);
+
+-- credit_transactions
+CREATE TABLE IF NOT EXISTS credit_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL CHECK (type IN ('topup', 'deduction', 'refund', 'signup_bonus')),
+    amount_cents INTEGER NOT NULL,
+    balance_after_cents INTEGER NOT NULL,
+    reference_id UUID,
+    reference_type TEXT,
+    description TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CHECK ((type = 'deduction' AND amount_cents < 0) OR (type != 'deduction' AND amount_cents > 0))
+);
+
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_user ON credit_transactions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_ref ON credit_transactions(reference_id) WHERE reference_id IS NOT NULL;
+
+-- users: add balance
+ALTER TABLE users ADD COLUMN IF NOT EXISTS balance_cents INTEGER NOT NULL DEFAULT 0;
 ```
 
 ---
@@ -215,6 +296,17 @@ class KnowledgeFileRecord(BaseModel):
     content_text: str
     storage_path: str | None
     uploaded_at: datetime
+
+class CreditTransactionRecord(BaseModel):
+    id: str
+    user_id: str
+    type: str  # topup | deduction | refund | signup_bonus
+    amount_cents: int
+    balance_after_cents: int
+    reference_id: str | None
+    reference_type: str | None
+    description: str
+    created_at: datetime
 ```
 
 ---
@@ -274,6 +366,46 @@ ORDER BY uploaded_at;
 ```
 Concatenated and prepended to task context along with `custom_instructions`.
 
+### Credit balance check (pre-flight)
+```sql
+SELECT balance_cents FROM users WHERE id = $1 FOR UPDATE;
+```
+
+### Deduct credits (atomic)
+```sql
+WITH updated AS (
+    UPDATE users SET balance_cents = balance_cents - $2
+    WHERE id = $1 AND balance_cents >= $2
+    RETURNING balance_cents
+)
+INSERT INTO credit_transactions (user_id, type, amount_cents, balance_after_cents, reference_id, reference_type, description)
+SELECT $1, 'deduction', -$2, balance_cents, $3, 'task', $4
+FROM updated;
+```
+
+### Transaction history
+```sql
+SELECT * FROM credit_transactions
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT $2 OFFSET $3;
+```
+
+### Usage breakdown by agent (billing dashboard)
+```sql
+SELECT
+    t.agent_id,
+    ac.name AS agent_name,
+    COUNT(*) AS task_count,
+    SUM(t.cost_usd) AS total_spent_usd
+FROM tasks t
+JOIN agent_configs ac ON ac.agent_id = t.agent_id
+WHERE t.user_id = $1
+    AND t.created_at >= NOW() - INTERVAL '30 days'
+GROUP BY t.agent_id, ac.name
+ORDER BY total_spent_usd DESC;
+```
+
 ---
 
 ## 7. Traceability
@@ -282,9 +414,10 @@ Concatenated and prepended to task context along with `custom_instructions`.
 |--------|-------|----------|---------|
 | E-01 Hired Agents | hired_agents | FR-02, FR-03, FR-06, FR-07 | S-07, S-08 |
 | E-02 Knowledge Files | knowledge_files | FR-05 | S-07, S-08 |
-| E-03 Tasks (extended) | tasks + hire_id | FR-04 | S-08 |
-| E-04 Agent Configs | agent_configs (existing) | FR-01 | S-01, S-02 |
-| E-05 Users | users (existing) | All | All |
+| E-03 Credit Transactions | credit_transactions | billing | billing dashboard |
+| E-04 Tasks (extended) | tasks + hire_id | FR-04 | S-08 |
+| E-05 Agent Configs | agent_configs (existing) | FR-01 | S-01, S-02 |
+| E-06 Users | users (existing) | All | All |
 
 ---
 

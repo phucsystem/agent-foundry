@@ -8,7 +8,7 @@ Agent Foundry is a platform for building, deploying, and hiring specialised AI a
 
 **Target Users:** SMBs, agencies, enterprises needing on-demand AI workers.
 
-**Revenue Model:** Weekly subscriptions ($49–$1,500/week), usage-based overages, white-label licensing.
+**Revenue Model:** Credit-based pay-per-task. Users top up USD credits, agents consume per task at actual LLM cost × 2.0x markup. $5 free credit on signup.
 
 **Current Status:** Phases 1–2 complete (5 agents, marketplace UI, hired agents, auth). Phase 3 (billing, visual agents) in progress.
 
@@ -50,11 +50,11 @@ Agent Foundry is a platform for building, deploying, and hiring specialised AI a
 | FR-12 | Agent Detail | P0 | Full profile: bio, tools, specialisation, stats, sample outputs, reviews, pricing tiers |
 | FR-13 | Agent Reviews | P2 | Display user reviews (rating + comment) on agent detail page |
 
-### Agent Hiring (Weekly Subscriptions)
+### Agent Hiring
 
 | ID | Feature | Priority | Description |
 |----|---------|----------|-------------|
-| FR-20 | Hire Agent | P0 | Select plan (Solo/Team/Squad), set weekly budget, create `hired_agents` row |
+| FR-20 | Hire Agent | P0 | Add agent to user's team (free). No plan selection, no budget. Creates `hired_agents` row. |
 | FR-21 | My Team Page | P0 | List all hired agents with status, plan, budget, renewal date, task count, costs |
 | FR-22 | Cancel Hire | P1 | Set hire status to `cancelled`, stop renewal |
 | FR-23 | Rehire Agent | P1 | Reactivate previously cancelled hire |
@@ -75,16 +75,20 @@ Agent Foundry is a platform for building, deploying, and hiring specialised AI a
 | FR-36 | Task Retry | P2 | Re-run failed task with same/modified parameters |
 | FR-37 | Task Download | P2 | Download results as PDF, Markdown, or JSON |
 
-### Billing & Subscriptions
+### Billing & Credits
 
 | ID | Feature | Priority | Description |
 |----|---------|----------|-------------|
-| FR-40 | Billing Dashboard | P1 | Current tier, weekly usage, cost breakdown by agent, projected total |
-| FR-41 | Tier Selection | P1 | View/switch between Solo ($49–$199), Team ($299–$499), Squad ($799–$1,499) |
-| FR-42 | Stripe Integration | P1 | Payment method, weekly subscription cycles, webhook handlers |
-| FR-43 | Usage Tracking | P1 | Track tasks, tokens, cost against weekly budget; alerts at 80%/100% |
-| FR-44 | Invoice History | P2 | List past invoices with download (PDF) |
-| FR-45 | Usage Overage | P2 | Per-task surcharge when exceeding weekly budget |
+| FR-40 | Billing Dashboard | P1 | Current balance, transaction history, usage breakdown by agent, topup button |
+| FR-41 | Credit Topup | P1 | Add credits via Stripe one-time Checkout. Min $5. Presets: $5, $10, $25, $50, $100, custom |
+| FR-42 | Stripe Integration | P1 | One-time payment sessions, webhook handler for payment confirmation |
+| FR-43 | Usage Tracking | P1 | Track per-task cost (actual LLM cost × 2.0), running balance, cost breakdown by agent |
+| FR-44 | Transaction History | P2 | List all credit transactions: topups, deductions, refunds, signup bonus |
+| FR-45 | Pre-flight Balance Check | P0 | Estimate task cost before execution, reject if insufficient balance (HTTP 402) |
+| FR-46 | Free Signup Credit | P1 | Auto-grant $5.00 credit on new user registration, no credit card required |
+| FR-47 | Low Balance Alert | P2 | Warn when balance < $1.00, block new tasks at $0.00, in-progress tasks finish |
+| FR-48 | Task Refund | P1 | Auto-refund 100% on system errors, no refund on user errors |
+| FR-49 | Per-Task Budget Cap | P2 | Optional max spend per task (USD), task aborts if cap exceeded |
 
 ### Landing & Onboarding
 
@@ -117,7 +121,7 @@ Agent Foundry is a platform for building, deploying, and hiring specialised AI a
 | S-06 | Task Board | /tasks | Kanban: Queued/Running/Completed/Failed + KPI row |
 | S-07 | Create Task | /tasks/new | 5-step wizard: goal → context → agent → budget → review |
 | S-08 | Task Detail | /tasks/[id] | Metrics, cost breakdown, tabbed output, timeline, rating |
-| S-09 | Billing | /billing | Tier card, weekly usage, agent cost breakdown, invoices |
+| S-09 | Billing | /billing | Balance card, topup button, transaction history, usage chart by agent |
 | S-10 | User Profile | /settings | Name, email, tier, API key management |
 
 ---
@@ -132,16 +136,19 @@ Agent Foundry is a platform for building, deploying, and hiring specialised AI a
 | E-04 | KnowledgeFile | `knowledge_files` | Context files: hire_id, file_name, size_bytes, content_text |
 | E-05 | Task | `tasks` | Task execution: user_id, agent_id, hire_id, goal, status, cost_usd, output_data |
 | E-06 | AgentMemory | `agent_memories` | Semantic memory: agent_id, chunk_text, embedding (vector 1536) |
+| E-07 | CreditTransaction | `credit_transactions` | Credit audit log: user_id, type (topup/deduction/refund/signup_bonus), amount_cents, balance_after_cents, reference_id, description |
 
 ### Entity Relationships
 
 ```
 User (E-01) ──1:N──> HiredAgent (E-03) ──1:N──> KnowledgeFile (E-04)
 User (E-01) ──1:N──> Task (E-05)
+User (E-01) ──1:N──> CreditTransaction (E-07)
 HiredAgent (E-03) ──1:N──> Task (E-05)
 AgentConfig (E-02) ──1:N──> HiredAgent (E-03)
 AgentConfig (E-02) ──1:N──> Task (E-05)
 AgentConfig (E-02) ──1:N──> AgentMemory (E-06)
+Task (E-05) ──0:1──> CreditTransaction (E-07)
 ```
 
 ---
@@ -226,6 +233,15 @@ AgentConfig (E-02) ──1:N──> AgentMemory (E-06)
 | GET | /tasks/{id} | FR-33 | Task status + results |
 | GET | /tasks/{id}/stream | FR-32 | SSE stream for live progress |
 
+### Billing
+
+| Method | URL | FR | Description |
+|--------|-----|----|-------------|
+| GET | /billing/balance | FR-40 | Current credit balance |
+| POST | /billing/topup | FR-41 | Create Stripe Checkout session for one-time payment |
+| POST | /billing/webhook | FR-42 | Stripe webhook handler (payment confirmation) |
+| GET | /billing/transactions | FR-44 | Paginated transaction history |
+
 ### Health
 
 | Method | URL | FR | Description |
@@ -257,8 +273,16 @@ AgentConfig (E-02) ──1:N──> AgentMemory (E-06)
 | FR-33 | S-08 | GET /tasks/{id} | E-05 |
 | FR-34 | S-08 | (future endpoint) | E-05 |
 | FR-35 | S-07 | POST /tasks (with hire_id) | E-03, E-05 |
-| FR-40 | S-09 | (future billing endpoints) | E-03, E-05 |
-| FR-42 | S-09 | (Stripe webhooks) | E-01, E-03 |
+| FR-40 | S-09 | GET /billing/balance | E-01, E-07 |
+| FR-41 | S-09 | POST /billing/topup | E-01, E-07 |
+| FR-42 | — | POST /billing/webhook | E-01, E-07 |
+| FR-43 | S-08, S-09 | GET /billing/balance | E-05, E-07 |
+| FR-44 | S-09 | GET /billing/transactions | E-07 |
+| FR-45 | S-07 | POST /tasks | E-01, E-05 |
+| FR-46 | S-01 | POST /auth/callback | E-01, E-07 |
+| FR-47 | S-06, S-09 | GET /billing/balance | E-01 |
+| FR-48 | S-08 | — (system) | E-05, E-07 |
+| FR-49 | S-07 | POST /tasks | E-05 |
 | FR-50 | S-00 | — (static page) | — |
 
 ---
@@ -268,7 +292,7 @@ AgentConfig (E-02) ──1:N──> AgentMemory (E-06)
 ### Dependencies
 - Logto Cloud (auth provider availability)
 - LLM APIs: Anthropic, OpenRouter, DeepSeek (quota, pricing changes)
-- Stripe (billing, Phase 3)
+- Stripe Checkout (one-time payments, credit topup)
 - GitHub/Notion APIs (MCP integrations)
 
 ### Risks
