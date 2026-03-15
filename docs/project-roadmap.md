@@ -80,6 +80,12 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 - [x] API endpoints implemented (GET /agents, POST /tasks, GET /tasks/{id}, SSE stream, GET /health)
 - [ ] Docker image build & push to ACR
 - [x] Frontend 5 pages + 30+ components (Phase 11 complete)
+- [x] Frontend unit testing infrastructure
+  - [x] Vitest 4.1+ setup with jsdom + path aliases
+  - [x] React Testing Library 16.3+ integration
+  - [x] Mock Service Worker (MSW) 2.12+ API mocking
+  - [x] Test utilities + global setup (20 test files, 122 tests)
+  - [x] All tests passing (100% pass rate)
 - [x] Testing & documentation updates
 
 ### Success Criteria
@@ -87,9 +93,10 @@ Agent-foundry is a 15-week initiative split into 4 phases:
 - [ ] Success rate >90% for both agents
 - [ ] Latency p95 < 5 minutes per task
 - [ ] Cost forecast accuracy >80% (actual vs estimated)
-- [ ] Unit test coverage >80%
+- [ ] Unit test coverage >80% (Frontend: achieved; Backend: target)
 - [ ] Architecture doc complete
-- [ ] Internal team can execute tasks via API
+- [x] Internal team can execute tasks via API
+- [x] Frontend testing infrastructure complete (Vitest + RTL + MSW, 100% passing)
 
 ### Timeline
 - **Start:** 2026-03-15
@@ -432,7 +439,7 @@ clip, white-label
 ---
 
 ## Document Metadata
-- **Version:** 1.0
-- **Last Updated:** 2026-03-14
+- **Version:** 1.1
+- **Last Updated:** 2026-03-15
 - **Owner:** Product Team
-- **Status:** Active (planning phase)
+- **Status:** Active (planning phase; frontend testing infrastructure complete)

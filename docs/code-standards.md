@@ -173,7 +173,9 @@ settings = Settings()
 - **Pages:** `app/{route}/page.tsx` (App Router)
 - **Hooks:** `lib/hooks/{useHookName}.ts`
 - **Utils:** `lib/{utilityName}.ts`
+- **Tests:** `tests/{path}/{module}.test.tsx` (mirror source structure)
 - **Styles:** Tailwind classes inline + global in `app/globals.css`
+- **Test Setup:** `tests/setup.ts` (Vitest global config), `tests/test-utils.tsx` (RTL + MSW helpers), `tests/mocks/` (MSW handlers)
 
 ### TypeScript
 - **Strict mode:** Always enabled
@@ -257,21 +259,66 @@ async function fetchAgents(): Promise<Agent[]> {
 ```
 
 ### Testing
-- **Framework:** Vitest + React Testing Library
-- **File location:** `{component}.test.tsx`
-- **Coverage:** >80% for components
-- **Test style:** Test behavior, not implementation
+
+**Framework:** Vitest 4.1+ + React Testing Library 16.3+
+
+**File Location:** `tests/{path}/{module}.test.tsx` (mirrors source structure)
+
+**Configuration:**
+- `tests/setup.ts` — Vitest global configuration (MSW, DOM setup)
+- `tests/test-utils.tsx` — Custom render function with providers (QueryClient, Zustand stores)
+- `tests/mocks/` — MSW handlers + server instance for API mocking
+- `vitest.config.ts` — Vitest + Vite setup (jsdom environment, path aliases)
+
+**Coverage:** >80% for components, hooks, utilities
+
+**Test Style:** Test behavior, not implementation
+
+**Naming Convention:** `test_{function}_with_{scenario}()` (descriptive)
 
 ```typescript
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderWithProviders } from "../test-utils";
 
 describe("TaskCard", () => {
   it("displays task status correctly", () => {
-    render(<TaskCard taskId="1" agentName="Coder" status="completed" cost={5} />);
+    renderWithProviders(
+      <TaskCard taskId="1" agentName="Coder" status="completed" cost={5} />
+    );
     expect(screen.getByText("completed")).toBeInTheDocument();
   });
+
+  it("calls onStatusChange when retry button clicked", async () => {
+    const onStatusChange = vi.fn();
+    renderWithProviders(
+      <TaskCard taskId="1" status="failed" onStatusChange={onStatusChange} />
+    );
+
+    const retryButton = screen.getByRole("button", { name: /retry/i });
+    await userEvent.click(retryButton);
+
+    expect(onStatusChange).toHaveBeenCalledWith("pending");
+  });
 });
+```
+
+**MSW Setup Example:**
+```typescript
+// tests/mocks/handlers.ts
+import { http, HttpResponse } from "msw";
+
+export const handlers = [
+  http.get("/api/agents", () => HttpResponse.json([...mockAgents])),
+  http.post("/api/tasks", () => HttpResponse.json({ id: "task-123" }, { status: 201 }))
+];
+```
+
+**Running Tests:**
+```bash
+npm run test           # Run all tests once
+npm run test:watch    # Watch mode
+npm run test -- --ui  # UI mode (browser)
 ```
 
 ### Accessibility
@@ -454,8 +501,32 @@ RETURN agent, task, project
 
 ---
 
+## Development Scripts
+
+### Frontend Commands
+```bash
+npm run dev           # Start Next.js dev server
+npm run build         # Build for production
+npm run lint          # Type check with tsc
+npm run test          # Run unit tests (Vitest)
+npm run test:watch   # Unit tests watch mode
+npm start             # Start production server
+```
+
+### Backend Commands (Python)
+```bash
+make up              # Start Docker infra
+make api             # Run FastAPI dev server
+make worker          # Run Celery worker
+make test            # Run pytest
+make migrate         # Run Alembic migrations
+```
+
+---
+
 ## Document Metadata
-- **Version:** 1.0
-- **Last Updated:** 2026-03-14
+- **Version:** 1.1
+- **Last Updated:** 2026-03-15
 - **Owner:** Engineering Team
 - **Status:** Active
+- **Testing Infrastructure:** Complete (Vitest, RTL, MSW - 20 test files, 122 tests)
