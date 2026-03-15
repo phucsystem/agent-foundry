@@ -10,8 +10,13 @@ interface BackendTask {
   goal: string;
   context?: string;
   budget_usd?: number;
+  cost_usd?: number | null;
+  tokens_used?: number | null;
+  runtime_seconds?: number | null;
   created_at?: string;
-  result?: string;
+  completed_at?: string | null;
+  output_data?: Record<string, unknown>;
+  input_data?: Record<string, unknown>;
   error?: string;
 }
 
@@ -27,6 +32,15 @@ interface CreateTaskResponse {
   status: string;
 }
 
+function formatDuration(seconds: number | null | undefined): string | null {
+  if (seconds == null) return null;
+  const rounded = Math.round(seconds);
+  if (rounded < 60) return `${rounded}s`;
+  const minutes = Math.floor(rounded / 60);
+  const remainingSeconds = rounded % 60;
+  return `${minutes}m ${remainingSeconds}s`;
+}
+
 function mapBackendTask(raw: BackendTask): Task {
   const colors = AGENT_COLORS[raw.agent_id] ?? { from: "#64748B", to: "#475569" };
   const agentName = raw.agent_id.charAt(0).toUpperCase() + raw.agent_id.slice(1);
@@ -40,33 +54,40 @@ function mapBackendTask(raw: BackendTask): Task {
   const statusMap: Record<string, TaskStatus> = {
     pending: "queued",
     queued: "queued",
+    on_hold: "on_hold",
     running: "running",
     completed: "completed",
     failed: "failed",
   };
+
+  const output = raw.output_data ?? {};
+  const input = raw.input_data ?? {};
+
+  const priorityMap: Record<string, TaskPriority> = { high: "high", medium: "medium", low: "low" };
+  const priority = priorityMap[String(input.priority ?? "")] ?? "medium";
 
   return {
     id: raw.task_id,
     title: raw.goal,
     description: raw.context ?? raw.goal,
     status: statusMap[raw.status] ?? "queued",
-    priority: "medium" as TaskPriority,
+    priority,
     agentId: raw.agent_id,
     agentName,
     agentInitials: initials,
     agentGradientFrom: colors.from,
     agentGradientTo: colors.to,
     createdAt: raw.created_at ?? "just now",
-    duration: null,
-    cost: null,
-    budgetCap: raw.budget_usd ?? 50,
-    tokens: null,
-    progress: raw.status === "completed" ? 100 : null,
-    liveStatus: raw.status === "running" ? "Processing..." : null,
-    errorMessage: raw.error ?? null,
-    retries: 0,
-    maxRetries: 3,
-    rating: null,
+    duration: (output.duration as string) ?? formatDuration(raw.runtime_seconds) ?? null,
+    cost: raw.cost_usd ?? null,
+    budgetCap: raw.budget_usd ?? (input.budget_usd as number) ?? 50,
+    tokens: raw.tokens_used ?? null,
+    progress: (output.progress as number) ?? (raw.status === "completed" ? 100 : null),
+    liveStatus: (output.live_status as string) ?? (raw.status === "running" ? "Processing..." : null),
+    errorMessage: (output.error as string) ?? raw.error ?? null,
+    retries: (output.retries as number) ?? 0,
+    maxRetries: (output.max_retries as number) ?? 3,
+    rating: (output.rating as number) ?? null,
   };
 }
 
