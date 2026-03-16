@@ -334,10 +334,10 @@ If refund needed: credit back difference
 ```python
 from crewai import LLM
 
-researcher_llm = LLM(model="bedrock/us.deepseek.r1-v1:0")
+researcher_llm = LLM(model="bedrock/deepseek.v3.2")
 writer_llm = LLM(model="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0")
-editor_llm = LLM(model="bedrock/us.deepseek.r1-v1:0")
-repurposer_llm = LLM(model="bedrock/us.deepseek.r1-v1:0")
+editor_llm = LLM(model="bedrock/deepseek.v3.2")
+repurposer_llm = LLM(model="bedrock/deepseek.v3.2")
 judge_llm = LLM(model="bedrock/anthropic.claude-3-5-haiku-20241022-v1:0")
 ```
 

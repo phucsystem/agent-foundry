@@ -54,7 +54,7 @@ class AgentCoreStack(cdk.Stack):
                 ],
                 resources=[
                     f"arn:aws:bedrock:{cdk.Aws.REGION}::foundation-model/anthropic.*",
-                    f"arn:aws:bedrock:{cdk.Aws.REGION}::foundation-model/us.deepseek.*",
+                    f"arn:aws:bedrock:{cdk.Aws.REGION}::foundation-model/deepseek.*",
                 ],
             )
         )

@@ -2,7 +2,7 @@
 
 from crewai import Agent, LLM
 
-DEEPSEEK_MODEL = "bedrock/us.deepseek.r1-v1:0"
+DEEPSEEK_MODEL = "bedrock/deepseek.v3.2"
 
 
 def create_editor_agent(brand_context: str = "") -> Agent:

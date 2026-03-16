@@ -73,3 +73,29 @@ CREATE TRIGGER update_users_updated_at
 CREATE TRIGGER update_brand_configs_updated_at
     BEFORE UPDATE ON brand_configs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Seed: mock user for development (matches MOCK_USER_ID in gateway)
+INSERT INTO users (id, email, logto_id, credit_balance_cents)
+VALUES ('00000000-0000-0000-0000-000000000001', 'test@example.com', 'mock', 500)
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed: default brand config (referenced by frontend as "default")
+INSERT INTO brand_configs (id, user_id, name, voice_yaml)
+VALUES (
+    '00000000-0000-0000-0000-000000000002',
+    '00000000-0000-0000-0000-000000000001',
+    'Default',
+    'core_values:
+  - clarity
+  - accuracy
+  - helpfulness
+tone: professional yet approachable
+audience: business professionals
+avoid_words:
+  - synergy
+  - leverage
+  - disrupt
+examples:
+  - "Clear, data-driven insights for informed decisions."
+sentence_length_avg: 15'
+) ON CONFLICT (id) DO NOTHING;

@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from gateway.config import settings
+from gateway.models.db_models import fetch_one, execute_returning
 
 logger = logging.getLogger(__name__)
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -20,6 +21,31 @@ class CurrentUser:
         self.user_id = user_id
         self.logto_sub = logto_sub
         self.email = email
+
+
+def _resolve_or_create_user(logto_sub: str, email: str) -> str:
+    """Map Logto sub to DB user UUID. Auto-provisions on first login with $5 free credit."""
+    row = fetch_one("SELECT id FROM users WHERE logto_id = %s", (logto_sub,))
+    if row:
+        return str(row["id"])
+
+    new_row = execute_returning(
+        """INSERT INTO users (email, logto_id, credit_balance_cents)
+           VALUES (%s, %s, 500)
+           ON CONFLICT (logto_id) DO UPDATE SET email = EXCLUDED.email
+           RETURNING id""",
+        (email or f"{logto_sub}@logto", logto_sub),
+    )
+    user_id = str(new_row["id"])
+    logger.info("Auto-provisioned user %s for Logto sub %s", user_id, logto_sub)
+
+    execute_returning(
+        """INSERT INTO credit_transactions (user_id, amount_cents, type, description)
+           VALUES (%s, 500, 'signup_bonus', 'Welcome bonus: $5.00 free credits')
+           RETURNING id""",
+        (user_id,),
+    )
+    return user_id
 
 
 def get_current_user(
@@ -39,11 +65,10 @@ def get_current_user(
         if not logto_sub:
             raise HTTPException(status_code=401, detail={"error": "UNAUTHORIZED", "message": "Invalid token"})
 
-        return CurrentUser(
-            user_id=logto_sub,  # resolved to DB UUID by service layer
-            logto_sub=logto_sub,
-            email=claims.get("email", ""),
-        )
+        email = claims.get("email", "")
+        user_id = _resolve_or_create_user(logto_sub, email)
+
+        return CurrentUser(user_id=user_id, logto_sub=logto_sub, email=email)
     except HTTPException:
         raise
     except Exception as error:

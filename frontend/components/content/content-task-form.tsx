@@ -38,7 +38,7 @@ export function ContentTaskForm() {
       {
         topic: topic.trim(),
         contentType,
-        brandConfigId: "default",
+        brandConfigId: "00000000-0000-0000-0000-000000000002",
         targetWordCount: wordCount,
         keywords: keywordList,
         competitorUrls: [],

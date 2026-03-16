@@ -4,7 +4,7 @@ from crewai import Agent, LLM
 
 from ..tools import create_web_search_tool, create_url_reader_tool
 
-DEEPSEEK_MODEL = "bedrock/us.deepseek.r1-v1:0"
+DEEPSEEK_MODEL = "bedrock/deepseek.v3.2"
 
 
 def create_researcher_agent(brand_context: str = "") -> Agent:

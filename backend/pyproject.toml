@@ -4,23 +4,11 @@ version = "0.1.0"
 description = "AI agent platform — build and hire specialised agents"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi>=0.135",
-    "uvicorn[standard]>=0.41",
-    "crewai>=0.80,<1.0",
-    "langgraph>=1.1",
-    "litellm>=1.80",
-    "anthropic>=0.84",
-    "celery[redis]>=5.6",
-    "asyncpg>=0.31",
-    "pgvector>=0.4",
-    "neo4j>=6.0",
     "pydantic>=2.12",
     "pydantic-settings>=2.13",
-    "langfuse>=2.50,<3.0",
-    "langchain-mcp-adapters>=0.2",
-    "playwright>=1.58",
     "pyyaml>=6.0",
-    "python-multipart>=0.0.22",
+    "asyncpg>=0.31",
+    "langfuse>=2.50,<3.0",
 ]
 
 [project.optional-dependencies]

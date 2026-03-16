@@ -3,9 +3,9 @@
 
 models:
   deepseek:
-    id: "bedrock/us.deepseek.r1-v1:0"
-    cost_per_1m_input: 0.27
-    cost_per_1m_output: 1.10
+    id: "bedrock/deepseek.v3.2"
+    cost_per_1m_input: 0.62
+    cost_per_1m_output: 1.85
   sonnet:
     id: "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0"
     cost_per_1m_input: 3.00
