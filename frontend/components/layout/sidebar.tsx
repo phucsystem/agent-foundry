@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react";
 import { NAV_ITEMS } from "@/lib/constants";
 import { ThemeToggle } from "./theme-toggle";
 import { AuthButton } from "./auth-button";
+import { CreditBalance } from "@/components/credits/credit-balance";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -57,6 +58,10 @@ export function Sidebar() {
       </ul>
 
       <div className="mt-auto">
+        <div className="px-6 py-2 flex items-center justify-between border-t border-border">
+          <span className="text-xs text-text-secondary">Credits</span>
+          <CreditBalance />
+        </div>
         <AuthButton />
         <ThemeToggle />
       </div>

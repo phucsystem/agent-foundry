@@ -1,0 +1,26 @@
+[project]
+name = "agent-foundry-gateway"
+version = "0.1.0"
+description = "API Gateway for Agent Foundry — Lambda deployment via Mangum"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.135",
+    "mangum>=0.19",
+    "pydantic>=2.12",
+    "pydantic-settings>=2.13",
+    "psycopg2-binary>=2.9",
+    "boto3>=1.35",
+    "pyjwt[crypto]>=2.9",
+    "stripe>=11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "httpx>=0.28",
+    "uvicorn[standard]>=0.41",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

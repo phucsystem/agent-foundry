@@ -1,0 +1,48 @@
+# Content Editor Agent Configurations
+# Used by CrewAI agents via Bedrock models
+
+models:
+  deepseek:
+    id: "bedrock/deepseek.v3.2"
+    cost_per_1m_input: 0.62
+    cost_per_1m_output: 1.85
+  sonnet:
+    id: "bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0"
+    cost_per_1m_input: 3.00
+    cost_per_1m_output: 15.00
+  haiku:
+    id: "bedrock/anthropic.claude-3-5-haiku-20241022-v1:0"
+    cost_per_1m_input: 0.25
+    cost_per_1m_output: 1.25
+
+agents:
+  researcher:
+    role: "Content Researcher"
+    model: deepseek
+    max_iter: 10
+    tools:
+      - serper_dev
+      - website_search
+
+  writer:
+    role: "Content Writer"
+    model: sonnet
+    max_iter: 5
+    tools: []
+
+  editor:
+    role: "Content Editor"
+    model: deepseek
+    max_iter: 5
+    tools: []
+
+  repurposer:
+    role: "Content Repurposer"
+    model: deepseek
+    max_iter: 5
+    tools: []
+
+  quality_judge:
+    role: "Quality Scorer"
+    model: haiku
+    description: "LLM-as-Judge for quality scoring (not a CrewAI agent)"

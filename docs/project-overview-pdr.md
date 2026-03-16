@@ -14,28 +14,31 @@
 
 ---
 
-## Implementation Status (as of 2026-03-14)
+## Implementation Status (as of 2026-03-16)
+
+**AWS AgentCore Architecture (Content Editor Agent MVP — March 2026)**
 
 | Requirement | Implemented | Phase | Notes |
 |-------------|-----------|-------|-------|
-| REQ-1.1: Agent Interface Contract | ✅ | 1 | TaskInput/TaskResult + validation + guardrails |
-| REQ-1.2: Agent Lifecycle | ✅ | 1 | YAML config loader with inheritance |
-| REQ-1.3: Multi-Agent Orchestration | ✅ | 1 | WorkflowGraph, TaskRouter, Sequential/Parallel flows |
-| REQ-1.4: Tools & Integrations | ✅ | 1 | BaseTool ABC, 9 tools, MCPToolAdapter ready |
-| REQ-2.1: PostgreSQL | ✅ | 1 | Schema + Alembic migrations |
-| REQ-2.2: pgai (Semantic Memory) | ✅ | 1 | EmbeddingService + semantic search |
-| REQ-2.3: Memgraph (Graph DB) | ✅ | 1 | MemgraphService implemented, evaluation pending |
-| REQ-3.1: Coder Agent | ✅ | 1 | CodeInterpreter, Terminal, RAG tools ready |
-| REQ-3.2: Research Agent | ✅ | 1 | WebSearch, PDFReader, RAG tools ready |
-| REQ-3.3: PM/QA/Copywriter Agents | 🔄 | 2 | Architecture ready, implementation pending |
-| REQ-4.1: Agent Marketplace | ✅ | 11 | Marketplace + Agent Detail pages, 30+ components, dark mode |
-| REQ-4.2: Weekly Hiring UI | ✅ | 11 | Hire agent + My Team page + Agent Detail view |
-| REQ-4.3: Task Management | ✅ | 11 | Task creation form + kanban board + detail page + SSE streaming |
-| REQ-4.4: Hired Agents Management | ✅ | 2 | Custom instructions, knowledge files, cost breakdown, task history |
-| REQ-4.5: Billing Dashboard | 🔄 | 2 | Scaffold ready, Stripe integration pending |
-| REQ-4.6: Team Collaboration | ⏳ | 3 | Pending Phase 3 |
-| REQ-5.1: REST API | ✅ | 1, 2 | /agents, /agents/hired, /tasks, /health endpoints live |
-| REQ-6.1: Langfuse Tracing | ✅ | 1 | LLM tracing + cost tracking |
+| REQ-1.1: Agent Interface Contract | ✅ | 1 | ContentTaskInput/ContentOutput + Pydantic validation |
+| REQ-1.2: Agent Lifecycle | ✅ | 1 | CrewAI crew with 4 agents (researcher, writer, editor, repurposer) |
+| REQ-1.3: Multi-Agent Orchestration | ✅ | 1 | Sequential crew pipeline on AgentCore Runtime |
+| REQ-1.4: Tools & Integrations | ✅ | 1 | SerperDev (web search), URL reader, LLM-as-Judge (Haiku) |
+| REQ-2.1: PostgreSQL | ✅ | 1 | RDS PostgreSQL (users, brand_configs, content_tasks, credit_transactions) |
+| REQ-2.2: AgentCore Memory | ✅ | 1 | Brand context persistence, semantic search, session summaries |
+| REQ-3.1: Content Editor Agent | ✅ | 1 | 4 agents deployed to AgentCore Runtime (researcher, writer, editor, repurposer) |
+| REQ-3.2: Content Types | ✅ | 1 | Blog posts, email, social variants (LinkedIn, Twitter, Instagram) |
+| REQ-3.3: Brand Voice Config | ✅ | 1 | BrandVoiceConfig (name, tone, audience, values, avoid_words) stored in RDS |
+| REQ-3.4: Quality Scoring | ✅ | 1 | LLM-as-Judge (Haiku) with rubric (clarity, accuracy, brand_voice, SEO, engagement) |
+| REQ-4.1: API Gateway | ✅ | 1 | Lambda + FastAPI + Mangum with Logto JWT auth |
+| REQ-4.2: Content Task Endpoints | ✅ | 1 | POST /api/tasks/content, GET /api/tasks/{id}, GET /api/tasks |
+| REQ-4.3: Credit System | ✅ | 1 | $5 free signup, usage-based (blog=$0.50, email=$0.30, social=$0.20), Stripe topup |
+| REQ-4.4: Task Management UI | ✅ | 1 | Next.js content editor (task form, result display, task history) |
+| REQ-4.5: Billing Dashboard | 🔄 | 5 | Credits page with balance + topup packages scaffolded |
+| REQ-4.6: Team Collaboration | ⏳ | 3+ | Post-MVP |
+| REQ-5.1: REST API | ✅ | 1 | /api/agents, /api/tasks/*, /api/users/me, /api/credits endpoints |
+| REQ-5.2: Webhooks | ✅ | 1 | Stripe webhook for credit topup completion |
+| REQ-6.1: Observability | ✅ | 1 | Langfuse + CloudWatch for LLM tracing, cost tracking, metrics |
 
 **Legend:** ✅ = Complete | 🔄 = In Progress | ⏳ = Planned
 
@@ -285,17 +288,19 @@
 
 | Constraint | Details |
 |------------|---------|
-| **Language** | Python 3.11+ (backend), TypeScript (frontend) |
-| **Framework** | CrewAI + LangGraph (agents), FastAPI (API), Next.js (frontend) |
-| **LLM Routing** | LiteLLM + OpenRouter (one API key, 200+ models) |
-| **Primary LLM** | Claude Sonnet 4.6 (reasoning), Claude Haiku (fast tasks) |
-| **Deployment** | Azure only (Phase 1), multi-cloud evaluation Phase 3+ |
-| **Database** | PostgreSQL 14+ (primary), Memgraph 5+ (graph), Redis 6+ (cache) |
-| **Container Runtime** | Docker, Docker Compose (local), Azure Container Apps (prod) |
-| **CI/CD** | GitHub Actions, Azure Container Registry |
-| **Cost Target** | $210–240 AUD/month (infrastructure, excl. LLM costs) |
-| **Latency SLA** | <5min task completion, <200ms API (p95) |
-| **Uptime** | 99.5% (Phase 2+) |
+| **Language** | Python 3.12+ (backend), TypeScript (frontend) |
+| **Framework** | CrewAI 0.80+ (agents on AgentCore), FastAPI 0.135+ (API), Next.js 16+ (frontend) |
+| **Agent Runtime** | AWS Bedrock AgentCore (managed serverless) |
+| **LLM Provider** | AWS Bedrock (DeepSeek V3, Claude Sonnet 3.5, Claude Haiku 3.5) |
+| **Memory** | AgentCore Memory (semantic search + session persistence) |
+| **Deployment** | AWS only (Lambda, AgentCore, RDS, Amplify, Secrets Manager) |
+| **Database** | PostgreSQL 15+ (RDS single-AZ for MVP), no Memgraph or pgvector (AgentCore Memory handles semantics) |
+| **Container Runtime** | Lambda (serverless, ARM64 Graviton); Docker Compose for local dev |
+| **CI/CD** | GitHub Actions, Amplify auto-deploy (frontend), CDK for IaC |
+| **Cost Target** | $102–260 USD/month (infrastructure + Bedrock at beta scale 5–10 users) |
+| **Latency SLA** | <5min task completion (AgentCore), <200ms API (p95) |
+| **Uptime** | 99.5% (RDS backups, Lambda auto-scaling, no single points of failure) |
+| **Architecture** | ARM64 Graviton (Lambda, AgentCore compile target) |
 
 ---
 

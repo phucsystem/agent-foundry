@@ -2,6 +2,11 @@ import type { NavItem } from "./types";
 
 export const NAV_ITEMS: NavItem[] = [
   {
+    label: "Content Editor",
+    href: "/content",
+    icon: "lucide:pen-line",
+  },
+  {
     label: "Marketplace",
     href: "/agents",
     icon: "lucide:layout-grid",
@@ -15,6 +20,11 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Tasks",
     href: "/tasks",
     icon: "lucide:activity",
+  },
+  {
+    label: "Credits",
+    href: "/credits",
+    icon: "lucide:wallet",
   },
   {
     label: "Billing",

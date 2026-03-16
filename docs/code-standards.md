@@ -94,23 +94,40 @@ except AgentExecutionError as e:
     return TaskResult(status="failed", error=str(e))
 ```
 
-### Testing
+### Testing (Backend)
 - **Framework:** pytest
 - **File location:** `tests/test_{module_name}.py`
-- **Coverage:** Aim for >80% (exclude obvious boilerplate)
+- **Coverage:** Aim for >80%
 - **Fixtures:** Use pytest fixtures for reusable setup
+- **Mocking:** Mock boto3 calls (Secrets Manager, AgentCore, Stripe) with moto/botocore stubs
 - **Naming:** `test_{function}_with_{condition}()` (descriptive)
 
 ```python
+import pytest
+from moto import mock_secretsmanager
+
 @pytest.fixture
 def sample_task():
-    return TaskInput(goal="Write a function", context="Python 3.11+")
+    return ContentTaskInput(topic="Test", brand_config_id="test-1")
 
-def test_execute_task_with_valid_input(sample_task):
-    result = execute_task(sample_task)
-    assert result.status == "completed"
-    assert len(result.output) > 0
+@mock_secretsmanager
+def test_credit_deduction_with_sufficient_balance(sample_task):
+    # Setup RDS mock
+    user = User(id="user-1", credit_balance_cents=10000)
+
+    # Deduct credits
+    result = deduct_credits(user.id, 500)
+    assert result is True
+
+    # Verify balance
+    updated_user = get_user(user.id)
+    assert updated_user.credit_balance_cents == 9500
 ```
+
+**Integration Testing (Against Staging Stack):**
+- Test full flow: auth → task creation → credit deduction → agentcore invoke → result
+- Use test user with isolated data
+- Run against deployed CDK stack in staging AWS account
 
 ### Imports & Dependencies
 - No circular imports (refactor if needed)
@@ -122,14 +139,20 @@ def test_execute_task_with_valid_input(sample_task):
 - Use `logging` module, not print statements
 - Create loggers per module: `logger = logging.getLogger(__name__)`
 - Log levels: DEBUG (dev), INFO (user actions), WARNING (recoverable issues), ERROR (failures)
-- Include context: agent_id, task_id, user_id, duration
+- Include context: task_id, user_id, cost, duration
+- CloudWatch logs retained for 30 days (cost control)
 
 ```python
-logger.info(f"Task {task.id} started for user {user_id}",
-            extra={"task_id": task.id, "agent_id": agent.id})
-logger.error(f"Guardrail violation in agent output",
-             extra={"agent_id": agent.id, "issue": violation.reason})
+logger.info(f"Content task {task_id} started for user {user_id}",
+            extra={"task_id": task_id, "user_id": user_id, "cost_credits": 50})
+logger.error(f"AgentCore invocation failed: {error}",
+             extra={"task_id": task_id, "error_type": type(error).__name__})
 ```
+
+**Structured Logging for AWS:**
+- Use JSON format for CloudWatch Insights querying
+- Never log PII (email, passwords)
+- Mask sensitive fields (credit balances shown as REDACTED in logs)
 
 ### Async/Await
 - Use `async def` for I/O-bound operations (API calls, DB queries)
@@ -147,15 +170,18 @@ async def execute_agents_in_parallel(agents: list[Agent], task: TaskInput) -> li
 - Use Pydantic `Settings` for environment variables
 - Never commit `.env` files
 - Provide `.env.example` template
-- Read secrets from Azure Key Vault in production
+- Read secrets from AWS Secrets Manager in production
+- Lambda environment variables for non-sensitive config
 
 ```python
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    openai_api_key: str
     database_url: str
-    redis_url: str = "redis://localhost:6379"
+    agentcore_runtime_arn: str
+    stripe_secret_key: str  # from Secrets Manager
+    logto_issuer: str
+    logto_jwks_url: str
     debug: bool = False
 
     class Config:
@@ -163,6 +189,14 @@ class Settings(BaseSettings):
 
 settings = Settings()
 ```
+
+### AWS Lambda Patterns
+- **Cold start optimization:** Keep function size < 50MB, use AWS Lambda Layers for deps
+- **Timeout:** Set to 5 minutes for AgentCore invocations (default 3s)
+- **Memory:** 512MB sufficient for FastAPI + Mangum
+- **VPC:** Place in same VPC as RDS for database access
+- **Environment variables:** Non-sensitive config only (API base URLs, etc.)
+- **Secrets:** Load from Secrets Manager via boto3 at startup (not per-invocation)
 
 ---
 
@@ -524,9 +558,38 @@ make migrate         # Run Alembic migrations
 
 ---
 
+## New: AgentCore-Specific Standards
+
+### CrewAI Agent Development
+- **Agent naming:** Descriptive (e.g., `ContentResearcherAgent`, not `Agent1`)
+- **Agent memory:** Use AgentCore Memory for persistent context (brand voice, user preferences)
+- **Tool integration:** Use crewai_tools (SerperDev, WebsiteSearchTool) + custom wrappers
+- **Model selection:** Match task to model cost (DeepSeek for cheap, Sonnet for quality)
+- **Token limits:** Set `max_tokens` per agent to prevent runaway costs
+
+### Lambda Function Development (Mangum)
+- **Request/response:** Use Pydantic models for validation
+- **Error handling:** Return proper HTTP status codes (401, 402, 404, 500)
+- **Timeouts:** Respect Lambda 5-minute limit; async invoke for longer tasks
+- **Database:** Use connection pooling (pgbouncer or RDS Proxy recommended)
+- **Startup:** Initialize Secrets Manager client once, reuse across invocations
+
+### RDS PostgreSQL (AWS)
+- **Migrations:** Use Alembic (same as before, but run in Lambda or build script)
+- **Connection:** Use psycopg2 with connection pooling
+- **Indexes:** Add on (user_id), (created_at) for query optimization
+- **Backup:** RDS automated backup enabled (retention: 7 days minimum)
+
+### Cost Optimization
+- **Bedrock:** Use DeepSeek V3 for 70% of tasks (cheapest), reserve Sonnet for writing
+- **Lambda:** Optimize for cold start; keep payload < 6 MB (Lambda limit)
+- **RDS:** Monitor CPU; use db.t4g.micro with auto-pause for dev
+- **Storage:** Archive old tasks to S3 after 90 days
+- **Logging:** CloudWatch retention 30 days (not indefinite)
+
 ## Document Metadata
-- **Version:** 1.1
-- **Last Updated:** 2026-03-15
+- **Version:** 2.0 (AWS AgentCore)
+- **Last Updated:** 2026-03-16
 - **Owner:** Engineering Team
-- **Status:** Active
-- **Testing Infrastructure:** Complete (Vitest, RTL, MSW - 20 test files, 122 tests)
+- **Status:** Active (AWS Migration Complete)
+- **Frontend Testing:** Vitest, RTL, MSW - 20 test files, 122 tests passing
