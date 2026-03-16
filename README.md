@@ -1,286 +1,207 @@
 # Agent Foundry
 
-Build and hire specialised AI agents. A platform for composing autonomous agents into workflows and renting them weekly like a staffing agency for AI workers.
+Content Editor AI agent on AWS AgentCore. Enterprise-grade agent platform with credit-based billing and multi-channel content generation (blog, email, social).
 
-## Vision
+## Architecture Overview
 
-Deploy a suite of domain-expert AI agents (Image Designer, Video Editor, Coder, PM, Research, Copywriter, QA) as reusable components within your own workflows, and monetise them via weekly subscription tiers targeting SMBs and enterprises.
+**Backend:**
+- `backend/agentcore/` — Content Editor agent (CrewAI, 4 sub-agents: research, writing, editing, repurposing)
+- `backend/gateway/` — Lambda API gateway (FastAPI + Mangum, Logto JWT auth, Stripe billing)
+- `backend/observability/` — Langfuse + OpenTelemetry tracing
+
+**Frontend:**
+- Next.js 16+ (App Router) on AWS Amplify
+- Content Editor pages, Credits UI, Brand voice management
+- TanStack Query 5+, Tailwind CSS 4+
+
+**Infrastructure (AWS):**
+- **CDK stacks:** Foundation (VPC, RDS, Secrets Manager, S3) + AgentCore Runtime (managed agent execution)
+- **Data:** RDS PostgreSQL (users, brand_configs, content_tasks, credit_transactions)
+- **Observability:** Langfuse + OpenTelemetry
+- **LLM Routing:** Bedrock-native (DeepSeek V3.2, Claude Sonnet, Claude Haiku)
+
+No Docker, no Redis, no Memgraph, no LiteLLM — all managed by AWS.
 
 ## Quick Start
 
 ### Prerequisites
 - Python 3.12+
-- Node.js 18+
-- Docker, Docker Compose
-- Azure CLI (production)
-- Git
+- Node.js 22+ with pnpm
+- AWS CLI + CDK CLI
+- AWS account with Bedrock model access (us-east-1)
+- Serper API key (web search)
+- Logto Cloud tenant (auth)
+- Stripe account (billing)
 
-### Local Development Setup
+### Local Development
 
 ```bash
-# Clone and configure
-git clone https://github.com/yourusername/agent-foundry.git
+git clone https://github.com/phucsystem/agent-foundry.git
 cd agent-foundry
 cp .env.example .env
-# Edit .env with your API keys (ANTHROPIC_API_KEY, OPENROUTER_API_KEY, etc.)
+# Edit .env with AWS credentials, API keys, Serper, Logto, Stripe tokens
 
-# Start infrastructure (Postgres, Redis, Memgraph, LiteLLM, Langfuse)
-make up
+# Frontend
+cd frontend && pnpm install && cd ..
+make fe                    # http://localhost:3000
 
-# Backend (new terminal)
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
-cd ..
-make api
+# Gateway (Lambda simulation)
+make gateway-dev           # http://localhost:8000
 
-# Frontend (new terminal)
-cd frontend
-npm install
-cd ..
-make fe
+# Agent (local AgentCore)
+make agent-dev             # Run Content Editor agent
+```
+
+### Deploy to AWS
+
+```bash
+make cdk-bootstrap         # one-time AWS CDK setup
+make cdk-deploy            # Deploy VPC, RDS, AgentCore Runtime
+make agent-launch          # Deploy agent to AgentCore
 ```
 
 ## Tech Stack
 
-**Backend:**
-- Python 3.12+, CrewAI 0.80+ + LangGraph 1.1+
-- FastAPI 0.135+ + Uvicorn 0.41+
-- Celery 5.6+ + Redis (async jobs)
-- PostgreSQL + pgai (semantic memory, RAG)
-- Memgraph (relational graph — Phase 1 MVP)
+| Component | Technology |
+|-----------|-----------|
+| **Agent Framework** | CrewAI 1.10+, LangGraph 0.3+ |
+| **Backend** | Python 3.12, FastAPI + Mangum (Lambda) |
+| **Frontend** | Next.js 16+ (App Router), React 19, TypeScript |
+| **Database** | AWS RDS PostgreSQL (users, tasks, credits, brand configs) |
+| **Auth** | Logto Cloud (OpenID Connect) + JWT |
+| **LLM Routing** | Bedrock native — DeepSeek V3.2, Claude Sonnet, Claude Haiku |
+| **Search** | Serper API (web search, URL reader) |
+| **Billing** | Stripe (topup), credit-based system |
+| **Observability** | Langfuse + OpenTelemetry |
+| **IaC** | AWS CDK (TypeScript) |
+| **CI/CD** | GitHub Actions |
 
-**Memory:**
-- PostgreSQL — billing, auth, configs
-- pgai (Timescale) — semantic search, embeddings, RAG
-- Memgraph — agent/task/project relationships, reputation
-
-**Frontend:**
-- Next.js 16+ (App Router) + TypeScript + Turbopack
-- Tailwind CSS 4+ + Tamagui
-- TanStack Query 5+, Router, Form 1+, Virtual
-- FastAPI SSE integration
-
-**LLM Backends:**
-- Primary: Claude Sonnet 4.6
-- Routing: LiteLLM + OpenRouter (200+ models, one API key)
-- On-device: Ollama (experimental)
-
-**Observability:**
-- Langfuse (self-hosted) — LLM tracing
-- OpenTelemetry → Azure Monitor
-
-**Deployment:**
-- Docker Compose (local)
-- Azure Container Apps (production)
-- Azure Database for PostgreSQL
-- Azure Cache for Redis
-- CI/CD: GitHub Actions → ACR
-
-## Project Structure (Planned)
+## Project Structure
 
 ```
 agent-foundry/
-├── README.md                           # This file
-├── docs/                               # Documentation
-│   ├── project-overview-pdr.md         # Product requirements
-│   ├── code-standards.md               # Code conventions
-│   ├── system-architecture.md          # System design
-│   ├── codebase-summary.md             # Planned structure
-│   ├── project-roadmap.md              # Phases & timeline
-│   ├── deployment-guide.md             # Azure deployment
-│   └── design-guidelines.md            # UI/UX standards
-├── backend/                            # Python backend
-│   ├── src/
-│   │   ├── agents/                     # Agent definitions & implementations
-│   │   ├── orchestrator/               # Workflow management (CrewAI/LangGraph)
-│   │   ├── api/                        # FastAPI routes
-│   │   ├── memory/                     # Memory interfaces (pgai, Memgraph)
-│   │   ├── guardrails/                 # Output validation, cost limits
-│   │   ├── integrations/               # MCP adapters, tool implementations
-│   │   └── models/                     # Pydantic schemas
-│   ├── agents_config/                  # YAML agent definitions
-│   ├── tests/                          # Unit & integration tests
-│   ├── requirements.txt
-│   └── docker/Dockerfile
-├── frontend/                           # Next.js frontend
-│   ├── app/                            # App Router pages
-│   ├── components/                     # React components
-│   ├── lib/                            # Utilities, API clients
-│   ├── styles/                         # Global styles
-│   ├── package.json
-│   └── docker/Dockerfile
-├── docker-compose.yml                  # Local development stack
-├── azure/                              # IaC
-│   ├── main.bicep                      # Azure infrastructure
-│   └── parameters.json
-└── .github/workflows/                  # CI/CD pipelines
+├── backend/
+│   ├── agentcore/              # Content Editor agent
+│   │   ├── agents/             # 4 CrewAI sub-agents (research, writing, editing, repurposing)
+│   │   ├── crews/              # Sequential crew orchestration
+│   │   ├── tools/              # SerperDev, URL reader, brand voice
+│   │   ├── models/             # Pydantic I/O contracts
+│   │   ├── services/           # Quality scoring, memory, task lifecycle
+│   │   └── config/             # Agent + rubric YAML configs
+│   ├── gateway/                # Lambda API Gateway
+│   │   ├── routers/            # content_tasks, agents, users, credits
+│   │   ├── services/           # AgentCore invoker, Stripe, task manager
+│   │   ├── auth/               # Logto JWT + auto-provisioning
+│   │   └── models/             # API + DB models
+│   ├── database/               # RDS schema contracts
+│   └── observability/          # Langfuse + OpenTelemetry
+├── frontend/                   # Next.js 16+
+│   ├── app/content/            # Content Editor pages
+│   ├── app/credits/            # Credit topup UI
+│   ├── components/             # UI components
+│   └── lib/                    # Hooks, types, API client
+├── infra/
+│   ├── cdk/                    # AWS CDK stacks (TypeScript)
+│   │   ├── foundation-stack.ts # VPC, RDS, Secrets
+│   │   └── agentcore-stack.ts  # AgentCore Runtime
+│   └── migrations/             # RDS schema
+├── docs/                       # Architecture docs with Mermaid
+├── Makefile                    # Development commands
+├── amplify.yml                 # Amplify deployment config
+└── CLAUDE.md                   # AI assistant instructions
 ```
 
-## Core Concepts
+## Business Model (MVP)
 
-### Separation: Flow vs Crew
-- **Flow** = Deterministic backbone (business rules, routing, validation) — YOU control
-- **Crew/Agents** = Intelligence layer (LLM reasoning within boundaries) — agents decide HOW
-- Clear contract: Agents receive `TaskInput`, return `TaskResult`
+**Content Editor Agent:**
+- Blog articles: $0.50/generation
+- Email sequences: $0.30/generation
+- Social media: $0.20/generation
 
-### Agent Anatomy
-| Layer | Responsibility |
-|-------|-----------------|
-| Identity | Role, goal, backstory, specialisation prompt |
-| Brain | LLM (Claude Sonnet, GPT-4o, Gemini, Ollama) |
-| Tools | APIs, file I/O, web search, design tools, code executors |
-| Memory | Session + pgai semantic + Memgraph relationships |
-| Guardrails | Output validation, hallucination checks, cost limits |
-| I/O | Pydantic TaskInput → TaskResult |
+**Credit System:**
+- Free on signup: $5 credit
+- Stripe topup: $10 / $25 / $50 plans
+- Estimated cost: $102–260/month at beta scale (5–10 users)
 
-### Agent Roster (MVP)
-- 💻 **Coder** — Code interpreter, GitHub MCP, terminal → PRs/diffs
-- 🔍 **Research** — Web search, PDF reader → Markdown reports
-- 📋 **PM** — Notion MCP, Jira/Linear MCP → PRDs/tickets
-- 🧪 **QA** — Playwright/Cypress → test reports/bugs
-- 📣 **Copywriter** — CMS APIs, email tools → content
-- 🎨 **Image Design** *(Phase 2)* — Stable Diffusion/DALL-E/Midjourney → PNG/SVG
-- 🎬 **Video Design** *(Phase 3)* — RunwayML/Kling/Sora, FFmpeg → MP4
+## Development Commands
 
-### Business Model: Weekly Hiring
-| Tier | Agents | Price |
-|------|--------|-------|
-| Solo | 1 agent | $49–$199/week |
-| Small Team | 3 agents (PM+Coder+QA) | $299–$499/week |
-| Full Squad | 5+ agents, orchestrated | $799–$1,499/week |
-| Enterprise | Custom, SLA, dedicated | Custom |
-
-Revenue: Weekly subscriptions, usage-based add-ons, outcome-based pricing, white-label, marketplace.
-
-## Documentation — Engineer Onboarding Guide
-
-All project documentation lives in [`/docs`](./docs/). Read in the order below to onboard effectively.
-
-### Start Here
-
-| # | Document | What You'll Learn |
-|---|----------|-------------------|
-| 1 | **[Project Overview (PDR)](./docs/project-overview-pdr.md)** | Business context, functional & non-functional requirements, target users |
-| 2 | **[System Architecture](./docs/system-architecture.md)** | System design, data flow, API contracts, service boundaries |
-| 3 | **[Codebase Summary](./docs/codebase-summary.md)** | Module inventory, line counts, completion status across all phases |
-
-### Architecture & Design
-
-| Document | What You'll Learn |
-|----------|-------------------|
-| **[SRD — Platform](./docs/SRD.md)** | System requirement definition for the main platform (marketplace, hiring, tasks, billing) |
-| **[SRD — Admin](./docs/admin-srd.md)** | System requirement definition for admin panel (metrics, user mgmt, health) |
-| **[API Specification](./docs/API_SPEC.md)** | Endpoint matrix for agent marketplace, hiring, and team management |
-| **[DB Design](./docs/DB_DESIGN.md)** | ER diagrams, schema extensions for agent hiring, settings, knowledge files |
-| **[UI Specification — Platform](./docs/UI_SPEC.md)** | Screen specs, flows, and design system for user-facing platform |
-| **[UI Specification — Admin](./docs/admin-ui-spec.md)** | Admin panel screen specs (Vercel-inspired dark mode, dashboard layouts) |
-
-### Standards & Guidelines
-
-| Document | What You'll Learn |
-|----------|-------------------|
-| **[Code Standards](./docs/code-standards.md)** | Python/TypeScript conventions, naming, error handling, file size limits |
-| **[Design Guidelines](./docs/design-guidelines.md)** | UI/UX patterns, component library, responsive breakpoints |
-
-### Operations
-
-| Document | What You'll Learn |
-|----------|-------------------|
-| **[Deployment Guide](./docs/deployment-guide.md)** | Docker Compose (10 containers), Azure Bicep IaC, CI/CD, env vars, scaling |
-| **[Project Roadmap](./docs/project-roadmap.md)** | 4 phases, timeline, milestones, current progress |
-
-### Progress Reports
-
-| Document | What You'll Learn |
-|----------|-------------------|
-| **[Phase 1 Completion Summary](./docs/PHASE-1-COMPLETION-SUMMARY.md)** | Full Phase 1 delivery — 92K backend lines, 41K frontend lines, 9 modules |
-| **[Phase 1 Week 1 Summary](./docs/PHASE-1-WEEK-1-COMPLETION-SUMMARY.md)** | Week 1 foundation deliverables and verification results |
-
-## Development
-
-### Running Tests (Phase 1+)
 ```bash
-pytest tests/ -v --cov=src
+make fe                    # Run Next.js frontend
+make gateway-dev           # Run Lambda gateway locally
+make agent-dev             # Run agent locally
+make lint                  # Lint Python + TypeScript
+make test                  # Run test suite
+make check                 # Type check + lint
+make cdk-deploy            # Deploy AWS stacks
+make agent-launch          # Deploy agent to AgentCore Runtime
 ```
 
-### Building Docker Images
-```bash
-docker-compose build
-docker-compose up
-```
+## Documentation
 
-### Deployment to Azure (Phase 1+)
-See [deployment-guide.md](./docs/deployment-guide.md) for full instructions.
+Read in order:
+
+1. **[Project Overview (PDR)](./docs/project-overview-pdr.md)** — Business context, requirements, user personas
+2. **[System Architecture](./docs/system-architecture.md)** — AWS AgentCore design, data flow, API contracts
+3. **[Code Standards](./docs/code-standards.md)** — Python/TypeScript conventions, naming, file size limits
+4. **[Design Guidelines](./docs/design-guidelines.md)** — UI/UX patterns, Tailwind design system
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/content-tasks` | POST | Create content generation task |
+| `/api/content-tasks/{id}` | GET | Get task status & results |
+| `/api/credits` | GET | User credit balance |
+| `/api/credits/topup` | POST | Stripe topup |
+| `/api/agents` | GET | List available agents |
+| `/api/brand-config` | GET/PUT | Brand voice settings |
+
+See [System Architecture](./docs/system-architecture.md) for full endpoint matrix.
+
+## Local Service URLs
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Gateway | http://localhost:8000 |
+| Gateway docs | http://localhost:8000/docs |
+
+## Testing
 
 ```bash
-az login
-az group create --name agent-foundry-rg --location australiaeast
-# ... (Bicep deployment)
+make test                  # Run all tests
+make test-agent            # Test agent logic only
+make test-gateway          # Test API logic only
 ```
 
 ## Contributing
 
-- Follow [code-standards.md](./docs/code-standards.md) for conventions
-- Create feature branches: `feature/agent-name-functionality`
+- Follow [code-standards.md](./docs/code-standards.md)
+- Create feature branches: `feature/{feature-name}`
 - Open PRs with test coverage
-- See [CONTRIBUTING.md](#) (TODO) for full guidelines
+- Conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
 
-## Roadmap
+## Costs (AWS)
 
-**Phase 1 (Weeks 1–4):** Foundation
-- Agent interface contract
-- Coder + Research agents
-- PostgreSQL + pgai + Memgraph
-- Langfuse integration
+**Infrastructure (monthly):**
+- RDS PostgreSQL: ~$30–50
+- Lambda: ~$10–30 (usage-dependent)
+- Total: ~$50–100/month
 
-**Phase 2 (Weeks 5–8):** Team Composition
-- PM + QA + Copywriter agents
-- Orchestrator (CrewAI manager + LangGraph)
-- Notion + GitHub MCP
+**LLM costs (Bedrock):**
+- DeepSeek V3.2: $0.62/1M input
+- Claude Sonnet: $3/1M input
+- Claude Haiku: $0.25/1M input
 
-**Phase 3 (Weeks 9–14):** Platform
-- Hiring UI (Next.js marketplace)
-- Billing (weekly Stripe cycles)
-- Image + Video agents
+Estimated $102–260/month at beta scale (5–10 users, 10–20 tasks/user/month).
 
-**Phase 4 (Weeks 15+):** Scale & Sell
-- White-label packaging
-- Public API
-- On-device LLM for mobile
+## Status
 
-See [project-roadmap.md](./docs/project-roadmap.md) for detailed milestones.
-
-## Costs
-
-**Estimated Azure Production Cost:** $210–240 AUD/month (excl. LLM API costs)
-- Container Apps (auto-scale to zero)
-- PostgreSQL Flexible (B2ms burstable)
-- Redis Cache
-- Static Web Apps for frontend
-
-LLM costs depend on usage tier & model choice (Claude Sonnet ~$3–15K/month at scale).
-
-## Observability
-
-- **Langfuse** (self-hosted) — LLM tracing, cost tracking, quality monitoring
-- **OpenTelemetry** — Application metrics → Azure Monitor
-- **PostgreSQL logs** — Audit trail for billing, auth, API calls
-
-## Support & Contact
-
-- **Issues:** GitHub Issues
-- **Docs:** See `/docs` directory
-- **Slack:** (TBD)
-- **Email:** team@yourdomain.com (TBD)
-
-## License
-
-TBD
+- **Current:** MVP (Content Editor agent)
+- **Phase 1 Complete:** Core agent framework, gateway, RDS schema, authentication
+- **Phase 2 (Planned):** Image Editor agent, expanded content types, team workspace
+- **Phase 3 (Planned):** Video Editor agent, white-label packaging, public API
 
 ---
 
-**Last updated:** 2026-03-14
-**Phase:** Foundation (Phase 1)
-**Status:** Planning
+**Last updated:** 2026-03-16 | AWS AgentCore | MVP Status
