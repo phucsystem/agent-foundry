@@ -55,3 +55,10 @@ htmlcov/
 
 # Symlinked env
 frontend/.env
+
+# CDK
+cdk.out/
+.bedrock_agentcore.yaml
+
+# Worktrees
+.worktrees/

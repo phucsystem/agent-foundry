@@ -11,157 +11,143 @@ Agent-foundry is a distributed system separating **deterministic flow** (routing
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 graph TD
-    FE["Frontend - Next.js 16 + React 19"]
-    FE -->|HTTP + SSE| API["FastAPI Gateway"]
-    API --> AReg["Agent Registry"]
-    API --> TQ["Task Queue - Celery/Redis"]
-    AReg --> CAG["CrewAI Agents"]
-    CAG --> LLMP["LiteLLM Proxy"]
-    LLMP --> LLMs["LLMs - Claude/GPT/Gemini"]
-    CAG --> TR["Tool Registry"]
-    CAG --> GP["Guardrail Pipeline"]
-    API --> LF["Langfuse - LLM Tracing"]
-    TQ --> PG["PostgreSQL<br/>Users, Tasks, Config"]
-    TQ --> PGV["pgvector<br/>Semantic Memory"]
-    TQ --> MG["Memgraph<br/>Graph Memory"]
+    FE["Frontend - Next.js 16 + React 19<br/>(Amplify)"]
+    FE -->|HTTP| API["Lambda FastAPI Gateway<br/>(Mangum)"]
+    API --> AC["AWS AgentCore Runtime<br/>(CrewAI Agents)"]
+    AC --> MODELS["Bedrock Models<br/>(Sonnet/DeepSeek/Haiku)"]
+    AC --> MEM["AgentCore Memory<br/>(Brand Context)"]
+    API --> RDS["RDS PostgreSQL<br/>(Users, Tasks, Credits)"]
+    AC --> RDS
+    API --> STRIPE["Stripe<br/>(Credit Topup)"]
+    API --> LF["Langfuse<br/>(LLM Tracing)"]
+    AC --> TOOLS["Tools<br/>(SerperDev, URL Reader)"]
 
     style FE fill:#4a90d9,stroke:#6ba3e0,color:#fff
     style API fill:#d4883e,stroke:#e0a060,color:#fff
-    style CAG fill:#9b6bb0,stroke:#b085c2,color:#fff
-    style LLMP fill:#c25a6e,stroke:#d47585,color:#fff
-    style GP fill:#c48530,stroke:#d9a050,color:#fff
-    style PG fill:#4a9e5c,stroke:#6db87e,color:#fff
-    style PGV fill:#3a8e7e,stroke:#5aaa9a,color:#fff
-    style MG fill:#7a5aaa,stroke:#9575c4,color:#fff
+    style AC fill:#9b6bb0,stroke:#b085c2,color:#fff
+    style MODELS fill:#c25a6e,stroke:#d47585,color:#fff
+    style MEM fill:#c48530,stroke:#d9a050,color:#fff
+    style RDS fill:#4a9e5c,stroke:#6db87e,color:#fff
+    style STRIPE fill:#3a8e7e,stroke:#5aaa9a,color:#fff
     style LF fill:#c46040,stroke:#d88060,color:#fff
+    style TOOLS fill:#7a5aaa,stroke:#9575c4,color:#fff
 ```
 
 ---
 
 ## Core Components
 
-### 1. API Gateway (FastAPI)
-**Purpose:** Route requests, validate auth, mediate between frontend and workers
+### 1. API Gateway (Lambda FastAPI + Mangum)
+**Purpose:** Route requests, validate auth, invoke AgentCore, manage credits
 
 **Responsibilities:**
-- Logto Cloud OIDC authentication (JWT + PyJWKClient validation)
-- API key-based authentication (for service-to-service)
+- Logto Cloud OIDC authentication (JWT validation)
 - Request validation (Pydantic)
-- Rate limiting & quota enforcement (per API key)
+- Credit balance checking & deduction
+- Task creation + AgentCore invocation via boto3
+- Credit topup (Stripe webhook integration)
 - Response marshalling
-- SSE connection for live task monitoring
 - Error handling & transformation
-- Optional MOCK_AUTH bypass for development
 
 **Key Routes:**
-- `GET /health` → Service health check
-- `GET /agents` → List agents with filters
-- `GET /agents/{agent_id}` → Agent public profile
-- `POST /agents/{agent_id}/hire` → Hire an agent (weekly subscription)
-- `GET /agents/hired` → List user's hired agents (My Team)
-- `GET /agents/hired/{hire_id}` → Hired agent detail + stats
-- `PUT /agents/hired/{hire_id}/settings` → Update custom instructions
-- `DELETE /agents/hired/{hire_id}` → Cancel hire
-- `POST /agents/hired/{hire_id}/rehire` → Reactivate cancelled hire
-- `POST /agents/hired/{hire_id}/knowledge` → Upload knowledge file
-- `DELETE /agents/hired/{hire_id}/knowledge/{file_id}` → Delete knowledge file
-- `GET /agents/hired/{hire_id}/tasks` → Recent tasks for hired agent
-- `POST /tasks` → Create task, enqueue (with optional hire_id for context injection)
-- `GET /tasks/{id}` → Task status & results
-- `GET /tasks/{id}/stream` → SSE live updates
-- `GET /users/me` → Authenticated user profile
-- `POST /auth/callback` → Logto OIDC callback
-- `GET /subscriptions` → User's current tier (future)
+- `GET /api/agents` → List available agents (Content Editor)
+- `GET /api/users/me` → Authenticated user profile + credit balance
+- `POST /api/tasks/content` → Create content task, deduct credits, invoke AgentCore (202 Accepted)
+- `GET /api/tasks/{id}` → Task status + result
+- `GET /api/tasks` → List user's tasks (paginated)
+- `POST /api/credits/topup` → Create Stripe Checkout session
+- `POST /api/credits/webhook` → Stripe webhook for credit topup completion
 
 **Auth Flow:**
-1. Frontend redirects user to Logto sign-in (`/auth/signin`)
-2. Logto returns user to callback endpoint (`/auth/callback`)
-3. Backend validates Logto token via JWKS endpoint
-4. JWT stored in secure HTTP-only cookie (NextAuth.js)
-5. Subsequent requests include JWT token
-6. Backend validates token signature + expiry via PyJWKClient
+1. Frontend redirects user to Logto sign-in
+2. Logto returns user to frontend with auth code
+3. Frontend obtains JWT access token from Logto
+4. Subsequent API requests include Bearer JWT token
+5. Lambda validates token signature via PyJWKClient (cached)
 
-**Infrastructure:** Uvicorn ASGI server, runs in Container Apps
+**Infrastructure:** AWS Lambda with Function URL, Mangum ASGI adapter, 512MB memory, 5-minute timeout, runs in same VPC as RDS
 
 ---
 
-### 2. Task Orchestrator (CrewAI / LangGraph)
-**Purpose:** Coordinate multi-agent workflows, route tasks to agents
+### 2. AgentCore Runtime (AWS Bedrock AgentCore)
+**Purpose:** Execute CrewAI agents with managed Bedrock LLM access
 
 **Responsibilities:**
-- Parse task input (goal, context, constraints)
-- Route to correct agent(s) based on task type
-- Handle sequential pipelines (A → B → C)
-- Handle parallel execution (A, B, C concurrently)
-- Aggregate results for hierarchical workflows (Manager → Specialists)
-- Time-box execution (< 5min SLA)
-- Error recovery (retry logic, fallback agents)
+- Host Content Editor CrewAI crew (5 sequential agents)
+- Manage LLM invocations via native Bedrock integration
+- Provide memory persistence across invocations
+- Tool execution (SerperDev, URL reader)
+- Monitoring + observability (OpenTelemetry)
+- Cost tracking per invocation
 
 **Architecture:**
-- **CrewAI Manager:** For multi-agent coordination within a task
-- **LangGraph:** For complex workflows spanning multiple tasks/agents
-- Both share same agent interface (Pydantic TaskInput → TaskResult)
+- **Content Editor Crew:** Sequential pipeline (researcher → writer → editor → repurposer)
+- **LLM Routing:** DeepSeek V3 (cheap reasoning), Sonnet (writing quality), Haiku (fast scoring)
+- **Memory:** AgentCore Memory with brand voice context persistence
+- **Tools:** SerperDev for web search, custom URL reader for research
 
 **Data Flow:**
 ```
-TaskInput
+TaskInput (topic, brand_config_id)
   ↓
-[Orchestrator determines agent(s)]
+Load brand voice from RDS
   ↓
-[Parallel or Sequential Dispatch]
+Retrieve brand context from AgentCore Memory
   ↓
-[Collect Results]
+Content Editor Crew executes 5 agents sequentially
+  ├─ Researcher: Find sources (SerperDev)
+  ├─ Writer: Draft content (Sonnet)
+  ├─ Editor: Refine + brand voice (DeepSeek)
+  └─ Repurposer: Create variants (DeepSeek)
   ↓
-TaskResult (aggregated output)
+Quality scoring via LLM-as-Judge (Haiku)
+  ↓
+Store session summary in AgentCore Memory
+  ↓
+Return ContentOutput (markdown + metadata + variants)
 ```
 
 ---
 
-### 3. Agent Framework
-**Purpose:** Define agent behavior, integrate LLM + tools, enforce guardrails
+### 3. Content Editor Agent (CrewAI Crew in AgentCore)
+**Purpose:** Multi-agent content generation with brand voice consistency
 
 **Agent Anatomy:**
-| Layer | Implementation |
-|-------|-----------------|
-| **Identity** | YAML config (id, name, role, goal, backstory, version) |
-| **Brain** | LLM via LiteLLM (Claude Sonnet, GPT-4o, Gemini, etc.) |
-| **Tools** | BaseTool ABC + @tool decorator (SimpleTool) / MCPToolAdapter |
-| **Memory** | Short-term (session) + pgai semantic search + Memgraph relationships |
-| **Guardrails** | Input/Output validation, cost limits, prompt injection detection |
-| **I/O Contract** | TaskInput → TaskResult (Pydantic) |
+| Agent | Role | Model | Tools |
+|-------|------|-------|-------|
+| **Researcher** | Find sources, competitor insights | DeepSeek V3 | SerperDev, URL reader |
+| **Writer** | Craft engaging content | Sonnet | None (receives research) |
+| **Editor** | Ensure brand voice, grammar, SEO | DeepSeek V3 | None |
+| **Repurposer** | Create social + email variants | DeepSeek V3 | None |
+| **Quality Judge** | Score content (clarity, accuracy, brand) | Haiku | None |
 
-**Agent Framework Architecture:**
+**Pydantic Models (Content Editor):**
+- `ContentTaskInput` — topic, content_type, brand_config_id, target_word_count, keywords, competitor_urls
+- `ContentOutput` — title, slug, meta_description, content (markdown), keywords, quality_score, social_variants, cost_usd
+- `BrandVoiceConfig` — name, core_values, tone, audience, avoid_words, sentence_length_avg (loaded from RDS)
+- `QualityScore` — clarity, data_accuracy, brand_voice, seo_optimization, engagement, weighted_total
+- `SocialVariant` — platform (LinkedIn/Twitter/Instagram), content, character_count
 
-```mermaid
-%%{init: {'theme': 'neutral'}}%%
-graph TD
-    YAML["base.yaml<br/>coder.yaml<br/>researcher.yaml"]
-    YAML -->|load| LC["AgentConfig<br/>Pydantic"]
-    LC -->|inherit| ACF["AgentConfig<br/>single-level"]
-    ACF -->|instantiate| BA["BaseAgent ABC"]
-    BA --> CA["CoderAgent"]
-    BA --> RA["ResearcherAgent"]
-    BA --> GA["GenericAgent<br/>fallback"]
-    CA --> CR["CrewAI Agent"]
-    RA --> CR
-    GA --> CR
-    CR -->|execute| CE["CrewAI Execution"]
-
-    style YAML fill:#b8960f,stroke:#d4b030,color:#fff
-    style LC fill:#4a8e3c,stroke:#6aaa5c,color:#fff
-    style BA fill:#2e8a7a,stroke:#4aaa9a,color:#fff
-    style CR fill:#9b6bb0,stroke:#b085c2,color:#fff
+**Crew Flow:**
+```
+Input: topic="10 Productivity Tips", brand_config_id="b2b-saas"
+  ↓ Load brand voice from RDS
+  ↓ Task 1: Research — Find 5+ sources (SerperDev)
+  ↓ Task 2: Outline — Structure with brand voice
+  ↓ Task 3: Draft — Write full blog post (Sonnet)
+  ↓ Task 4: Edit — Refine for brand, SEO
+  ↓ Task 5: Repurpose — Create 5 social + 2 email variants
+  ↓ Quality Judge: Score each dimension
+  ↓
+Output: ContentOutput with markdown + variants + score
 ```
 
-**Pydantic Models (config.py):**
-- `AgentConfig` — Full agent configuration (id, name, role, goal, llm, tools, guardrails)
-- `LLMConfig` — LLM provider routing (model, base_url, temperature, max_tokens)
-- `TaskInput` — Task contract (agent_id, goal, context, budget_usd, timeout_seconds)
-- `TaskResult` — Result contract (status, output, error, tokens_used, cost_usd, duration_seconds)
-- `GuardrailConfig` — Safety limits (max_budget_usd, max_runtime_seconds, output_schema)
-- `ToolConfig` — Tool configuration (name, enabled, config dict)
+**Tools (Content Editor):**
+- **SerperDev:** Web search for research + competitor analysis
+- **URL Reader:** Extract content from URLs for source processing
+- **LLM-as-Judge:** Haiku for quality scoring with rubric
 
-**Tool System:**
+**Tool System (Legacy - Future Agents):**
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
@@ -180,245 +166,210 @@ graph TD
     style TR fill:#9a6510,stroke:#b88030,color:#fff
 ```
 
-**Pre-built Tools (via @tool decorator):**
-- Web search, file I/O, code interpretation
-- GitHub MCP integration (planned Phase 2)
-- Notion MCP integration (planned Phase 2)
-
 ---
 
-### 4. Task Executor (Celery Workers)
-**Purpose:** Execute tasks asynchronously, manage job queue, handle retries
+### 4. Task Execution (Lambda → AgentCore)
+**Purpose:** Coordinate task execution via Lambda, manage credits, persist results
 
 **Responsibilities:**
-- Dequeue tasks from Redis
-- Instantiate agent from AgentRegistry
-- Run GuardrailPipeline.run_input_checks() (prompt injection, budget)
-- Invoke CrewAI Agent with resolved tools
-- Capture output, logs, metrics from CrewAI
-- Run GuardrailPipeline.run_output_checks() (schema validation, cost warning)
-- Store result in PostgreSQL
-- Publish completion events (Langfuse, SSE)
-- Retry on transient failures (exponential backoff)
-- Hard timeout (300s default from GuardrailConfig.max_runtime_seconds)
+- Validate Logto JWT + user authentication
+- Check user credit balance
+- Deduct credits optimistically (refund on failure)
+- Create task record in RDS (status: pending)
+- Invoke AgentCore Runtime asynchronously (boto3)
+- Poll task completion (up to 5 minutes)
+- Store result + cost in RDS
+- Publish to frontend (polling-based, not SSE)
 
 **Task Execution Flow:**
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
-    participant User as User
-    participant API as FastAPI
-    participant Redis as Redis Queue
-    participant Worker as Celery Worker
-    participant Reg as AgentRegistry
-    participant Pipe as GuardrailPipeline
-    participant CrewAI as CrewAI Agent
-    participant LLM as LiteLLM
-    participant DB as PostgreSQL
+    participant User as User/Frontend
+    participant API as Lambda Gateway
+    participant Auth as Logto
+    participant RDS as RDS PostgreSQL
+    participant Credit as Credit Service
+    participant AgentCore as AgentCore Runtime
+    participant Bedrock as Bedrock Models
 
-    User->>API: POST /api/tasks
-    API->>API: Validate TaskInput (Pydantic)
-    API->>Redis: Enqueue task_id
-    API-->>User: Return task_id (polling/SSE)
+    User->>API: POST /api/tasks/content + JWT
+    API->>Auth: Validate JWT
+    Auth-->>API: Valid
 
-    Redis-->>Worker: Dequeue task_id
-    Worker->>Reg: get_agent(agent_id)
-    Reg->>Reg: Load AgentConfig
-    Reg-->>Worker: Agent instance
+    API->>RDS: Get user + credit balance
+    API->>Credit: Check if balance >= cost
+    Credit-->>API: OK (50 credits for blog)
 
-    Worker->>Pipe: run_input_checks(task)
-    Pipe->>Pipe: InputGuardrail - block injection
-    Pipe->>Pipe: CostGuardrail - pre-flight budget
-    Pipe-->>Worker: OK
+    API->>Credit: Deduct credits (pessimistic lock)
+    Credit->>RDS: UPDATE users.credit_balance_cents
+    Credit-->>API: OK
 
-    Worker->>CrewAI: execute(task.goal)
-    CrewAI->>LLM: completion request
-    LLM-->>CrewAI: response
-    CrewAI-->>Worker: TaskResult
+    API->>RDS: Create task (status: pending)
+    API-->>User: 202 Accepted + task_id
 
-    Worker->>Pipe: run_output_checks(result)
-    Pipe->>Pipe: OutputGuardrail - schema validation
-    Pipe->>Pipe: CostGuardrail - cost warning
-    Pipe-->>Worker: OK
+    API->>AgentCore: invoke_agent_runtime(task_id, input)
+    AgentCore->>RDS: Load brand voice config
+    AgentCore->>Bedrock: Call models (researcher, writer, editor, repurposer)
+    Bedrock-->>AgentCore: LLM responses
+    AgentCore->>RDS: Store result + tokens_used
 
-    Worker->>DB: Save TaskResult
-    Worker->>API: Publish SSE event
-    API-->>User: Live update
+    User->>API: GET /api/tasks/{id}
+    API->>RDS: SELECT * FROM tasks WHERE id=?
+    API-->>User: {status: "completed", output: {...}}
 ```
 
 ---
 
-### 5. Memory & Knowledge Subsystem
+### 5. Data & Memory Systems
 
-#### 5a. PostgreSQL (Structured Data)
+#### 5a. RDS PostgreSQL (Structured Data)
 **Tables:**
-- `users` — Account, tier, API key
-- `subscriptions` — Current tier, renewal date, price
-- `tasks` — User id, agent, goal, input, output, cost, timestamps, hire_id (for hired agents context)
-- `tasks_history` — Archive of completed tasks
-- `agents_config` — YAML agent definitions (versioned)
-- `hired_agents` — User-agent subscription (status, plan, custom_instructions, weekly_budget_usd, renewal dates)
-- `knowledge_files` — Markdown files uploaded for hired agents (content_text for context injection)
-- `tools` — Available tools, pricing
-- `invoices` — Billing records
-- `audit_log` — API calls, agent runs, sensitive actions
+- `users` — id, logto_id, email, credit_balance_cents, created_at, updated_at
+- `brand_configs` — id, user_id, name, voice_yaml (YAML), created_at, updated_at
+- `content_tasks` — id, user_id, brand_config_id, task_type, status, input_json, output_json, tokens_used, cost_cents, created_at, completed_at
+- `credit_transactions` — id, user_id, amount_cents, type (topup/deduction/refund), task_id, description, created_at
 
 **Indexes:**
-- `(user_id, created_at)` on tasks (filter by user, sort by time)
-- `(agent_id, status)` on tasks (filter by agent, find pending)
-- `(user_id, created_at DESC)` on audit_log
+- `(user_id, created_at DESC)` on content_tasks (user's task history)
+- `(user_id)` on brand_configs (user's brands)
+- `(status)` on content_tasks (find pending tasks)
 
-#### 5b. pgai (Semantic Memory + RAG)
-**Purpose:** Enable agents to search for similar past tasks, documents, examples
+#### 5b. AgentCore Memory (Brand Context Persistence)
+**Purpose:** Store brand voice configurations + session summaries across AgentCore invocations
 
 **Data:**
-- Session transcripts (agent reasoning + output)
-- User-uploaded context documents (PDFs, markdown)
-- Past task outputs (code, reports, designs)
-- Knowledge base (team wiki, brand guidelines, coding standards)
+- Brand voice preferences (tone, values, audience, keywords)
+- Session summaries (content type, quality score, feedback)
+- Learning insights (what worked, what didn't)
 
 **Workflow:**
-1. User uploads context doc or task completes
-2. Text split into chunks (max 2K tokens)
-3. pgai auto-vectorises via embedding API (OpenAI default, or local Ollama)
-4. Stored in `pgvector` column with metadata (task_id, agent_id, user_id, type)
-5. Agent retrieves similar chunks via semantic search: "Find past coder tasks with error handling patterns"
-6. Chunks injected into agent prompt as context
+1. Task starts: retrieve `/brand/{user_id}/` memories from AgentCore Memory
+2. Inject brand context into researcher + writer agent prompts
+3. Task completes: store quality score + content summary
+4. Next task for same user retrieves improved context
 
-**Example Query:**
-```sql
-SELECT chunk_text, similarity
-FROM knowledge_embeddings
-WHERE user_id = $1 AND type = 'task_output'
-ORDER BY embedding <-> pgvector::vector($2)  -- cosine similarity
-LIMIT 5;
-```
-
-#### 5c. Memgraph (Relational Graph)
-**Purpose:** Track agent-task relationships and enable analytics (Phase 2+ evaluation).
-
-**Status:** Stub implementation — not fully integrated yet. Evaluation in Phase 2 will determine if graph queries add value over PostgreSQL + pgai.
-
-**Planned Usage:** Agent success metrics, workflow recommendations, skill overlap analysis.
-
----
-
-### 6. Guardrails & Cost Control
-
-**Guardrail Pipeline Architecture:**
-
-```mermaid
-%%{init: {'theme': 'neutral'}}%%
-graph LR
-    IN["TaskInput"]
-    IGR["InputGuardrail<br/>prompt injection"]
-    CGR1["CostGuardrail<br/>pre-flight budget"]
-    EX["Execute<br/>CrewAI Agent"]
-    CGR2["CostGuardrail<br/>cost warning"]
-    OGR["OutputGuardrail<br/>schema validation"]
-    OUT["TaskResult"]
-
-    IN -->|validate| IGR
-    IGR -->|check| CGR1
-    CGR1 -->|approved| EX
-    EX -->|result| CGR2
-    CGR2 -->|check| OGR
-    OGR -->|valid| OUT
-
-    style IGR fill:#c25a5a,stroke:#d47575,color:#fff
-    style CGR1 fill:#b8960f,stroke:#d4b030,color:#fff
-    style CGR2 fill:#b8960f,stroke:#d4b030,color:#fff
-    style OGR fill:#4a9e5c,stroke:#6db87e,color:#fff
-```
-
-**Guardrail Implementation (guardrails/ module):**
-
-| Class | Responsibility |
-|-------|-----------------|
-| `GuardrailBase` | Abstract base with async validate_input/validate_output methods |
-| `GuardrailPipeline` | Composes multiple guardrails, runs in sequence |
-| `InputGuardrail` | Detects prompt injection patterns, validates required fields |
-| `CostGuardrail` | Pre-flight budget check, cost forecasting, warns if approaching limit |
-| `OutputGuardrail` | Validates TaskResult schema, checks token count |
-
-**Cost Control (via GuardrailConfig):**
-- Per-task budget: `max_budget_usd = 10.0` (default, per config)
-- Per-agent max runtime: `max_runtime_seconds = 300` (5 minutes)
-- Output schema validation: `output_schema = "TaskResult"` (enforced)
-- Prompt injection detection: `block_prompt_injection = True` (default)
-
-**Exception Hierarchy (exceptions.py):**
-```
-AgentError (base)
-├── AgentConfigError → Invalid config
-├── AgentExecutionError → Task failed
-├── AgentNotFoundError → Agent not in registry
-├── ToolNotFoundError → Tool not in registry
-└── GuardrailViolation (base)
-    ├── BudgetExceededError → Budget limit exceeded
-    ├── OutputValidationError → Result schema invalid
-    └── InputValidationError → Prompt injection detected
-```
-
----
-
-### 7. LLM Routing (LiteLLM + OpenRouter + DeepSeek)
-
-**Purpose:** One API key, 200+ models, cost-based automatic routing
-
-**Strategy:**
-- **Primary (reasoning):** Claude Sonnet 4.6 for complex tasks
-- **Code:** DeepSeek-Coder or Claude for coding tasks
-- **Chat:** DeepSeek-Chat for conversational tasks
-- **Reasoning:** DeepSeek-Reasoner for multi-step problems
-- **Fast/cheap:** Claude Haiku or Gemini Flash for simple tasks
-- **Fallback:** If quota exceeded, downgrade to cheaper model
-- **On-device:** Ollama for low-latency, cost-free execution (local)
-
-**DeepSeek Models (Direct API):**
-- `deepseek-coder` — Code generation, debugging, refactoring
-- `deepseek-chat` — General conversation, summarization
-- `deepseek-reasoner` — Complex reasoning, multi-step problems
-
-**Configuration:**
+**Example:**
 ```python
-agent_llm_config = {
-    "coder": {
-        "primary": "claude-4.6-sonnet",
-        "fallback": ["claude-3.5-sonnet", "gpt-4o", "ollama/neural-chat"],
-        "budget": 50.0,  # max $ per day
-    },
-    "research": {
-        "primary": "claude-haiku",
-        "fallback": ["gemini-2.0-flash"],
-        "budget": 20.0,
-    }
-}
-```
+from bedrock_agentcore.memory import MemoryClient
 
-**Via LiteLLM:**
-```python
-import litellm
+client = MemoryClient(region_name='us-east-1', memory_id=MEMORY_ID)
 
-response = litellm.completion(
-    model="openrouter/claude-3.5-sonnet",
-    messages=[...],
-    budget_limit_dollars=10.0,
+# Retrieve past brand context
+memories = client.retrieve_memories(
+    namespace=f'/brand/{user_id}/',
+    query='brand preferences and writing tone'
+)
+
+# Store session learning
+client.add_memory(
+    namespace=f'/brand/{user_id}/',
+    description=f'Blog post quality: {score.weighted_total:.2f}',
+    memory_type='SessionSummary'
 )
 ```
+
+#### 5c. Stripe (Billing + Credit Topup)
+**Purpose:** Payment processing for credit purchases
+
+**Integration:**
+- Webhook validates credit topup completion
+- Stripe test mode for development
+- 3 fixed packages: $10 → 1000 credits, $25 → 2750 credits, $50 → 6000 credits
+
+---
+
+### 6. Cost Control & Billing
+
+**Credit System (MVP):**
+- Signup: +$5.00 free credit
+- Blog post: 50 credits ($0.50) — actual cost ~$0.30–0.50
+- Credit topup: Stripe packages ($10, $25, $50 with bonuses)
+- All costs tracked in `credit_transactions` table
+
+**Cost Per Blog Post Breakdown:**
+- DeepSeek V3 research: ~$0.05
+- Sonnet writing: ~$0.25
+- DeepSeek V3 editing: ~$0.05
+- Haiku quality scoring: ~$0.02
+- **Total: ~$0.37 per blog** (2x markup = 50 credits = $0.50)
+
+**Cost Monitoring:**
+- CloudWatch metrics: tokens/day, cost/day per user
+- Langfuse dashboard: cost breakdown by model, agent, user
+- Alarms: Daily spend > $20 (alert via SNS)
+
+**Billing Flow:**
+```
+User submits task
+  ↓
+Check balance >= cost (50 credits)
+  ↓
+Deduct optimistically (pessimistic lock to prevent race)
+  ↓
+AgentCore executes
+  ↓
+Verify actual cost (usually lower than deduction)
+  ↓
+Store final cost in task record
+  ↓
+If refund needed: credit back difference
+```
+
+---
+
+### 7. Bedrock LLM Routing (AWS Native)
+
+**Purpose:** Cost-optimized access to Claude, DeepSeek via AWS Bedrock
+
+**Strategy:**
+- **Research (Cheap):** DeepSeek V3 — factual extraction, web search analysis
+- **Writing (Quality):** Claude Sonnet 3.5 — high-quality prose, brand voice adherence
+- **Editing (Cheap):** DeepSeek V3 — rule-following, brand voice enforcement
+- **Repurposing (Cheap):** DeepSeek V3 — template adaptation, social post generation
+- **Quality Judge (Fast):** Claude Haiku 3.5 — structured scoring, quick feedback
+
+**Bedrock Model IDs (CrewAI):**
+```python
+from crewai import LLM
+
+researcher_llm = LLM(model="bedrock/us.deepseek.r1-v1:0")
+writer_llm = LLM(model="bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0")
+editor_llm = LLM(model="bedrock/us.deepseek.r1-v1:0")
+repurposer_llm = LLM(model="bedrock/us.deepseek.r1-v1:0")
+judge_llm = LLM(model="bedrock/anthropic.claude-3-5-haiku-20241022-v1:0")
+```
+
+**Cost Comparison (per 1M tokens):**
+| Model | Input | Output |
+|-------|-------|--------|
+| DeepSeek V3 | $0.27 | $1.10 |
+| Claude Haiku | $0.25 | $1.25 |
+| Claude Sonnet | $3.00 | $15.00 |
 
 ---
 
 ### 8. Observability & Tracing
 
 #### Langfuse (LLM Tracing)
-Captures LLM calls, agent execution traces, task lifecycle, and cost breakdowns. Enables cost tracking per agent per user.
+Captures Bedrock LLM calls, agent execution traces, token usage, and costs. Provides dashboard for cost tracking per agent, per user, per model.
 
-#### Observability
-- **OpenTelemetry:** API latency, error rates, queue depth, worker utilization
-- **Azure Monitor:** Metrics, logs, performance counters
-- **Application Logs:** Structured JSON with timestamp, level, service, agent_id, task_id, user_id
+**Integration:**
+- AgentCore exports OpenTelemetry traces to Langfuse
+- Each LLM call tracked: model, input/output tokens, latency, cost
+- Full crew trace shows: researcher (1.5min) → writer (2min) → editor (1min) → repurposer (1min) → judge (0.3min)
+- Cost breakdown per model: DeepSeek vs Sonnet vs Haiku actual usage
+
+#### CloudWatch Metrics
+- Lambda invocations, errors, duration (API Gateway)
+- AgentCore vCPU-hours consumed
+- RDS connections, CPU utilization
+- Daily spend tracking (aggregate Bedrock costs)
+
+#### Application Logs
+- Structured JSON: timestamp, level (DEBUG/INFO/ERROR), component, user_id, task_id, cost_cents
+- Log retention: 30 days (cost control)
 
 ---
 
@@ -466,149 +417,161 @@ graph TD
 
 ---
 
-## Deployment Topology (Azure)
+## Deployment Topology (AWS)
 
 ```mermaid
 %%{init: {'theme': 'neutral'}}%%
 graph TB
-    FD["Azure Front Door + CDN<br/>DDoS protection, caching"]
-    AUTH["Logto Cloud<br/>OIDC Provider<br/>https://pk5k15.logto.app"]
+    ROUTE["Route 53<br/>Domain Routing"]
+    CF["CloudFront<br/>CDN + DDoS"]
+    AUTH["Logto Cloud<br/>OIDC Provider"]
 
     subgraph compute["Compute Layer"]
-        SWA["Static Web Apps<br/>Next.js Frontend<br/>@logto/next SDK"]
-        API["Container Apps<br/>FastAPI 1-10<br/>PyJWKClient validation"]
-        WK["Container Apps<br/>Celery Workers 1-10"]
+        AMP["Amplify<br/>Next.js Frontend<br/>App Router"]
+        LAM["Lambda<br/>FastAPI Gateway<br/>(Mangum)"]
     end
 
-    subgraph data["Data & State"]
-        PG["PostgreSQL Flexible<br/>Users, Tasks, Config"]
-        RD["Redis Standard<br/>Task Queue"]
-        MG["Container Apps<br/>Memgraph"]
+    subgraph agentcore["AgentCore"]
+        AC["AgentCore Runtime<br/>CrewAI Crew<br/>Memory"]
+    end
+
+    subgraph data["Data Layer"]
+        RDS["RDS PostgreSQL<br/>db.t4g.micro<br/>(Users, Tasks, Credits)"]
+        STRIPE["Stripe<br/>Payment Processing"]
+    end
+
+    subgraph llm["LLM Services"]
+        BEDROCK["AWS Bedrock<br/>DeepSeek V3, Sonnet, Haiku"]
     end
 
     subgraph obs["Observability"]
         LF["Langfuse<br/>LLM Tracing"]
-        AM["Azure Monitor<br/>Metrics & Logs"]
+        CW["CloudWatch<br/>Metrics + Logs"]
     end
 
-    subgraph llm["LLM Services"]
-        LLP["LiteLLM Proxy<br/>Model Routing"]
-        CLAUDE["Claude<br/>Anthropic"]
-        DS["DeepSeek<br/>API Direct"]
-    end
+    ROUTE --> CF
+    CF --> AMP
+    CF --> LAM
 
-    FD --> SWA
-    FD --> API
-    FD --> WK
+    AMP --> AUTH
+    LAM --> AUTH
 
-    SWA --> AUTH
-    API --> AUTH
+    LAM --> RDS
+    LAM --> STRIPE
+    LAM --> AC
 
-    API --> PG
-    API --> RD
-    WK --> RD
-    WK --> PG
-    WK --> MG
+    AC --> RDS
+    AC --> BEDROCK
+    AC --> LF
 
-    API --> LLP
-    WK --> LLP
+    LAM --> LF
+    LAM --> CW
+    AC --> CW
 
-    LLP --> CLAUDE
-    LLP --> DS
-
-    API --> LF
-    WK --> LF
-    API --> AM
-    WK --> AM
-
-    style FD fill:#1565c0,stroke:#4a90d9,color:#fff
+    style ROUTE fill:#1565c0,stroke:#4a90d9,color:#fff
+    style CF fill:#ff9500,stroke:#ffb030,color:#000
     style AUTH fill:#9b5bb0,stroke:#b085c2,color:#fff
-    style SWA fill:#4a90d9,stroke:#6ba3e0,color:#fff
-    style API fill:#d4883e,stroke:#e0a060,color:#fff
-    style WK fill:#4a9e5c,stroke:#6db87e,color:#fff
-    style PG fill:#3a8e4c,stroke:#5aaa6e,color:#fff
-    style RD fill:#3a7ec0,stroke:#5a9ee0,color:#fff
-    style MG fill:#8a4ab0,stroke:#a565ca,color:#fff
+    style AMP fill:#4a90d9,stroke:#6ba3e0,color:#fff
+    style LAM fill:#d4883e,stroke:#e0a060,color:#fff
+    style AC fill:#9b6bb0,stroke:#b085c2,color:#fff
+    style RDS fill:#3a8e4c,stroke:#5aaa6e,color:#fff
+    style STRIPE fill:#3a7ec0,stroke:#5a9ee0,color:#fff
+    style BEDROCK fill:#ff6b35,stroke:#ff9500,color:#fff
     style LF fill:#c04040,stroke:#d06060,color:#fff
-    style AM fill:#d4883e,stroke:#e0a060,color:#fff
-    style LLP fill:#e8a000,stroke:#f0b820,color:#000
-    style CLAUDE fill:#6ba3e0,stroke:#8bc3ff,color:#fff
-    style DS fill:#ff9500,stroke:#ffb030,color:#fff
+    style CW fill:#d4883e,stroke:#e0a060,color:#fff
 ```
 
 **Infrastructure Breakdown:**
-- **Azure Front Door:** Global routing, DDoS protection, request rate limiting
-- **Static Web Apps:** Next.js frontend (auto-scaling, free tier eligible)
-- **Container Apps:** FastAPI + Celery (scale based on CPU/memory + queue depth)
-- **PostgreSQL Flexible:** Pay-per-use, auto-pause when idle, backups
-- **Redis:** Standard tier (1GB sufficient for MVP queue)
-- **Memgraph:** Single instance in Container Apps (evaluate Phase 3)
-- **Logto Cloud:** Managed OIDC auth provider (no self-hosting required)
-- **LiteLLM Proxy:** Model routing + fallback logic (local Container Apps)
+- **Amplify Hosting:** Next.js frontend, auto-deploys from GitHub, $0.15/GB served
+- **Lambda + Function URL:** FastAPI gateway, 512MB memory, 5min timeout, pays per invocation + GB-seconds
+- **AgentCore Runtime:** Managed agent execution, ~$0.0895/vCPU-hr, auto-scales
+- **RDS PostgreSQL:** db.t4g.micro, ~$15/month, single-AZ for MVP
+- **Logto Cloud:** Managed OIDC, free tier sufficient for MVP
+- **Langfuse:** Self-hosted or cloud (optional for MVP, use CloudWatch logs as fallback)
+- **CloudWatch:** Included with Lambda/RDS, 30-day log retention
 
 **Scaling:**
-- FastAPI: Container Apps (1-10 instances based on CPU/memory)
-- Celery workers: Container Apps (1-10 instances based on queue depth)
-- PostgreSQL: Auto-pause after inactivity; scale storage as data grows
-- Redis: Standard tier (1GB, sufficient for MVP queue)
-- Memgraph: Container Apps (single instance, evaluate after Phase 2)
+- Lambda: Auto-scales on concurrency (default 100), ~1-2s cold start
+- AgentCore: Pay-per-use, scales with vCPU demand
+- RDS: Single-AZ for dev, upgrade to multi-AZ for production
+- Frontend: Amplify auto-scales, CDN caches static assets
 
-**Cost Estimate:** $210–240 AUD/month infrastructure
-- Container Apps: $30–50 (auto-scale to zero)
-- PostgreSQL: $50–70
-- Redis: $15–20
-- Static Web Apps: Free
-- Front Door: $30–40
+**Cost Estimate (Monthly at Beta Scale 5–10 users):**
+- Bedrock models: $50–150 (token usage)
+- AgentCore Runtime: $20–50 (vCPU-hours)
+- Lambda: $5–15 (free tier covers 1M invocations)
+- RDS: $15–20
+- Amplify: $5–10
+- CloudFront: $2–5
+- **Total: $97–250/month** (well under $500 constraint)
 
 ---
 
 ## Phase Rollout
 
-**Phase 1 (Weeks 1–4):**
+**AWS AgentCore Migration (March 2026):**
 
-**Week 1 — Foundation (COMPLETE)**
-- Agent interface contract: `TaskInput`, `TaskResult` Pydantic models
-- Base `Agent` ABC + concrete stubs (Coder, Research)
-- FastAPI scaffolding with routers (health, agents, tasks)
-- Docker Compose stack: Traefik, PostgreSQL, Redis, Memgraph, LiteLLM, Langfuse
-- Makefile with development commands
-- .env.example template
-- Next.js 16 frontend skeleton (layout + landing page)
+**Phase 1 — AWS Foundation + CDK Setup (COMPLETE)**
+- [x] AWS account + Bedrock model access enabled (DeepSeek V3, Sonnet, Haiku)
+- [x] CDK project scaffolded (infra/cdk/, stacks: FoundationStack + AgentCoreStack)
+- [x] VPC + RDS PostgreSQL (db.t4g.micro) + Secrets Manager
+- [x] AgentCore Runtime + Memory configured
+- [x] RDS schema: users, brand_configs, content_tasks, credit_transactions
+- [x] Makefile updated with CDK + agentcore commands
 
-**Weeks 2–4 (COMPLETE)**
-- [x] Agent framework: tools, guardrails, config loader, exception hierarchy
-- [x] Coder + Research agent implementations (with tools, LLM invocation ready)
-- [x] PostgreSQL migrations + pgai semantic setup
-- [x] Celery worker implementation (task execution, retries, progress publishing)
-- [x] API endpoint implementations (health, agents, tasks with SSE)
-- [x] GitHub Actions CI/CD (lint, test, build)
-- [x] Frontend unit testing infrastructure (Vitest, RTL, MSW; 20 test files, 122 tests passing)
+**Phase 2 — Content Editor Agent (COMPLETE)**
+- [x] CrewAI crew with 4 agents: researcher, writer, editor, repurposer
+- [x] Models: DeepSeek V3 (cheap), Sonnet (writing), Haiku (scoring)
+- [x] Tools: SerperDev search, URL reader for research
+- [x] Brand voice loader from RDS
+- [x] Quality scorer (LLM-as-Judge with rubric)
+- [x] AgentCore Memory integration for brand context
+- [x] Local testing with `agentcore dev`
+- [x] Deployed to AgentCore Runtime
 
-**Phase 2 (Weeks 5–8) — COMPLETE:**
-- [x] PM, QA, Copywriter agents added (5 agents total)
-- [x] Orchestrator (CrewAI manager) keyword-based routing
-- [x] Frontend marketplace UI + auth (Logto Cloud)
-- [x] Billing dashboard UI
-- [x] Notion + GitHub MCP integrated
-- [x] Internal dogfood testing with agents
-- [x] Hired agents feature (weekly subscriptions, My Team page, agent detail view, knowledge upload, custom instructions)
+**Phase 3 — API Gateway + Auth (COMPLETE)**
+- [x] Lambda FastAPI gateway with Mangum adapter
+- [x] Logto JWT validation
+- [x] Content task endpoints: POST /api/tasks/content, GET /api/tasks/{id}
+- [x] Credit system: check balance, deduct, refund, topup
+- [x] Stripe integration for credit packages
+- [x] boto3 AgentCore invoker service
+- [x] CDK Lambda stack with Function URL
 
-**Phase 3 (Weeks 9–14):**
-- Image + Video agents
-- Memgraph evaluation (keep or remove?)
-- Public signup + Stripe billing
-- 50+ paid customers
+**Phase 4 — Frontend Migration (COMPLETE)**
+- [x] Content Editor task form component (topic, brand config, keywords)
+- [x] Content result display with markdown rendering
+- [x] Credit balance badge + topup packages
+- [x] Task history list
+- [x] Sidebar nav: Content Editor + Credits
+- [x] Amplify deployment config
+- [x] TanStack Query hooks for content + credits APIs
 
-**Phase 4 (Weeks 15+):**
-- White-label packaging
-- Public API + SDKs
-- Agent versioning & A/B testing
-- Scale to 500+ users
+**Phase 5 — Testing + Launch Prep (In Progress)**
+- [ ] Unit tests: Pydantic models, credit service, brand voice loader
+- [ ] Integration tests: full content flow, credit deduction + refund
+- [ ] Langfuse integration for LLM trace visibility
+- [ ] CloudWatch dashboards (operations, cost tracking)
+- [ ] Docs update: system-architecture.md, code-standards.md
+- [ ] Beta user setup + sample brand configs
+- [ ] Performance baseline (10 blog posts)
+- [ ] Cost monitoring + alarms
+
+**Future Phases (Post-MVP):**
+- Phase 6: Social Media Manager agent
+- Phase 7: Email Campaign Builder agent
+- Phase 8: Scale to 50+ paid customers
+- Phase 9: White-label packaging + Public API
 
 ---
 
 ## Document Metadata
-- **Version:** 1.5
-- **Last Updated:** 2026-03-15
+- **Version:** 2.0 (AWS AgentCore Migration)
+- **Last Updated:** 2026-03-16
 - **Owner:** Architecture Team
-- **Status:** Phase 1–2, 6–11 Complete (All 9 backend modules + hired agents routers + auth + CI/CD + Phase 11 frontend UI + hired agents pages implemented; Logto Cloud auth integrated; Knowledge injection into tasks implemented; Frontend unit testing infrastructure complete with 100% passing tests)
+- **Status:** AWS Migration Complete (Phases 1–4)
+  - Phase 1: CDK + Foundation Stack deployed
+  - Phase 2: Content Editor agent deployed to AgentCore
+  - Phase 3: Lambda API gateway + credit system deployed
+  - Phase 4: Frontend + Amplify deployed
+  - Phase 5: Testing + launch prep in progress

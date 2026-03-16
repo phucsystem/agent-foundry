@@ -1,0 +1,53 @@
+# Quality Scoring Rubric for Content Editor
+# Used by QualityScorer service (LLM-as-Judge with Haiku)
+
+dimensions:
+  clarity:
+    weight: 0.20
+    description: "Writing clarity, structure, and readability"
+    criteria:
+      - Clear topic sentences per section
+      - Logical flow between paragraphs
+      - No jargon without explanation
+      - Appropriate sentence length variety
+
+  data_accuracy:
+    weight: 0.20
+    description: "Factual accuracy and source credibility"
+    criteria:
+      - Claims supported by cited data
+      - Sources are credible (no outdated or unreliable)
+      - Statistics properly contextualized
+      - No hallucinated facts
+
+  brand_voice:
+    weight: 0.25
+    description: "Adherence to brand voice guidelines"
+    criteria:
+      - Tone matches brand specification
+      - Vocabulary appropriate for target audience
+      - Avoided words are absent
+      - Writing style consistent throughout
+
+  seo_optimization:
+    weight: 0.15
+    description: "Search engine optimization quality"
+    criteria:
+      - Primary keyword in title and first paragraph
+      - Keywords in H2/H3 headings naturally
+      - Meta description under 160 chars with keyword
+      - Internal/external links present
+
+  engagement:
+    weight: 0.20
+    description: "Reader engagement and action potential"
+    criteria:
+      - Compelling hook in introduction
+      - Practical takeaways or insights
+      - Clear call-to-action in conclusion
+      - Storytelling elements or examples
+
+thresholds:
+  publish_ready: 0.70
+  needs_human_review: 0.50
+  reject: 0.30
